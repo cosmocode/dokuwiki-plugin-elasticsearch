@@ -1,0 +1,7 @@
+base   elasticsearch
+author Kieback&Peter IT
+email  it-support@kieback-peter.de
+date   2013-10-15
+name   elasticsearch plugin
+desc   Elasticsearch indexing and searching
+url    https://git.kieback-peter.de/it/dokuwiki-elasticsearch
