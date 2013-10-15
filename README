@@ -1,3 +1,4 @@
 - Template skeleton w/ http://pluginwiz.dokuwiki.org/
 - https://www.dokuwiki.org/devel:plugins
 - https://www.dokuwiki.org/devel:events_list
+- Example search plugin seee https://github.com/gbirke/dokuwiki_solr
