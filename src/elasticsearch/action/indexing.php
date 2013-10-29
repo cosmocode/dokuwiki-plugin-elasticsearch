@@ -52,7 +52,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
 
-    privat function needs_indexing($id) {
+    private function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         //TODO check filemtime of indexStateFile against filemtime(wikiFN($id))
     }
