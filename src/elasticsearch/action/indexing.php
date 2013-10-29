@@ -19,8 +19,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     public function register(Doku_Event_Handler &$controller) {
 
-       $controller->register_hook('INDEXER_PAGE_ADD', 'FIXME', $this, 'handle_indexer_page_add');
-       $controller->register_hook('TPL_CONTENT_DISPLAY', 'FIXME', $this, 'handle_tpl_content_display');
+       $controller->register_hook('INDEXER_PAGE_ADD', 'BEFORE', $this, 'handle_indexer_page_add');
+       $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
    
     }
 
