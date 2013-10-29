@@ -68,12 +68,52 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         //TODO check filemtime of indexStateFile against filemtime(wikiFN($id))
     }
 
+    /**
+     * Returns the object and creates if needed beforehand
+     * @return \Elastica\Client
+     */
     private function getElasticaClient() {
         if (is_null($this->elasticaClient)) {
             $dsn = $this->getConf('elasticsearch_dsn');
             $this->elasticaClient = new \Elastica\Client($dsn);
         }
         return $this->elasticaClient;
+    }
+
+    /**
+     * Index a page
+     *
+     * @param $id
+     * @return void
+     */
+    private function index_page($id) {
+        $indexName = $this->getConf('elasticsearch_indexname');
+        $documentType = $this->getConf('elasticsearch_documenttype');
+        $client = $this->getElasticaClient();
+        $index  = $client->getIndex($indexName);
+        $type   = $index->getType($documentType);
+        $documentId = $documentType . '_' . $id;
+
+        // collect the date which should be indexed
+        $meta = p_get_metadata($id, '', true);
+
+        $data = array();
+        $data['created'] = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
+        $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
+        $data['creator'] = $meta['creator'];
+        $data['title'] = $meta['title'];
+        $data['abstract'] = $meta['description']['abstract'];
+        $data['content'] = rawWiki($id);
+
+        // check if the document still exists to update it or add it as a new one
+        try {
+            $document = $type->getDocument($documentId);
+            $client->addDocuments($documentId, array('doc' => $data), $index->getName(), $type->getName());
+        } catch (\Elastica\Exception\NotFoundException $e) {
+            $document = new \Elastica\Document($documentId, $data);
+            $type->addDocument($document);
+        }
+        $index->refresh();
     }
 
 }

@@ -14,3 +14,6 @@ $conf['elasticsearch_dsn'] = array(
     )
 );
 
+$conf['elasticsearch_indexname']    = 'test';
+$conf['elasticsearch_documenttype'] = 'wikipage';
+
