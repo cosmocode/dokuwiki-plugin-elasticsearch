@@ -9,6 +9,8 @@
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
 
+
+
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     /**
@@ -35,9 +37,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     public function handle_indexer_page_add(Doku_Event &$event, $param) {
         global $ID;
+
         $logs = array();
         $logs[] = 'BEGIN';
         $logs[] = metaFN($ID,'.solr_indexed');
+        $logs[] = wikiFN($ID);
         $logs[] = 'END';
         foreach($logs as $entry) {
             syslog(LOG_ERR, $entry);
@@ -45,6 +49,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
+    }
+
+
+    privat function needs_indexing($id) {
+        $indexStateFile = metaFN($id, '.elasticsearch_indexed');
+        //TODO check filemtime of indexStateFile against filemtime(wikiFN($id))
     }
 
 }
