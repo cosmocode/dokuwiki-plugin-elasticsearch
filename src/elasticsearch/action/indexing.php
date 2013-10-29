@@ -14,6 +14,11 @@ require_once dirname(__FILE__) . '/../vendor/autoload.php';
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     /**
+     * @var \Elastica\Client $elasticaClient
+     */
+    private $elasticaClient;
+
+    /**
      * Registers a callback function for a given event
      *
      * @param Doku_Event_Handler $controller DokuWiki's event controller object
@@ -52,9 +57,23 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
 
+    /**
+     * Check if the page $id has changed since the last indexing.
+     *
+     * @param $id
+     * @return boolean
+     */
     private function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         //TODO check filemtime of indexStateFile against filemtime(wikiFN($id))
+    }
+
+    private function getElasticaClient() {
+        if (is_null($this->elasticaClient)) {
+            $dsn = $this->getConf('elasticsearch_dsn');
+            $this->elasticaClient = new \Elastica\Client($dsn);
+        }
+        return $this->elasticaClient;
     }
 
 }
