@@ -2,3 +2,4 @@
 - https://www.dokuwiki.org/devel:plugins
 - https://www.dokuwiki.org/devel:events_list
 - Example search plugin see https://github.com/gbirke/dokuwiki_solr
+- Elastica.io as elasticsearch client for PHP (>= 5.3)
