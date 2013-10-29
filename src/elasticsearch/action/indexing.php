@@ -9,7 +9,7 @@
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
 
-
+require_once dirname(__FILE__) . '../vendor/autoload.php';
 
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
@@ -40,7 +40,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
         $logs = array();
         $logs[] = 'BEGIN';
-        $logs[] = metaFN($ID,'.solr_indexed');
+        $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
         $logs[] = 'END';
         foreach($logs as $entry) {
