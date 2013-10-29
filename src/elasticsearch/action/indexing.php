@@ -35,7 +35,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     public function handle_indexer_page_add(Doku_Event &$event, $param) {
         global $ID;
-
+        $logs = array();
+        $logs[] = 'BEGIN';
+        $logs[] = metaFN($ID,'.solr_indexed');
+        $logs[] = 'END';
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
