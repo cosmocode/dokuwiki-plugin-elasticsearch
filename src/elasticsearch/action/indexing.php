@@ -51,7 +51,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         foreach($logs as $entry) {
             syslog(LOG_ERR, $entry);
         }
-        $this->index_page($ID);
+        //@TODO only if needed! $this->index_page($ID);
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
