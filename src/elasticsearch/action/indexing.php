@@ -56,7 +56,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
         global $ID;
         if ($this->getConf('elasticsearch_indexondisplay')) {
-            $this->index_page($id);
+            $this->index_page($ID);
         }
     }
 
