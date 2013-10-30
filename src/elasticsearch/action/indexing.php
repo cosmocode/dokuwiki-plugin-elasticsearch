@@ -56,7 +56,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
-        global $ID, $INFO;
+        global $ID, $INFO, $AUTH_ACL;
         $logs = array();
         $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
@@ -70,7 +70,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
                 $this->index_page($ID);
             }
             $acl = auth_loadACL();
-            $this->log($acl);
+            $this->log($AUTH_ACL);
         }
     }
 
