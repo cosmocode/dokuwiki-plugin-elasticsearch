@@ -195,7 +195,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $this->log($ns);
         $this->log($path);
         foreach($AUTH_ACL as $acl) {
-            $this->log($acl);
+            $this->log(preg_replace('/#.*$/', '',$acl));
         }
         $this->log('-- getPageACL() <<--');
     }
