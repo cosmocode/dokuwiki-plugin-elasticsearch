@@ -140,10 +140,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['content'] = rawWiki($id);
         $data['namespace'] = getNS($id);
         $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
+        $data['groups'] = $this->getPageACL($id);
 
         $this->getPageACL($id);
-
-        //@TODO groupnames for file must be indexed also
 
         // check if the document still exists to update it or add it as a new one
         try {
