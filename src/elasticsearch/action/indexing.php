@@ -69,8 +69,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             if ($this->needs_indexing($ID)) {
                 $this->index_page($ID);
             }
-            $acl = auth_loadACL();
             $this->log($AUTH_ACL);
+            $this->log(getNS($id));
         }
     }
 
