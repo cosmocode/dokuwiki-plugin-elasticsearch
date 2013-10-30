@@ -149,6 +149,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $type->addDocument($document);
         }
         $index->refresh();
+        $this->update_indexstate($id);
     }
 
     private function log($txt) {
