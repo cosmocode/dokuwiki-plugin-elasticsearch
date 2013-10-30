@@ -184,7 +184,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     private function getPageACL($id) {
         global $AUTH_ACL;
 
-        $matches = preg_grep('/^'.preg_quote($id, '/').'[ \t]+([^ \t]+)[ \t]+/', $AUTH_ACL);
+        $ns = getNS($id);
+        if($ns) {
+            $path = $ns.':*';
+        } else {
+            $path = '*';
+        }
+        $matches = preg_grep('/^'.preg_quote($path, '/').'[ \t]+([^ \t]+)[ \t]+/', $AUTH_ACL);
         $this->log($matches);
     }
 
