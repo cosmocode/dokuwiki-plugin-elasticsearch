@@ -228,8 +228,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
                 //break here
                 break;
             }
-        }while(1); //this should never loop endless
-        $this->log($perms);
+        } while(1); //this should never loop endless
+        $groups = array();
+        foreach($perms as $group => $permission) {
+            $groups[] = sprintf("%s = %s", $group, $permission);
+        }
+        $this->log($groups);
     }
 
 }
