@@ -138,6 +138,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['abstract'] = $meta['description']['abstract'];
         $data['content'] = rawWiki($id);
         $data['language'] = substr($id, 0, 3) == 'en:' ? 'en' : 'de';
+        $data['namespace'] = $this->getNamespace($id);
 
         //@TODO groupnames for file must be indexed also
         //@TODO namespace must be added (wo/ language!)
@@ -165,6 +166,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
         foreach($logs as $entry) {
             syslog(LOG_ERR, $entry);
+        }
+    }
+
+    private function getNamespace($id) {
+        $parts = explode(':', $id);
+        // ignore 1st part if it indicates language 'en'
+        if ($parts[0] = 'en' && isset($parts[1])) {
+            return $parts[1];
+        } else {
+            return $parts[0];
         }
     }
 
