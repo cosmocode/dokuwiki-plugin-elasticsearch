@@ -83,12 +83,23 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     private function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         $dataFile = wikiFN($id);
+
+        // no data file -> no indexing
+        if (!file_exists($dataFile)) {
+            return false;
+        }
+        // check if latest indexing attempt is done after page update
         if (file_exists($indexStateFile)) {
             if (filemtime($indexStateFile) > filemtime($dataFile)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private function update_indexstate($id) {
+        $indexStateFile = metaFN($id, '.elasticsearch_indexed');
+        return file_put_contents($indexStateFile, '');
     }
 
     /**
