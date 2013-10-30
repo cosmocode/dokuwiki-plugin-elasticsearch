@@ -61,8 +61,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
-        $logs[] = metaFN('lib_images_smileys_plus.gif','.elasticsearch_indexed');
-        $logs[] = wikiFN('lib_images_smileys_plus.gif');
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
         $logs[] = 'END content display';
         $this->log($logs);
