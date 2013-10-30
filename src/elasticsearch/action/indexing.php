@@ -56,7 +56,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
-        global $ID, $INFO, $AUTH_ACL;
+        global $ID, $INFO;
         $logs = array();
         $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
@@ -69,8 +69,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             if ($this->needs_indexing($ID)) {
                 $this->index_page($ID);
             }
-            $this->log($AUTH_ACL);
-            $this->log(getNS($ID));
         }
     }
 
@@ -143,6 +141,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['namespace'] = getNS($id);
         $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
 
+        $this->getPageACL($id);
+
         //@TODO groupnames for file must be indexed also
 
         // check if the document still exists to update it or add it as a new one
@@ -179,6 +179,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         } else {
             return $parts[0];
         }
+    }
+
+    private function getPageACL($id) {
+        global $AUTH_ACL;
+        $this->log($AUTH_ACL);
     }
 
 }
