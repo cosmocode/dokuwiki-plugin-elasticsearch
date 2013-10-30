@@ -49,10 +49,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = wikiFN($ID);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
         $logs[] = 'END';
-        foreach($logs as $entry) {
-            syslog(LOG_ERR, $entry);
-        }
-
+        $this->log($logs);
         //@TODO only if needed! $this->index_page($ID);
     }
 
@@ -100,6 +97,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return void
      */
     private function index_page($id) {
+        $this->log('Indexing page ' . $id);
         $indexName = $this->getConf('elasticsearch_indexname');
         $documentType = $this->getConf('elasticsearch_documenttype');
         $client = $this->getElasticaClient();
@@ -127,6 +125,20 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $type->addDocument($document);
         }
         $index->refresh();
+    }
+
+    private function log($txt) {
+        if (!$this->getConf('elasticsearch_debug')) {
+            return;
+        }
+        if (!is_array($txt)) {
+            $logs = array($txt);
+        } else {
+            $logs = $txt;
+        }
+        foreach($logs as $entry) {
+            syslog(LOG_ERR, $entry);
+        }
     }
 
 }
