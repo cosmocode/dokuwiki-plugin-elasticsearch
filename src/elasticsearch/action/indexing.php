@@ -183,6 +183,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     private function getPageACL($id) {
         global $AUTH_ACL;
+        global $conf;
 
         $id = cleanID($id);
         $ns = getNS($id);
