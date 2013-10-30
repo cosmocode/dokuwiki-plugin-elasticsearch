@@ -50,13 +50,17 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
         $logs[] = 'END';
         $this->log($logs);
-        //@TODO only if needed! $this->index_page($ID);
+        if ($this->needs_indexing($ID)) {
+            $this->index_page($ID);
+        }
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
         global $ID;
         if ($this->getConf('elasticsearch_indexondisplay')) {
-            $this->index_page($ID);
+            if ($this->needs_indexing($ID)) {
+                $this->index_page($ID);
+            }
         }
     }
 
