@@ -47,10 +47,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = 'BEGIN';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
+        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
         $logs[] = 'END';
         foreach($logs as $entry) {
             syslog(LOG_ERR, $entry);
         }
+
         //@TODO only if needed! $this->index_page($ID);
     }
 
@@ -66,7 +68,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     private function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
-        //TODO check filemtime of indexStateFile against filemtime(wikiFN($id))
+        $dataFile = wikiFN($id);
+        if (file_exists($indexStateFile)) {
+            if (filemtime($indexStateFile) > filemtime($dataFile)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
