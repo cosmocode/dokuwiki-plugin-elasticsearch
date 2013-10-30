@@ -222,11 +222,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $groups = array();
         foreach($perms as $group => $permission) {
             if ($permission > AUTH_NONE) {
-                $groups[] = sprintf("%s = %s", $group, $permission);
+                $groups[] = $group;
+                $this->log(sprintf("%s = %s", $group, $permission));
             }
         }
-        $this->log($groups);
+        return $groups;
     }
-
 }
 
