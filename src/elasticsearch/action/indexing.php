@@ -184,20 +184,51 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     private function getPageACL($id) {
         global $AUTH_ACL;
 
+        $id = cleanID($id);
         $ns = getNS($id);
-        if($ns) {
-            $path = $ns.':*';
-        } else {
-            $path = '*';
+        $perms = array();
+
+        $matches = preg_grep('/^'.preg_quote($id,'/').'\s+/',$AUTH_ACL);
+        if(count($matches)){
+            foreach($matches as $match){
+                $match = preg_replace('/#.*$/','',$match); //ignore comments
+                $acl   = preg_split('/\s+/',$match);
+                if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
+                if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
+            }
         }
-        $this->log('-->> getPageACL() --');
-        $this->log($ns);
-        $this->log($path);
-        foreach($AUTH_ACL as $acl) {
-            $acl = preg_replace('/#.*$/', '', $acl);
-            $this->log($acl);
+        //still here? do the namespace checks
+        if($ns){
+            $path = $ns.':\*';
+        }else{
+            $path = '\*'; //root document
         }
-        $this->log('-- getPageACL() <<--');
+        do{
+            $matches = preg_grep('/^'.$path.'\s+/',$AUTH_ACL);
+            if(count($matches)){
+                foreach($matches as $match){
+                    $match = preg_replace('/#.*$/','',$match); //ignore comments
+                    $acl   = preg_split('/\s+/',$match);
+                    if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
+                    if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
+                }
+            }
+
+            //get next higher namespace
+            $ns   = getNS($ns);
+            //get next higher namespace
+            $ns   = getNS($ns);
+
+            if($path != '\*'){
+                $path = $ns.':\*';
+                if($path == ':\*') $path = '\*';
+            }else{
+                //we did this already
+                //break here
+                break;
+            }
+        }while(1); //this should never loop endless
+        $this->log($perms);
     }
 
 }
