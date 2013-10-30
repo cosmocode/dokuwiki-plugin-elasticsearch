@@ -144,7 +144,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
 
         //@TODO groupnames for file must be indexed also
-        //@TODO namespace must be added (wo/ language!)
 
         // check if the document still exists to update it or add it as a new one
         try {
