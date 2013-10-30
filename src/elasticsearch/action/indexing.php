@@ -137,6 +137,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['title'] = $meta['title'];
         $data['abstract'] = $meta['description']['abstract'];
         $data['content'] = rawWiki($id);
+        $data['language'] = substr($id, 0, 3) == 'en:' ? 'en' : 'de';
 
         // check if the document still exists to update it or add it as a new one
         try {
