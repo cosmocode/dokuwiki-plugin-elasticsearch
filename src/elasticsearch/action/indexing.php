@@ -70,7 +70,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
                 $this->index_page($ID);
             }
             $this->log($AUTH_ACL);
-            $this->log(getNS($id));
+            $this->log(getNS($ID));
         }
     }
 
