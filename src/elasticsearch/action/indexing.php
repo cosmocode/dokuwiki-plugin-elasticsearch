@@ -167,9 +167,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $logs = $txt;
         }
         foreach($logs as $entry) {
-            if (is_array($entry)) {
-                $this->log($entry);
-            }
             syslog(LOG_ERR, $entry);
         }
     }
