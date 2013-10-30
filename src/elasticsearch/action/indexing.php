@@ -121,7 +121,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         // check if the document still exists to update it or add it as a new one
         try {
             $document = $type->getDocument($documentId);
-            $client->addDocuments($documentId, array('doc' => $data), $index->getName(), $type->getName());
+            $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
         } catch (\Elastica\Exception\NotFoundException $e) {
             $document = new \Elastica\Document($documentId, $data);
             $type->addDocument($document);
