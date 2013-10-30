@@ -19,4 +19,5 @@ require_once(DOKU_INC.'inc/common.php');
 require_once(DOKU_INC.'inc/search.php');
 require_once(DOKU_INC.'inc/pageutils.php');
 require_once DOKU_INC.'inc/cliopts.php';
-//require_once(dirname(__FILE__).'/action/indexing.php');
+require_once(dirname(__FILE__).'/action/indexing.php');
+require_once(dirname(__FILE__).'/Pageinfo.php');
