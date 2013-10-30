@@ -44,11 +44,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         global $ID;
 
         $logs = array();
-        $logs[] = 'BEGIN';
+        $logs[] = 'BEGIN page add';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
-        $logs[] = 'END';
+        $logs[] = 'END page add';
         $this->log($logs);
         if ($this->needs_indexing($ID)) {
             $this->index_page($ID);
@@ -58,13 +58,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
         global $ID;
         $logs = array();
-        $logs[] = 'BEGIN';
+        $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
         $logs[] = metaFN('lib_images_smileys_plus.gif','.elasticsearch_indexed');
         $logs[] = wikiFN('lib_images_smileys_plus.gif');
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
-        $logs[] = 'END';
+        $logs[] = 'END content display';
         $this->log($logs);
         if ($this->getConf('elasticsearch_indexondisplay')) {
             if ($this->needs_indexing($ID)) {
