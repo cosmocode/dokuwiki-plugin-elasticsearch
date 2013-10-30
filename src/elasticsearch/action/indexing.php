@@ -47,7 +47,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = 'BEGIN page add';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
-        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
+        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END page add';
         $this->log($logs);
         if ($this->needs_indexing($ID)) {
@@ -61,7 +61,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
-        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'index still exists';
+        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END content display';
         $this->log($logs);
         if ($this->getConf('elasticsearch_indexondisplay')) {
