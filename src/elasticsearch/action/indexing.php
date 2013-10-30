@@ -140,8 +140,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['title'] = $meta['title'];
         $data['abstract'] = $meta['description']['abstract'];
         $data['content'] = rawWiki($id);
-        $data['language'] = substr($id, 0, 3) == 'en:' ? 'en' : 'de';
-        $data['namespace'] = $this->getNamespace($id);
+        $data['namespace'] = getNS($id);
+        $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
 
         //@TODO groupnames for file must be indexed also
         //@TODO namespace must be added (wo/ language!)
