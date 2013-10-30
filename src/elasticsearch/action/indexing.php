@@ -231,7 +231,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         } while(1); //this should never loop endless
         $groups = array();
         foreach($perms as $group => $permission) {
-            $groups[] = sprintf("%s = %s", $group, $permission);
+            if ($permission > AUTH_NONE) {
+                $groups[] = sprintf("%s = %s", $group, $permission);
+            }
         }
         $this->log($groups);
     }
