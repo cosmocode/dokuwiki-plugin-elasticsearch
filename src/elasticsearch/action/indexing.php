@@ -56,11 +56,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
-        global $ID;
+        global $ID, $INFO;
         $logs = array();
         $logs[] = 'BEGIN content display';
         $logs[] = metaFN($ID,'.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
+        $logs[] = wikiFN($INFO['id']);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END content display';
         $this->log($logs);
