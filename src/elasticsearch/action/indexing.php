@@ -171,16 +171,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
     }
 
-    private function getNamespace($id) {
-        $parts = explode(':', $id);
-        // ignore 1st part if it indicates language 'en'
-        if ($parts[0] = 'en' && isset($parts[1])) {
-            return $parts[1];
-        } else {
-            return $parts[0];
-        }
-    }
-
     private function getPageACL($id) {
         global $AUTH_ACL;
         global $conf;
