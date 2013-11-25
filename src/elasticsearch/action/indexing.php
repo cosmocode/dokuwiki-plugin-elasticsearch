@@ -128,6 +128,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $type   = $index->getType($documentType);
         $documentId = $documentType . '_' . $id;
 
+        // @TODO check if content is empty, that means the page is deleted and
+        //       has to be removed from the index.
+
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', true);
 
