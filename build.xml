@@ -26,18 +26,24 @@
         <mkdir dir="${project.basedir}/build/phpdox"/>
     </target>
 
-    <target name="lint" description="Perform syntax check of sourcecode files">
-        <apply executable="php" failonerror="true">
-            <arg value="-l" />
-
-            <fileset dir="${project.basedir}/src">
-                <include name="**/*.php" />
+    <target name="lint">
+        <phplint haltonfailure="true">
+            <fileset dir="src/elasticsearch/action">
+                <include name="**/*.php"/>
             </fileset>
-
-            <fileset dir="${project.basedir}/tests">
-                <include name="**/*.php" />
+            <fileset dir="src/elasticsearch/conf">
+                <include name="**/*.php"/>
             </fileset>
-        </apply>
+            <fileset dir="src/elasticsearch/lang">
+                <include name="**/*.php"/>
+            </fileset>
+            <fileset dir="src/elasticsearch/helper">
+                <include name="**/*.php"/>
+            </fileset>
+            <fileset dir="src/elasticsearch">
+                <include name="**/*cli*.php"/>
+            </fileset>
+        </phplint>
     </target>
 
     <target name="phploc" description="Measure project size using PHPLOC">
