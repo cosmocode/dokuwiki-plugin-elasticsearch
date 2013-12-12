@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 $constants = array( 'DOKU_INC', 'DOKU_PLUGIN', 'DOKU_CONF', 'DOKU_E_LEVEL',

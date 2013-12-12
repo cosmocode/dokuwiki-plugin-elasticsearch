@@ -108,6 +108,8 @@
         <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
              host="${app.host}" display="true"
              command="cd ${app.destdir} &amp;&amp; https_proxy=http://http.proxy.kiebackpeter.kup:3128/ http_proxy=http://http.proxy.kiebackpeter.kup:3128/ composer -v update" />
-
+        <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
+             host="${app.host}" display="true"
+             command="chmod +x ${app.destdir}/index-cli.php" />
     </target>
 </project>
