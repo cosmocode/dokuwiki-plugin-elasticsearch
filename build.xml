@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="testnet" default="build" basedir="./">
+
+    <property file="build.properties" />
+
     <target name="build" depends="prepare,lint,composer,phploc,pdepend,phpcpd"/>
 
     <target name="clean" description="Cleanup build artifacts">
@@ -82,5 +85,21 @@
         <exec executable="composer">
             <arg value="update" />
         </exec>
+    </target>
+
+    <target name="deploy-prod" description="deploys the app into production">
+        <scp username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
+             host="${app.host}" todir="${app.destdir}" level="debug">
+            <fileset dir="src/elasticsearch">
+                <include name="**/*"/>
+            </fileset>
+        </scp>
+        <scp username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
+             host="${app.host}" todir="${app.destdir}" level="debug" file="composer.json">
+        </scp>
+        <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
+             host="${app.host}" display="true" failonerror="true"
+             command="cd ${app.destdir} &amp;&amp; composer update" />
+
     </target>
 </project>
