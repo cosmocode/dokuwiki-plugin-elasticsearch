@@ -106,7 +106,7 @@
              host="${app.host}" todir="${app.destdir}" level="debug" file="composer.json">
         </scp>
         <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
-             host="${app.host}" display="true" failonerror="true"
+             host="${app.host}" display="true"
              command="cd ${app.destdir} &amp;&amp; composer -v update" />
 
     </target>
