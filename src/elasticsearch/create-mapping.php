@@ -12,5 +12,10 @@ $index  = $client->getIndex($indexName);
 $type   = $index->getType($documentType);
 $mapping = new \Elastica\Type\Mapping();
 $mapping->setType($type);
-$mapping->setProperties(array( ));
+$mapping->setProperties(array(
+    'uri' => array(
+        'type' => 'string'
+    )
+));
 $mapping->send();
+
