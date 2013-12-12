@@ -63,20 +63,14 @@
         </exec>
     </target>
 
-    <target name="phpmd"
-            description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
-        <exec executable="phpmd">
-            <arg path="${project.basedir}/src" />
-            <arg value="text" />
-            <arg value="${project.basedir}/build/phpmd.xml" />
-        </exec>
+    <target name="phpmd">
+    <exec command="phpmd src/elasticsearcg xml cleancode,codesize,controversial,design,naming --reportfile build/logs/pmd.xml --exclude */vendor/*" />
     </target>
 
     <target name="phpcs"
             description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
         <exec executable="phpcs">
             <arg value="--standard=${project.basedir}/build/phpcs.xml" />
-            <arg value="--ignore=vendor/" />
             <arg path="src/elasticsearch" />
         </exec>
     </target>
