@@ -76,7 +76,8 @@
             description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
         <exec executable="phpcs">
             <arg value="--standard=${project.basedir}/build/phpcs.xml" />
-            <arg path="${project.basedir}/src" />
+            <arg value="--ignore=vendor/" />
+            <arg path="src/elasticsearch" />
         </exec>
     </target>
 
