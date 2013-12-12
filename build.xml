@@ -107,7 +107,7 @@
         </scp>
         <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
              host="${app.host}" display="true" failonerror="true"
-             command="cd ${app.destdir} &amp;&amp; composer update" />
+             command="cd ${app.destdir} &amp;&amp; composer -v update" />
 
     </target>
 </project>
