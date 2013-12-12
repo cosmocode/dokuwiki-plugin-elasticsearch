@@ -107,7 +107,7 @@
         </scp>
         <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
              host="${app.host}" display="true"
-             command="cd ${app.destdir} &amp;&amp; composer -v update" />
+             command="cd ${app.destdir} &amp;&amp; https_proxy=http://http.proxy.kiebackpeter.kup:3128/ http_proxy=http://http.proxy.kiebackpeter.kup:3128/ composer -v update" />
 
     </target>
 </project>
