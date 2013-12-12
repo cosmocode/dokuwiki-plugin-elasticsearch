@@ -64,7 +64,7 @@
     </target>
 
     <target name="phpmd">
-        <exec command="phpmd src/elasticsearcg xml cleancode,codesize,controversial,design,naming --reportfile build/logs/pmd.xml --exclude */vendor/*" />
+        <exec command="phpmd src/elasticsearch xml cleancode,codesize,controversial,design,naming --reportfile build/logs/pmd.xml --exclude */vendor/*" />
     </target>
 
     <target name="phpcs"
