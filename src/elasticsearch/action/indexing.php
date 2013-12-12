@@ -135,15 +135,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $meta = p_get_metadata($id, '', true);
 
         $data = array();
-        $data['created'] = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
-        $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
-        $data['creator'] = $meta['creator'];
-        $data['title'] = $meta['title'];
-        $data['abstract'] = $meta['description']['abstract'];
-        $data['content'] = rawWiki($id);
+        $data['uri']       = $id;
+        $data['created']   = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
+        $data['modified']  = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
+        $data['creator']   = $meta['creator'];
+        $data['title']     = $meta['title'];
+        $data['abstract']  = $meta['description']['abstract'];
+        $data['content']   = rawWiki($id);
         $data['namespace'] = getNS($id);
-        $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
-        $data['groups'] = $this->getPageACL($id);
+        $data['language']  = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
+        $data['groups']    = $this->getPageACL($id);
 
         $this->getPageACL($id);
 
