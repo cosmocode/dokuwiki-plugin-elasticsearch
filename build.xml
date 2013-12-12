@@ -64,22 +64,23 @@
     </target>
 
     <target name="phpmd">
-    <exec command="phpmd src/elasticsearcg xml cleancode,codesize,controversial,design,naming --reportfile build/logs/pmd.xml --exclude */vendor/*" />
+        <exec command="phpmd src/elasticsearcg xml cleancode,codesize,controversial,design,naming --reportfile build/logs/pmd.xml --exclude */vendor/*" />
     </target>
 
     <target name="phpcs"
             description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
-        <exec executable="phpcs">
-            <arg value="--standard=${project.basedir}/build/phpcs.xml" />
+        <exec logoutput="true" executable="phpcs" >
+            <arg value="--report=checkstyle" />
+            <arg value="--report-file=${project.basedir}/build/logs/checkstyle.xml" />
+            <arg value="--standard=PSR2" />
             <arg path="src/elasticsearch" />
         </exec>
     </target>
 
     <target name="phpcpd" description="Find duplicate code using PHPCPD">
         <exec executable="phpcpd">
-            <arg value="--log-pmd" />
-            <arg value="${project.basedir}/build/logs/pmd-cpd.xml" />
-            <arg path="${project.basedir}/src" />
+            <arg value="--log-pmd=build/logs/pmd-cpd.xml" />
+            <arg path="src/elasticsearch" />
         </exec>
     </target>
 
