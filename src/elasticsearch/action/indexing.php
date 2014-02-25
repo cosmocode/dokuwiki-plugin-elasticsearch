@@ -151,7 +151,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
         $mainnamespace .= ':start';
         $metadata_ns = p_get_metadata($mainnamespace, '', true);
-        $data['namespace'] = str_replace('*', '',$metadata_ns['title']);
+        $data['namespace'] = $metadata_ns['title'];
+        $data['namespace'] = str_repeat('*', '', $data['namespace']);
 
         $data['groups']    = $this->getPageACL($id);
 
