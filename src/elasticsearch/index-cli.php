@@ -25,7 +25,7 @@ require_once(dirname(__FILE__).'/action/indexing.php');
 function index_all_pages(){
     global $conf, $ID;
     $data = array();
-    search($data,$conf['datadir'], 'search_allpages', array('skipacl'));
+    search($data,$conf['datadir'], 'search_allpages', array('skipacl' => true));
 
     foreach($data as $val) {
         $ID = $val['id'];
