@@ -63,6 +63,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = wikiFN($ID);
         $logs[] = wikiFN($INFO['id']);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
+        $logs[] = $ID;
+        $meta = p_get_metadata(getNS("msk"), '', true);
+        foreach ($meta as $k => $v) {
+            $logs[] = sprintf("%s = %s", $k, $v);
+        }
         $logs[] = 'END content display';
         $this->log($logs);
         if ($this->getConf('elasticsearch_indexondisplay')) {
@@ -142,8 +147,17 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['title']     = $meta['title'];
         $data['abstract']  = $meta['description']['abstract'];
         $data['content']   = rawWiki($id);
-        $data['namespace'] = getNS($id);
         $data['language']  = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
+        $data['namespace'] = getNS($id);
+        $namespace_part = explode(':', getNS($id));
+        $mainnamespace = $namespace_part[0];
+        if ($mainnamespace === 'en') {
+            $mainnamespace = $namespace_part[1];
+        }
+        $mainnamespace .= ':start';
+        $metadata_ns = p_get_metadata($mainnamespace, '', true);
+        $data['namespace'] = $metadata_ns['title'];
+
         $data['groups']    = $this->getPageACL($id);
 
         $this->getPageACL($id);
