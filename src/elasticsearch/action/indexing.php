@@ -143,14 +143,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['abstract']  = $meta['description']['abstract'];
         $data['content']   = rawWiki($id);
         $data['language']  = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
-        $data['namespace'] = getNS($id);
-        $namespace_part = explode(':', getNS($id));
-        $mainnamespace = $namespace_part[0];
-        if ($mainnamespace === 'en') {
-            $mainnamespace = $namespace_part[1];
-        }
-        $mainnamespace .= ':start';
-        $metadata_ns = p_get_metadata($mainnamespace, '', true);
+        $metadata_ns = p_get_metadata(getNS($id), '', true);
         $data['namespace'] = $metadata_ns['title'];
         $data['namespace'] = str_replace('*', '', $data['namespace']);
 
@@ -242,4 +235,3 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         return $groups;
     }
 }
-
