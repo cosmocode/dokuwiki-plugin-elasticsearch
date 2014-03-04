@@ -147,6 +147,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if (!isset($metadata_ns['title'])) {
             $metadata_ns = p_get_metadata(noNS($id).':start', '', true);
         }
+        $metadata_ns['title'] = p_get_first_heading($id, METADATA_DONT_RENDER);
         $data['namespace'] = $metadata_ns['title'];
         $data['namespace'] = str_replace('*', '', $data['namespace']);
 
