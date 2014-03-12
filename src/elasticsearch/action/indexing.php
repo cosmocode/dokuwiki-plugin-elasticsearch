@@ -143,11 +143,14 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['abstract']  = $meta['description']['abstract'];
         $data['content']   = rawWiki($id);
         $data['language']  = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
-        $metadata_ns = p_get_metadata(noNS($id), '', true);
-        if (!isset($metadata_ns['title'])) {
-            $metadata_ns = p_get_metadata(noNS($id).':start', '', true);
+
+        // fetching the namespace's title
+        $ids = explode(':', $id);
+        if ('en' == $ids[0]) {
+            $metadata_ns = p_get_metadata($ids[0].':' . $ids[1] . ':start', '', true);
+        } else {
+            $metadata_ns = p_get_metadata($ids[0].':start', '', true);
         }
-        $metadata_ns['title'] = p_get_first_heading($id, METADATA_DONT_RENDER);
         $data['namespace'] = $metadata_ns['title'];
         $data['namespace'] = str_replace('*', '', $data['namespace']);
         if (trim($data['namespace']) == '') {
