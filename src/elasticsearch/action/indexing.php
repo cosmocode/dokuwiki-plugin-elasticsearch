@@ -157,20 +157,23 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             unset($data['namespace']);
         }
 
-        $data['groups']    = $this->getPageACL($id);
+        // only index if we've found a namespace
+        if (isset($data['namespace'])) {
+            $data['groups']    = $this->getPageACL($id);
 
-        $this->getPageACL($id);
+            $this->getPageACL($id);
 
-        // check if the document still exists to update it or add it as a new one
-        try {
-            $document = $type->getDocument($documentId);
-            $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
-        } catch (\Elastica\Exception\NotFoundException $e) {
-            $document = new \Elastica\Document($documentId, $data);
-            $type->addDocument($document);
+            // check if the document still exists to update it or add it as a new one
+            try {
+                $document = $type->getDocument($documentId);
+                $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
+            } catch (\Elastica\Exception\NotFoundException $e) {
+                $document = new \Elastica\Document($documentId, $data);
+                $type->addDocument($document);
+            }
+            $index->refresh();
+            $this->update_indexstate($id);
         }
-        $index->refresh();
-        $this->update_indexstate($id);
     }
 
     private function log($txt) {
