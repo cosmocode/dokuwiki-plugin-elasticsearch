@@ -15,6 +15,11 @@ $mapping->setType($type);
 $mapping->setProperties(array(
     'uri' => array(
         'type' => 'string'
+    ),
+    'namespace' => array(
+        'type' => 'string',
+        'index' => 'not_analyzed',
+        'store' => 'yes'
     )
 ));
 $mapping->send();
