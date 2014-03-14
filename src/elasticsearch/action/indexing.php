@@ -87,6 +87,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if (!file_exists($dataFile)) {
             return false;
         }
+
+        // force indexing if we're called via cli (e.g. cron)
+        if (php_sapi_name() == 'cli') {
+            return true;
+        }
         // check if latest indexing attempt is done after page update
         if (file_exists($indexStateFile)) {
             if (filemtime($indexStateFile) > filemtime($dataFile)) {
