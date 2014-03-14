@@ -107,5 +107,8 @@
         <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
              host="${app.host}" display="true"
              command="chmod +x ${app.destdir}/index-cli.php" />
+        <ssh username="${app.user}" pubkeyfile="/home/jenkins/.ssh/id_rsa.pub" privkeyfile="/home/jenkins/.ssh/id_rsa"
+             host="${app.host}" display="true"
+             command="chmod +x ${app.destdir}/list-pages.php" />
     </target>
 </project>
