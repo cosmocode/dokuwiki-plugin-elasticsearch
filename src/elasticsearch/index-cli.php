@@ -26,9 +26,12 @@ function index_all_pages(){
     global $conf, $ID;
     $data = array();
     search($data,$conf['datadir'], 'search_allpages', array('skipacl' => true));
-
+    $pages = count($data);
+    $n = 0;
     foreach($data as $val) {
         $ID = $val['id'];
+        $n++;
+        printf("Indexing page %s (%d of %d)\n", $ID, $n, $pages);
         trigger_event(TPL_CONTENT_DISPLAY, $val['id']);
         sleep(1);
     }
