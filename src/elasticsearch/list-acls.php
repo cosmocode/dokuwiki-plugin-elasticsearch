@@ -78,7 +78,7 @@ function getPageACL($id) {
     foreach($perms as $group => $permission) {
         if ($permission > AUTH_NONE) {
             $groups[] = str_replace('-', '', str_replace('@', '', strtolower(urldecode($group))));
-            $this->log(sprintf("%s = %s", $group, $permission));
+            printf("%s = %s\n", $group, $permission);
         }
     }
     return $groups;

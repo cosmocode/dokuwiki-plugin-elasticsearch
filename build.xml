@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="testnet" default="build" basedir="./">
+<project name="Dokuwiki Elasticsearch plugin" default="build" basedir="./">
 
     <property file="build.properties" />
 
