@@ -62,8 +62,6 @@ function getPageACL($id) {
 
         //get next higher namespace
         $ns   = getNS($ns);
-        //get next higher namespace
-        $ns   = getNS($ns);
 
         if($path != '\*'){
             $path = $ns.':\*';

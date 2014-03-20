@@ -231,8 +231,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
             //get next higher namespace
             $ns   = getNS($ns);
-            //get next higher namespace
-            $ns   = getNS($ns);
 
             if($path != '\*'){
                 $path = $ns.':\*';
