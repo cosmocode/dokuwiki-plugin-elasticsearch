@@ -72,7 +72,7 @@ function getPageACL($id) {
             break;
         }
     } while(1); //this should never loop endless
-    $groups = array();
+    $groups = array(str_replace('-', '', str_replace('@', '', strtolower(urldecode($conf['superuser'])))));
     foreach($perms as $group => $permission) {
         if ($permission > AUTH_NONE) {
             $groups[] = str_replace('-', '', str_replace('@', '', strtolower(urldecode($group))));
