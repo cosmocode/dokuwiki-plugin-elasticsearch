@@ -27,8 +27,7 @@ class helper_plugin_elasticsearch_searching extends DokuWiki_Plugin {
                 ),
                 'return' => array('pages' => 'array')
             ),
-            array(
-                // and more supported methods...
+            array(// and more supported methods...
             )
         );
     }

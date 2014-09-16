@@ -26,16 +26,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     public function register(Doku_Event_Handler &$controller) {
 
-       $controller->register_hook('INDEXER_PAGE_ADD', 'BEFORE', $this, 'handle_indexer_page_add');
-       $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
-   
+        $controller->register_hook('INDEXER_PAGE_ADD', 'BEFORE', $this, 'handle_indexer_page_add');
+        $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
+
     }
 
     /**
      * [Custom event handler which performs action]
      *
-     * @param Doku_Event $event  event object by reference
-     * @param mixed      $param  [the parameters passed as fifth argument to register_hook() when this
+     * @param Doku_Event $event event object by reference
+     * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
      *                           handler was registered]
      * @return void
      */
@@ -43,35 +43,34 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     public function handle_indexer_page_add(Doku_Event &$event, $param) {
         global $ID;
 
-        $logs = array();
+        $logs   = array();
         $logs[] = 'BEGIN page add';
-        $logs[] = metaFN($ID,'.elasticsearch_indexed');
+        $logs[] = metaFN($ID, '.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END page add';
         $this->log($logs);
-        if ($this->needs_indexing($ID)) {
+        if($this->needs_indexing($ID)) {
             $this->index_page($ID);
         }
     }
 
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
         global $ID, $INFO;
-        $logs = array();
+        $logs   = array();
         $logs[] = 'BEGIN content display';
-        $logs[] = metaFN($ID,'.elasticsearch_indexed');
+        $logs[] = metaFN($ID, '.elasticsearch_indexed');
         $logs[] = wikiFN($ID);
         $logs[] = wikiFN($INFO['id']);
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END content display';
         $this->log($logs);
-        if ($this->getConf('elasticsearch_indexondisplay')) {
-            if ($this->needs_indexing($ID)) {
+        if($this->getConf('elasticsearch_indexondisplay')) {
+            if($this->needs_indexing($ID)) {
                 $this->index_page($ID);
             }
         }
     }
-
 
     /**
      * Check if the page $id has changed since the last indexing.
@@ -81,20 +80,20 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     private function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
-        $dataFile = wikiFN($id);
+        $dataFile       = wikiFN($id);
 
         // no data file -> no indexing
-        if (!file_exists($dataFile)) {
+        if(!file_exists($dataFile)) {
             return false;
         }
 
         // force indexing if we're called via cli (e.g. cron)
-        if (php_sapi_name() == 'cli') {
+        if(php_sapi_name() == 'cli') {
             return true;
         }
         // check if latest indexing attempt is done after page update
-        if (file_exists($indexStateFile)) {
-            if (filemtime($indexStateFile) > filemtime($dataFile)) {
+        if(file_exists($indexStateFile)) {
+            if(filemtime($indexStateFile) > filemtime($dataFile)) {
                 return false;
             }
         }
@@ -111,8 +110,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return \Elastica\Client
      */
     private function getElasticaClient() {
-        if (is_null($this->elasticaClient)) {
-            $dsn = $this->getConf('elasticsearch_dsn');
+        if(is_null($this->elasticaClient)) {
+            $dsn                  = $this->getConf('elasticsearch_dsn');
             $this->elasticaClient = new \Elastica\Client($dsn);
         }
         return $this->elasticaClient;
@@ -126,12 +125,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     private function index_page($id) {
         $this->log('Indexing page ' . $id);
-        $indexName = $this->getConf('elasticsearch_indexname');
+        $indexName    = $this->getConf('elasticsearch_indexname');
         $documentType = $this->getConf('elasticsearch_documenttype');
-        $client = $this->getElasticaClient();
-        $index  = $client->getIndex($indexName);
-        $type   = $index->getType($documentType);
-        $documentId = $documentType . '_' . $id;
+        $client       = $this->getElasticaClient();
+        $index        = $client->getIndex($indexName);
+        $type         = $index->getType($documentType);
+        $documentId   = $documentType . '_' . $id;
 
         // @TODO check if content is empty, that means the page is deleted and
         //       has to be removed from the index.
@@ -139,39 +138,38 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', true);
 
-        $data = array();
-        $data['uri']       = $id;
-        $data['created']   = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
-        $data['modified']  = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
-        $data['creator']   = $meta['creator'];
-        $data['title']     = $meta['title'];
-        $data['abstract']  = $meta['description']['abstract'];
-        $data['content']   = rawWiki($id);
-        $data['language']  = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
+        $data             = array();
+        $data['uri']      = $id;
+        $data['created']  = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
+        $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
+        $data['creator']  = $meta['creator'];
+        $data['title']    = $meta['title'];
+        $data['abstract'] = $meta['description']['abstract'];
+        $data['content']  = rawWiki($id);
+        $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
 
         // fetching the namespace's title
         $ids = explode(':', $id);
-        if ('en' == $ids[0]) {
-            $metadata_ns = p_get_metadata($ids[0].':' . $ids[1] . ':start', '', true);
+        if('en' == $ids[0]) {
+            $metadata_ns = p_get_metadata($ids[0] . ':' . $ids[1] . ':start', '', true);
         } else {
-            $metadata_ns = p_get_metadata($ids[0].':start', '', true);
+            $metadata_ns = p_get_metadata($ids[0] . ':start', '', true);
         }
         $data['namespace'] = $metadata_ns['title'];
         $data['namespace'] = str_replace('*', '', $data['namespace']);
-        if (trim($data['namespace']) == '') {
+        if(trim($data['namespace']) == '') {
             unset($data['namespace']);
         }
 
         // only index if we've found a namespace
-        if (isset($data['namespace'])) {
-            $data['groups']    = $this->getPageACL($id);
-
+        if(isset($data['namespace'])) {
+            $data['groups'] = $this->getPageACL($id);
 
             // check if the document still exists to update it or add it as a new one
             try {
                 $document = $type->getDocument($documentId);
                 $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
-            } catch (\Elastica\Exception\NotFoundException $e) {
+            } catch(\Elastica\Exception\NotFoundException $e) {
                 $document = new \Elastica\Document($documentId, $data);
                 $type->addDocument($document);
             }
@@ -181,10 +179,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     private function log($txt) {
-        if (!$this->getConf('elasticsearch_debug')) {
+        if(!$this->getConf('elasticsearch_debug')) {
             return;
         }
-        if (!is_array($txt)) {
+        if(!is_array($txt)) {
             $logs = array($txt);
         } else {
             $logs = $txt;
@@ -198,43 +196,43 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         global $AUTH_ACL;
         global $conf;
 
-        $id = cleanID($id);
-        $ns = getNS($id);
+        $id    = cleanID($id);
+        $ns    = getNS($id);
         $perms = array();
 
-        $matches = preg_grep('/^'.preg_quote($id,'/').'\s+/',$AUTH_ACL);
-        if(count($matches)){
-            foreach($matches as $match){
-                $match = preg_replace('/#.*$/','',$match); //ignore comments
-                $acl   = preg_split('/\s+/',$match);
+        $matches = preg_grep('/^' . preg_quote($id, '/') . '\s+/', $AUTH_ACL);
+        if(count($matches)) {
+            foreach($matches as $match) {
+                $match = preg_replace('/#.*$/', '', $match); //ignore comments
+                $acl   = preg_split('/\s+/', $match);
                 if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
                 if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
             }
         }
         //still here? do the namespace checks
-        if($ns){
-            $path = $ns.':\*';
-        }else{
+        if($ns) {
+            $path = $ns . ':\*';
+        } else {
             $path = '\*'; //root document
         }
-        do{
-            $matches = preg_grep('/^'.$path.'\s+/',$AUTH_ACL);
-            if(count($matches)){
-                foreach($matches as $match){
-                    $match = preg_replace('/#.*$/','',$match); //ignore comments
-                    $acl   = preg_split('/\s+/',$match);
+        do {
+            $matches = preg_grep('/^' . $path . '\s+/', $AUTH_ACL);
+            if(count($matches)) {
+                foreach($matches as $match) {
+                    $match = preg_replace('/#.*$/', '', $match); //ignore comments
+                    $acl   = preg_split('/\s+/', $match);
                     if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
                     if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
                 }
             }
 
             //get next higher namespace
-            $ns   = getNS($ns);
+            $ns = getNS($ns);
 
-            if($path != '\*'){
-                $path = $ns.':\*';
+            if($path != '\*') {
+                $path = $ns . ':\*';
                 if($path == ':\*') $path = '\*';
-            }else{
+            } else {
                 //we did this already
                 //break here
                 break;
@@ -242,7 +240,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         } while(1); //this should never loop endless
         $groups = array(str_replace('-', '', str_replace('@', '', strtolower(urldecode($conf['superuser'])))));
         foreach($perms as $group => $permission) {
-            if ($permission > AUTH_NONE) {
+            if($permission > AUTH_NONE) {
                 $groups[] = str_replace('-', '', str_replace('@', '', strtolower(urldecode($group))));
                 $this->log(sprintf("%s = %s", $group, $permission));
             }
