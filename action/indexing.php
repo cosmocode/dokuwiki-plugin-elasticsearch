@@ -9,14 +9,7 @@
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
 
-require_once dirname(__FILE__) . '/../vendor/autoload.php';
-
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
-
-    /**
-     * @var \Elastica\Client $elasticaClient
-     */
-    private $elasticaClient;
 
     /**
      * Registers a callback function for a given event
@@ -39,7 +32,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      *                           handler was registered]
      * @return void
      */
-
     public function handle_indexer_page_add(Doku_Event &$event, $param) {
         global $ID;
 
@@ -55,6 +47,14 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
     }
 
+    /**
+     * [Custom event handler which performs action]
+     *
+     * @param Doku_Event $event event object by reference
+     * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
+     *                           handler was registered]
+     * @return void
+     */
     public function handle_tpl_content_display(Doku_Event &$event, $param) {
         global $ID, $INFO;
         $logs   = array();
@@ -75,7 +75,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * Check if the page $id has changed since the last indexing.
      *
-     * @param $id
+     * @param string $id
      * @return boolean
      */
     private function needs_indexing($id) {
@@ -100,21 +100,15 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         return true;
     }
 
+    /**
+     * Save indexed state for a page
+     *
+     * @param string $id
+     * @return int
+     */
     private function update_indexstate($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         return file_put_contents($indexStateFile, '');
-    }
-
-    /**
-     * Returns the object and creates if needed beforehand
-     * @return \Elastica\Client
-     */
-    private function getElasticaClient() {
-        if(is_null($this->elasticaClient)) {
-            $dsn                  = $this->getConf('elasticsearch_dsn');
-            $this->elasticaClient = new \Elastica\Client($dsn);
-        }
-        return $this->elasticaClient;
     }
 
     /**
@@ -124,10 +118,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return void
      */
     private function index_page($id) {
+        /** @var helper_plugin_elasticsearch_client $hlp */
+        $hlp = plugin_load('helper', 'elasticsearch_client');
+
         $this->log('Indexing page ' . $id);
         $indexName    = $this->getConf('indexname');
         $documentType = $this->getConf('documenttype');
-        $client       = $this->getElasticaClient();
+        $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
         $documentId   = $documentType . '_' . $id;
@@ -150,7 +147,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
         // fetching the namespace's title
         $ids = explode(':', $id);
-        if('en' == $ids[0]) {
+        if('en' == $ids[0]) { // FIXME add proper translation plugin support
             $metadata_ns = p_get_metadata($ids[0] . ':' . $ids[1] . ':start', '', true);
         } else {
             $metadata_ns = p_get_metadata($ids[0] . ':start', '', true);
@@ -178,8 +175,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
     }
 
+    /**
+     * Log something to the debug log
+     *
+     * @param string $txt
+     */
     private function log($txt) {
-        if(!$this->getConf('elasticsearch_debug')) {
+        if(!$this->getConf('debug')) {
             return;
         }
         if(!is_array($txt)) {
@@ -188,10 +190,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $logs = $txt;
         }
         foreach($logs as $entry) {
-            syslog(LOG_ERR, $entry);
+            dbglog($entry);
         }
     }
 
+    /**
+     * Lists all groups that have at least read permissions on the given page
+     *
+     * @param $id
+     * @return array
+     */
     private function getPageACL($id) {
         global $AUTH_ACL;
         global $conf;
