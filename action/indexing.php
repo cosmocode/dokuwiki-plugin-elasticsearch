@@ -125,8 +125,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     private function index_page($id) {
         $this->log('Indexing page ' . $id);
-        $indexName    = $this->getConf('elasticsearch_indexname');
-        $documentType = $this->getConf('elasticsearch_documenttype');
+        $indexName    = $this->getConf('indexname');
+        $documentType = $this->getConf('documenttype');
         $client       = $this->getElasticaClient();
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
