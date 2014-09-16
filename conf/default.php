@@ -5,17 +5,12 @@
  * @author Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-//$conf['fixme']    = 'FIXME';
-
-$conf['elasticsearch_dsn'] = array(
-    'servers' => array(
-        array('host' => 'elasticsearch-1.kiebackpeter.kup', 'port' => 80, 'proxy' => ''),
-        array('host' => 'elasticsearch-2.kiebackpeter.kup', 'port' => 80, 'proxy' => '')
-    )
-);
-
+$conf['servers'] = '
+    elasticsearch-1.kiebackpeter.kup:80
+    elasticsearch-2.kiebackpeter.kup:80
+';
 $conf['indexname']      = 'test';
 $conf['documenttype']   = 'wikipage';
-$conf['indexondisplay'] = true;
-$conf['debug']          = true;
+$conf['indexondisplay'] = 1;
+$conf['debug']          = 1;
 
