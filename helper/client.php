@@ -44,6 +44,19 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     }
 
     /**
+     * Create the index
+     *
+     * @param bool $clear rebuild index
+     * @return \Elastica\Response
+     */
+    public function createIndex($clear=false) {
+        $client = $this->connect();
+        $index = $client->getIndex($this->getConf('indexname'));
+        $response = $index->create(array(), $clear);
+        return $response;
+    }
+
+    /**
      * Create the field mapping
      *
      * @return \Elastica\Response
@@ -70,6 +83,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         $response = $mapping->send();
         return $response;
     }
+
 
 }
 

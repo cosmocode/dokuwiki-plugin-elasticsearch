@@ -117,7 +117,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param $id
      * @return void
      */
-    private function index_page($id) {
+    public function index_page($id) {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
 
