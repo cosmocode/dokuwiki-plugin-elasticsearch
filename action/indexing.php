@@ -18,33 +18,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return void
      */
     public function register(Doku_Event_Handler &$controller) {
-
-        $controller->register_hook('INDEXER_PAGE_ADD', 'BEFORE', $this, 'handle_indexer_page_add');
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
-
-    }
-
-    /**
-     * [Custom event handler which performs action]
-     *
-     * @param Doku_Event $event event object by reference
-     * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
-     *                           handler was registered]
-     * @return void
-     */
-    public function handle_indexer_page_add(Doku_Event &$event, $param) {
-        global $ID;
-
-        $logs   = array();
-        $logs[] = 'BEGIN page add';
-        $logs[] = metaFN($ID, '.elasticsearch_indexed');
-        $logs[] = wikiFN($ID);
-        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
-        $logs[] = 'END page add';
-        $this->log($logs);
-        if($this->needs_indexing($ID)) {
-            $this->index_page($ID);
-        }
     }
 
     /**
@@ -65,10 +39,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
         $logs[] = 'END content display';
         $this->log($logs);
-        if($this->getConf('elasticsearch_indexondisplay')) {
-            if($this->needs_indexing($ID)) {
-                $this->index_page($ID);
-            }
+        if($this->needs_indexing($ID)) {
+            $this->index_page($ID);
         }
     }
 
