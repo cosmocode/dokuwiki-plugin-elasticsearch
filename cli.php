@@ -1,8 +1,15 @@
 #!/usr/bin/php
 <?php
+/**
+ * DokuWiki Plugin elasticsearch (CLI Component)
+ *
+ * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * @author  Andreas Gohr <gohr@cosmocode.de>
+ */
+
 if(!defined('DOKU_INC')) define('DOKU_INC', realpath(dirname(__FILE__).'/../../../').'/');
 require_once(DOKU_INC.'inc/init.php');
-require_once dirname(__FILE__) . '/vendor/autoload.php';
+
 
 class elasticsearch_cli extends DokuCLI {
 

@@ -8,6 +8,7 @@
 
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
+require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
 
