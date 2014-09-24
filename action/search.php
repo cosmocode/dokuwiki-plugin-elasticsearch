@@ -9,7 +9,7 @@
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
 
-class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
+class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
     /**
      * Registers a callback function for a given event
