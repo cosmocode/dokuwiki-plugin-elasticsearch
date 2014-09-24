@@ -57,6 +57,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
         // no data file -> no indexing
         if(!file_exists($dataFile)) {
+            // page does not exist but has a state file, try to remove from index
+            if(file_exists($indexStateFile)) {
+                $this->delete_page($id);
+            }
             return false;
         }
 
@@ -85,6 +89,32 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Remove the given document from the index
+     *
+     * @param $id
+     */
+    public function delete_page($id) {
+        /** @var helper_plugin_elasticsearch_client $hlp */
+        $hlp = plugin_load('helper', 'elasticsearch_client');
+        $indexName    = $this->getConf('indexname');
+        $documentType = $this->getConf('documenttype');
+        $client       = $hlp->connect();
+        $index        = $client->getIndex($indexName);
+        $type         = $index->getType($documentType);
+        $documentId   = $documentType . '_' . $id;
+
+        try {
+            $type->deleteById($documentId);
+            $index->refresh();
+        } catch (Exception $e) {
+            // we ignore this
+        }
+
+        // delete state file
+        @unlink(metaFN($id, '.elasticsearch_indexed'));
+    }
+
+    /**
      * Index a page
      *
      * @param $id
@@ -103,9 +133,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
         $documentId   = $documentType . '_' . $id;
-
-        // @TODO check if content is empty, that means the page is deleted and
-        //       has to be removed from the index.
 
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', true);
