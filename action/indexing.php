@@ -4,6 +4,7 @@
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
+ * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
 // must be run within Dokuwiki
@@ -90,6 +91,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return void
      */
     public function index_page($id) {
+        global $conf;
+
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
 
@@ -115,11 +118,22 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['title']    = $meta['title'];
         $data['abstract'] = $meta['description']['abstract'];
         $data['content']  = rawWiki($id);
-        $data['language'] = substr(getNS($id), 0, 3) == 'en:' ? 'en' : 'de';
 
-        // fetching the namespace's title
+        /** @var helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if($trans) {
+            // translation plugin available
+            $lc = $trans->getLangPart($id);
+            $data['language'] = $trans->realLC($lc);
+        } else {
+            // no translation plugin
+            $lc = '';
+            $data['language'] = $conf['lang'];
+        }
+
+        // fetching the top namespace's title
         $ids = explode(':', $id);
-        if('en' == $ids[0]) { // FIXME add proper translation plugin support
+        if($lc) {
             $metadata_ns = p_get_metadata($ids[0] . ':' . $ids[1] . ':start', '', true);
         } else {
             $metadata_ns = p_get_metadata($ids[0] . ':start', '', true);
