@@ -69,8 +69,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             )
         );
 
-        $result = $index->search($equery);
-        $this->print_results($result);
+        try {
+            $result = $index->search($equery);
+            $this->print_results($result);
+        } catch (Exception $e) {
+            msg('Something went wrong on searching ('.$e->getMessage().') please try again later or ask an admin for help', -1);
+        }
     }
 
     /**
