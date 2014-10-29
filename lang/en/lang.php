@@ -1,3 +1,4 @@
 <?php
 
-$lang['ns'] = 'Realm:';
+$lang['ns']     = 'Realm:';
+$lang['author'] = 'Author:';

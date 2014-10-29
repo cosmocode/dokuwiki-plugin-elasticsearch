@@ -139,7 +139,14 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             echo '<dt>';
             echo html_wikilink($page);
-            echo ': ' . $row->getScore();
+            echo '<div>';
+            if($row->getSource()['namespace']) {
+                echo '<span class="ns"><b>' . $this->getLang('ns') . '</b> ' . hsc($row->getSource()['namespace']) . '</span><br />';
+            }
+            if($row->getSource()['creator']){
+                echo '<span class="author"><b>' . $this->getLang('author') . '</b> ' . hsc($row->getSource()['creator']) . '</span>';
+            }
+            echo '</div>';
             echo '</dt>';
 
             // snippets
