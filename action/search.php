@@ -69,7 +69,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 "fields"    => array("content" => new \StdClass())
             )
         );
-        $equery->setSize(1000); #FIXME do pagination
+
+        // paginate
+        $equery->setSize($this->getConf('perpage'));
+        $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
 
         $filters = new \Elastica\Filter\BoolAnd();
 
@@ -80,7 +83,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         }
         $groupFilter = new \Elastica\Filter\BoolOr();
         foreach($groups as $group) {
-            $group = str_replace('-', '', strtolower($group));
+            $group  = str_replace('-', '', strtolower($group));
             $filter = new \Elastica\Filter\Term();
             $filter->setTerm('groups', $group);
             $groupFilter->addFilter($filter);
@@ -114,6 +117,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $this->print_intro();
             $this->print_facets($facets['namespace']['terms']);
             $this->print_results($result);
+            $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
         }
@@ -163,7 +167,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             if($row->getSource()['namespace']) {
                 echo '<span class="ns"><b>' . $this->getLang('ns') . '</b> ' . hsc($row->getSource()['namespace']) . '</span><br />';
             }
-            if($row->getSource()['creator']){
+            if($row->getSource()['creator']) {
                 echo '<span class="author"><b>' . $this->getLang('author') . '</b> ' . hsc($row->getSource()['creator']) . '</span>';
             }
             echo '</div>';
@@ -215,6 +219,74 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         echo '</ul>';
         echo '<input type="submit" value="' . $lang['btn_search'] . '" class="button" />';
         echo '</form>';
+    }
+
+    /**
+     * @param \Elastica\ResultSet $result
+     */
+    protected function print_pagination($result) {
+        global $INPUT;
+        global $QUERY;
+
+        $all   = $result->getTotalHits();
+        $pages = ceil($all / $this->getConf('perpage'));
+        $cur   = $INPUT->int('p', 1, true);
+
+        // which pages to show FIXME does this make any sense or am I drunk?
+        $toshow = array(1, 2, $cur, $pages, $pages - 1);
+        if($cur - 1 > 1) $toshow[] = $cur - 1;
+        if($cur + 1 < $pages) $toshow[] = $cur + 1;
+        $toshow = array_unique($toshow);
+        // fill up to seven, if possible
+        if(count($toshow) < 7) {
+            if($cur < 4) {
+                if($cur + 2 < $pages && count($toshow) < 7) $toshow[] = $cur + 2;
+                if($cur + 3 < $pages && count($toshow) < 7) $toshow[] = $cur + 3;
+                if($cur + 4 < $pages && count($toshow) < 7) $toshow[] = $cur + 4;
+            } else {
+                if($cur - 2 > 1 && count($toshow) < 7) $toshow[] = $cur - 2;
+                if($cur - 3 > 1 && count($toshow) < 7) $toshow[] = $cur - 3;
+                if($cur - 4 > 1 && count($toshow) < 7) $toshow[] = $cur - 4;
+            }
+        }
+        sort($toshow);
+        $showlen = count($toshow);
+
+        echo '<ul class="elastic_pagination">';
+        if($cur > 1) {
+            echo '<li class="prev">';
+            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
+            echo '«';
+            echo '</a>';
+            echo '</li>';
+        }
+
+        for($i = 0; $i < $showlen; $i++) {
+            if($toshow[$i] == $cur) {
+                echo '<li class="cur">' . $toshow[$i] . '</li>';
+            } else {
+                echo '<li>';
+                echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => $toshow[$i]))) . '">';
+                echo $toshow[$i];
+                echo '</a>';
+                echo '</li>';
+            }
+
+            // show seperator when a jump follows
+            if(isset($toshow[$i + 1]) && $toshow[$i + 1] - $toshow[$i] > 1) {
+                echo '<li class="sep">…</li>';
+            }
+        }
+
+        if($cur < $pages) {
+            echo '<li class="next">';
+            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
+            echo '»';
+            echo '</a>';
+            echo '</li>';
+        }
+
+        echo '</ul>';
     }
 
 }

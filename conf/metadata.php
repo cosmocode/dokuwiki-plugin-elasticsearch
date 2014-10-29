@@ -8,5 +8,6 @@
 $meta['servers']        = array();
 $meta['indexname']      = array('string');
 $meta['documenttype']   = array('string');
+$meta['perpage']        = array('numeric', '_min'=>1);
 $meta['debug']          = array('onoff');
 
