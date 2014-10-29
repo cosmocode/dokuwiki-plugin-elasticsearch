@@ -82,13 +82,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $equery->setFilter($facetFilter);
         }
 
-
         // add Facets for namespaces
         $facet = new \Elastica\Facet\Terms('namespace');
         $facet->setField('namespace');
         $facet->setSize(25);
         $equery->addFacet($facet);
-
 
         try {
             $result = $index->search($equery);
@@ -97,8 +95,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $this->print_intro();
             $this->print_facets($facets['namespace']['terms']);
             $this->print_results($result);
-        } catch (Exception $e) {
-            msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>'.hsc($e->getMessage()).'</pre>', -1);
+        } catch(Exception $e) {
+            msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
         }
     }
 
@@ -114,7 +112,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $intro = p_locale_xhtml('searchpage');
         // allow use of placeholder in search intro
         $pagecreateinfo = (auth_quickaclcheck($ID) >= AUTH_CREATE) ? $lang['searchcreatepage'] : '';
-        $intro = str_replace(
+        $intro          = str_replace(
             array('@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'),
             array(hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo),
             $intro
@@ -156,7 +154,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $found++;
         }
         if(!$found) {
-            echo '<dt>'.$lang['nothingfound'].'</dt>';
+            echo '<dt>' . $lang['nothingfound'] . '</dt>';
         }
         echo '</dl>';
     }
@@ -171,9 +169,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         global $QUERY;
         global $lang;
 
-        echo '<form action="'.wl().'" class="elastic_facets">';
-        echo '<legend>'.$this->getLang('ns').'</legend>';
-        echo '<input name="id" type="hidden" value="'.formText($QUERY).'" />';
+        echo '<form action="' . wl() . '" class="elastic_facets">';
+        echo '<legend>' . $this->getLang('ns') . '</legend>';
+        echo '<input name="id" type="hidden" value="' . formText($QUERY) . '" />';
         echo '<input name="do" type="hidden" value="elasticsearch" />';
         echo '<ul>';
         foreach($facets as $facet) {
@@ -181,15 +179,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '<li><div class="li">';
             if(in_array($facet['term'], $INPUT->arr('ns'))) {
                 $on = ' checked="checked"';
-            }else {
+            } else {
                 $on = '';
             }
 
-            echo '<label><input name="ns[]" type="checkbox"'.$on.' value="'.formText($facet['term']).'" /> '.hsc($facet['term']).'</label>';
+            echo '<label><input name="ns[]" type="checkbox"' . $on . ' value="' . formText($facet['term']) . '" /> ' . hsc($facet['term']) . '</label>';
             echo '</div></li>';
         }
         echo '</ul>';
-        echo '<input type="submit" value="'.$lang['btn_search'].'" class="button" />';
+        echo '<input type="submit" value="' . $lang['btn_search'] . '" class="button" />';
         echo '</form>';
     }
 
