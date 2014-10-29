@@ -86,13 +86,17 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     protected function print_results($results) {
         global $lang;
         global $QUERY;
+        global $ID;
 
         // just reuse the standard search page intro:
         $intro = p_locale_xhtml('searchpage');
+        // allow use of placeholder in search intro
+        $pagecreateinfo = (auth_quickaclcheck($ID) >= AUTH_CREATE) ? $lang['searchcreatepage'] : '';
         $intro = str_replace(
-            array('@QUERY@','@SEARCH@'),
-            array(hsc(rawurlencode($QUERY)),hsc($QUERY)),
-            $intro);
+            array('@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'),
+            array(hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo),
+            $intro
+        );
         echo $intro;
         flush();
 
