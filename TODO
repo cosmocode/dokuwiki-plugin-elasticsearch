@@ -1,0 +1,7 @@
+
+we should probably store namespaces and namespace titles separately and do facets based on the namespace bt display
+the title
+
+group handling is a bit simplistic right now (the cleanup in particulary)
+
+languages should be facets too

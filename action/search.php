@@ -48,6 +48,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $event->stopPropagation();
         global $QUERY;
         global $INPUT;
+        global $USERINFO;
 
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -70,16 +71,35 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         );
         $equery->setSize(1000); #FIXME do pagination
 
+        $filters = new \Elastica\Filter\BoolAnd();
+
+        // add groupfilter
+        $groups = array('all');
+        if(isset($USERINFO['grps'])) {
+            $groups = array_merge($groups, $USERINFO['grps']);
+        }
+        $groupFilter = new \Elastica\Filter\BoolOr();
+        foreach($groups as $group) {
+            $group = str_replace('-', '', strtolower($group));
+            $filter = new \Elastica\Filter\Term();
+            $filter->setTerm('groups', $group);
+            $groupFilter->addFilter($filter);
+        }
+        $filters->addFilter($groupFilter);
+
         // add namespace filter
         if($INPUT->has('ns')) {
             $facetFilter = new \Elastica\Filter\BoolOr();
             foreach($INPUT->arr('ns') as $term) {
                 $filter = new \Elastica\Filter\Term();
-                $filter->setTerm('namespace', \Elastica\Util::replaceBooleanWordsAndEscapeTerm($term));
+                $filter->setTerm('namespace', $term);
                 $facetFilter->addFilter($filter);
             }
-            $equery->setFilter($facetFilter);
+            $filters->addFilter($facetFilter);
         }
+
+        // set all filters
+        $equery->setFilter($filters);
 
         // add Facets for namespaces
         $facet = new \Elastica\Facet\Terms('namespace');
