@@ -85,7 +85,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     private function update_indexstate($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
-        return file_put_contents($indexStateFile, '');
+        return io_saveFile($indexStateFile, '');
     }
 
     /**
