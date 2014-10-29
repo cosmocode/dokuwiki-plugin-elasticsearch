@@ -103,6 +103,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     protected function print_intro() {
         global $QUERY;
         global $ID;
+        global $lang;
 
         // just reuse the standard search page intro:
         $intro = p_locale_xhtml('searchpage');
@@ -165,11 +166,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         global $QUERY;
         global $lang;
 
-        echo '<form action="'.wl().'">';
+        echo '<form action="'.wl().'" class="elastic_facets">';
         echo '<legend>'.$this->getLang('ns').'</legend>';
         echo '<input name="id" type="hidden" value="'.formText($QUERY).'" />';
         echo '<input name="do" type="hidden" value="elasticsearch" />';
-        echo '<ul class="elastic_facets">';
+        echo '<ul>';
         foreach($facets as $facet) {
 
             echo '<li><div class="li">';
@@ -179,7 +180,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 $on = '';
             }
 
-            echo '<label><input name="ns[]" type="checkbox"'.$on.' value="'.formText($facet['term']).'" />'.hsc($facet['term']).'</label>';
+            echo '<label><input name="ns[]" type="checkbox"'.$on.' value="'.formText($facet['term']).'" /> '.hsc($facet['term']).'</label>';
             echo '</div></li>';
         }
         echo '</ul>';
