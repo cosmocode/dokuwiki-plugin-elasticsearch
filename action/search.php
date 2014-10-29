@@ -56,8 +56,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $index  = $client->getIndex($this->getConf('indexname'));
 
         // define the query string
-        $qstring = new \Elastica\Query\QueryString();
-        $qstring->setQuery($QUERY);
+        $qstring = new \Elastica\Query\SimpleQueryString($QUERY);
 
         // create the actual search object
         $equery = new \Elastica\Query();
@@ -76,7 +75,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $facetFilter = new \Elastica\Filter\BoolOr();
             foreach($INPUT->arr('ns') as $term) {
                 $filter = new \Elastica\Filter\Term();
-                $filter->setTerm('namespace', $term);
+                $filter->setTerm('namespace', \Elastica\Util::replaceBooleanWordsAndEscapeTerm($term));
                 $facetFilter->addFilter($filter);
             }
             $equery->setFilter($facetFilter);
