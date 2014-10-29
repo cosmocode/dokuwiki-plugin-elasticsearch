@@ -47,6 +47,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $event->preventDefault();
         $event->stopPropagation();
         global $QUERY;
+        global $INPUT;
 
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -68,23 +69,38 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 "fields"    => array("content" => new \StdClass())
             )
         );
+        $equery->setSize(1000); #FIXME do pagination
+
+        // add namespace filter
+        if($INPUT->has('ns')) {
+            $filter = new \Elastica\Filter\Term();
+            $filter->setTerm('namespace', $INPUT->arr('ns'));
+            $equery->setFilter($filter);
+        }
+
+        // add Facets for namespaces
+        $facet = new \Elastica\Facet\Terms('namespace');
+        $facet->setField('namespace');
+        $facet->setSize(25);
+        $equery->addFacet($facet);
+
 
         try {
             $result = $index->search($equery);
+            $facets = $result->getFacets();
+
+            $this->print_intro();
+            $this->print_facets($facets['namespace']['terms']);
             $this->print_results($result);
         } catch (Exception $e) {
-            msg('Something went wrong on searching ('.$e->getMessage().') please try again later or ask an admin for help', -1);
+            msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>'.hsc($e->getMessage()).'</pre>', -1);
         }
     }
 
     /**
-     * Output the search results
-     *
-     * @fixme maybe add facets later?
-     * @param \Elastica\Result[] $results
+     * Prints the introduction text
      */
-    protected function print_results($results) {
-        global $lang;
+    protected function print_intro() {
         global $QUERY;
         global $ID;
 
@@ -99,6 +115,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         );
         echo $intro;
         flush();
+    }
+
+    /**
+     * Output the search results
+     *
+     * @param \Elastica\Result[] $results
+     */
+    protected function print_results($results) {
+        global $lang;
 
         // output results
         $found = 0;
@@ -128,6 +153,38 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '<dt>'.$lang['nothingfound'].'</dt>';
         }
         echo '</dl>';
+    }
+
+    /**
+     * Output the namespace facets
+     *
+     * @param array $facets Facet terms
+     */
+    protected function print_facets($facets) {
+        global $INPUT;
+        global $QUERY;
+        global $lang;
+
+        echo '<form action="'.wl().'">';
+        echo '<legend>'.$this->getLang('ns').'</legend>';
+        echo '<input name="id" type="hidden" value="'.formText($QUERY).'" />';
+        echo '<input name="do" type="hidden" value="elasticsearch" />';
+        echo '<ul class="elastic_facets">';
+        foreach($facets as $facet) {
+
+            echo '<li><div class="li">';
+            if(in_array($facet['term'], $INPUT->arr('ns'))) {
+                $on = ' checked="checked"';
+            }else {
+                $on = '';
+            }
+
+            echo '<label><input name="ns[]" type="checkbox"'.$on.' value="'.formText($facet['term']).'" />'.hsc($facet['term']).'</label>';
+            echo '</div></li>';
+        }
+        echo '</ul>';
+        echo '<input type="submit" value="'.$lang['btn_search'].'" class="button" />';
+        echo '</form>';
     }
 
 }
