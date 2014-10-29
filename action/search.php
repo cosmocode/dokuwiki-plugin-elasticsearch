@@ -73,10 +73,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         // add namespace filter
         if($INPUT->has('ns')) {
-            $filter = new \Elastica\Filter\Term();
-            $filter->setTerm('namespace', $INPUT->arr('ns'));
-            $equery->setFilter($filter);
+            $facetFilter = new \Elastica\Filter\BoolOr();
+            foreach($INPUT->arr('ns') as $term) {
+                $filter = new \Elastica\Filter\Term();
+                $filter->setTerm('namespace', $term);
+                $facetFilter->addFilter($filter);
+            }
+            $equery->setFilter($facetFilter);
         }
+
 
         // add Facets for namespaces
         $facet = new \Elastica\Facet\Terms('namespace');
