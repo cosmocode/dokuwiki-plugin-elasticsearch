@@ -116,8 +116,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             $this->print_intro();
             $this->print_facets($facets['namespace']['terms']);
-            $this->print_results($result);
-            $this->print_pagination($result);
+            $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
         }
@@ -148,6 +147,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * Output the search results
      *
      * @param \Elastica\Result[] $results
+     * @return bool true when results where shown
      */
     protected function print_results($results) {
         global $lang;
@@ -187,6 +187,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '<dt>' . $lang['nothingfound'] . '</dt>';
         }
         echo '</dl>';
+
+        return (bool) $found;
     }
 
     /**
@@ -232,7 +234,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $pages = ceil($all / $this->getConf('perpage'));
         $cur   = $INPUT->int('p', 1, true);
 
-        // which pages to show FIXME does this make any sense or am I drunk?
+        if($pages < 2) return;
+
+        // which pages to show
         $toshow = array(1, 2, $cur, $pages, $pages - 1);
         if($cur - 1 > 1) $toshow[] = $cur - 1;
         if($cur + 1 < $pages) $toshow[] = $cur + 1;
