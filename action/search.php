@@ -184,7 +184,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $found++;
         }
         if(!$found) {
-            echo '<dt>' . $lang['nothingfound'] . '</dt>';
+            echo '<dt class="none">' . $lang['nothingfound'] . '</dt>';
         }
         echo '</dl>';
 
