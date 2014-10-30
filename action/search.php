@@ -280,7 +280,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         if($cur < $pages) {
             echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur+1)))) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
