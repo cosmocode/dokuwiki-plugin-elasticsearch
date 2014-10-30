@@ -5,8 +5,9 @@
  * @author Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-$meta['servers']        = 'ElasticSearch servers: one per line, add port number after a colon, give optional proxy after a comma';
-$meta['indexname']      = 'Index name to use, must exist or can be created with the cli.php tool.';
-$meta['documenttype']   = 'Document type to use when indexing';
-$meta['perpage']        = 'How many hits to show per page';
-$meta['debug']          = 'Log messages to data/cache/debug.log - needs allowdebug enabled';
+$lang['servers']      = 'ElasticSearch servers: one per line, add port number after a colon, give optional proxy after a comma';
+$lang['indexname']    = 'Index name to use, must exist or can be created with the cli.php tool.';
+$lang['documenttype'] = 'Document type to use when indexing';
+$lang['perpage']      = 'How many hits to show per page';
+$lang['realmonly']    = 'Index pages within a realm (top namespace) only?';
+$lang['debug']        = 'Log messages to data/cache/debug.log - needs allowdebug enabled';

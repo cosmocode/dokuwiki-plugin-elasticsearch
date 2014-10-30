@@ -5,8 +5,9 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-$meta['servers']        = 'ElasticSearch server: einer pro Zeile, Port-Nummer durch Doppelpunkt getrennt, optionaler Proxy nach einem Komma';
-$meta['indexname']      = 'Zu benutzener Index-Name. Muss existieren oder kann mit dem cli.php tool erzeugt werden.';
-$meta['documenttype']   = 'Dokumententyp unter dem die Wikiseiten abgelegt werden sollen';
-$meta['perpage']        = 'Anzahl der Treffer pro Seite';
-$meta['debug']          = 'Debugging messages nach data/cache/debug.log schreiben - benötigt eingeschaltete allowdebug Option';
+$lang['servers']      = 'ElasticSearch server: einer pro Zeile, Port-Nummer durch Doppelpunkt getrennt, optionaler Proxy nach einem Komma';
+$lang['indexname']    = 'Zu benutzener Index-Name. Muss existieren oder kann mit dem cli.php tool erzeugt werden.';
+$lang['documenttype'] = 'Dokumententyp unter dem die Wikiseiten abgelegt werden sollen';
+$lang['perpage']      = 'Anzahl der Treffer pro Seite';
+$lang['realmonly']    = 'Nur Seiten indizieren die innerhalb eines Bereiches (Top Namensraum) liegen?';
+$lang['debug']        = 'Debugging messages nach data/cache/debug.log schreiben - benötigt eingeschaltete allowdebug Option';

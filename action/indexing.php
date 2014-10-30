@@ -20,10 +20,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     public function register(Doku_Event_Handler &$controller) {
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'handle_delete');
     }
 
     /**
-     * [Custom event handler which performs action]
+     * Add pages to index
      *
      * @param Doku_Event $event event object by reference
      * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
@@ -43,6 +44,21 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if($this->needs_indexing($ID)) {
             $this->index_page($ID);
         }
+    }
+
+    /**
+     * Remove pages from index
+     *
+     * @param Doku_Event $event event object by reference
+     * @param mixed $param [the parameters passed as fifth argument to register_hook() when this
+     *                           handler was registered]
+     * @return void
+     */
+    public function handle_delete(Doku_Event &$event, $param) {
+        if($event->data[3]) return; // is old revision stuff
+        if(!empty($event->data[0][1])) return; // page still exists
+        // still here? delete from index
+        $this->delete_page($event->data[2]);
     }
 
     /**
@@ -95,7 +111,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     public function delete_page($id) {
         /** @var helper_plugin_elasticsearch_client $hlp */
-        $hlp = plugin_load('helper', 'elasticsearch_client');
+        $hlp          = plugin_load('helper', 'elasticsearch_client');
         $indexName    = $this->getConf('indexname');
         $documentType = $this->getConf('documenttype');
         $client       = $hlp->connect();
@@ -106,8 +122,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         try {
             $type->deleteById($documentId);
             $index->refresh();
-        } catch (Exception $e) {
+            $this->log($documentId.' deleted ');
+        } catch(Exception $e) {
             // we ignore this
+            $this->log($documentId.' not deleted '.$e.getMessage());
         }
 
         // delete state file
@@ -150,11 +168,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $trans = plugin_load('helper', 'translation');
         if($trans) {
             // translation plugin available
-            $lc = $trans->getLangPart($id);
+            $lc               = $trans->getLangPart($id);
             $data['language'] = $trans->realLC($lc);
         } else {
             // no translation plugin
-            $lc = '';
+            $lc               = '';
             $data['language'] = $conf['lang'];
         }
 
@@ -172,7 +190,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
 
         // only index if we've found a namespace
-        if(isset($data['namespace'])) {
+        if(isset($data['namespace']) || !$this->getConf('realmonly')) {
             $data['groups'] = $this->getPageACL($id);
 
             // check if the document still exists to update it or add it as a new one
@@ -184,6 +202,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
                 $type->addDocument($document);
             }
             $index->refresh();
+            $this->update_indexstate($id);
+        } else {
+            $this->log("$id has no realm (top namespace) - not indexed");
             $this->update_indexstate($id);
         }
     }
