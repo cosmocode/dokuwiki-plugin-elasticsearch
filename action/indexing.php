@@ -153,7 +153,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $documentId   = $documentType . '_' . $id;
 
         // collect the date which should be indexed
-        $meta = p_get_metadata($id, '', true);
+        $meta = p_get_metadata($id, '', METADATA_RENDER_UNLIMITED);
 
         $data             = array();
         $data['uri']      = $id;
