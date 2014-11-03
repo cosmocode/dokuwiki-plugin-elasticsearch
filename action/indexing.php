@@ -200,6 +200,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             } catch(\Elastica\Exception\NotFoundException $e) {
                 $document = new \Elastica\Document($documentId, $data);
                 $type->addDocument($document);
+            } catch(Exception $e) {
+                msg('Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
+                return;
             }
             $index->refresh();
             $this->update_indexstate($id);
