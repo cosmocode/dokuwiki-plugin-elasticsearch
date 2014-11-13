@@ -125,7 +125,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $this->log($documentId.' deleted ');
         } catch(Exception $e) {
             // we ignore this
-            $this->log($documentId.' not deleted '.$e.getMessage());
+            $this->log($documentId.' not deleted '.$e->getMessage());
         }
 
         // delete state file
