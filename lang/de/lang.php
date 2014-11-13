@@ -6,4 +6,5 @@
  */
 
 $lang['ns']     = 'Bereich:';
+$lang['nsp']    = 'Bereiche:';
 $lang['author'] = 'Autor:';

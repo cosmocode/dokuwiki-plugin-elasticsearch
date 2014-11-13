@@ -6,4 +6,5 @@
  */
 
 $lang['ns']     = 'Realm:';
+$lang['nsp']    = 'Realms:';
 $lang['author'] = 'Author:';

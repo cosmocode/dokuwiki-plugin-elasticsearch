@@ -202,7 +202,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         global $lang;
 
         echo '<form action="' . wl() . '" class="elastic_facets">';
-        echo '<legend>' . $this->getLang('ns') . '</legend>';
+        echo '<legend>' . $this->getLang('nsp') . '</legend>';
         echo '<input name="id" type="hidden" value="' . formText($QUERY) . '" />';
         echo '<input name="do" type="hidden" value="elasticsearch" />';
         echo '<ul>';
