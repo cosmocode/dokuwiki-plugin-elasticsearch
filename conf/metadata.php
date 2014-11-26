@@ -8,6 +8,7 @@
 $meta['servers']      = array();
 $meta['indexname']    = array('string');
 $meta['documenttype'] = array('string');
+$meta['snippets']     = array('multichoice', '_choices' => array('content','abstract'));
 $meta['perpage']      = array('numeric', '_min' => 1);
 $meta['realmonly']    = array('onoff');
 $meta['debug']        = array('onoff');

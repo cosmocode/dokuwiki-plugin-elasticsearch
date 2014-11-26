@@ -66,7 +66,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             array(
                 "pre_tags"  => array('ELASTICSEARCH_MARKER_IN'),
                 "post_tags" => array('ELASTICSEARCH_MARKER_OUT'),
-                "fields"    => array("content" => new \StdClass())
+                "fields"    => array(
+                    $this->getConf('snippets') => new \StdClass(),
+                    'title' => new \StdClass())
             )
         );
 
@@ -161,8 +163,28 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $page = $row->getSource()['uri'];
             if(!page_exists($page) || auth_quickaclcheck($page) < AUTH_READ) continue;
 
+            // get highlighted title
+            $title = str_replace(
+                array('ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'),
+                array('<strong class="search_hit">', '</strong>'),
+                hsc(join(' … ', (array) $row->getHighlights()['title']))
+            );
+            if(!$title) $title = hsc($row->getSource()['title']);
+            if(!$title) $title = hsc(p_get_first_heading($page));
+            if(!$title) $title = hsc($page);
+
+            // get highlighted snippet
+            $snippet = str_replace(
+                array('ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'),
+                array('<strong class="search_hit">', '</strong>'),
+                hsc(join(' … ', (array) $row->getHighlights()[$this->getConf('snippets')]))
+            );
+            if(!$snippet) $snippet = hsc($row->getSource()['abstract']); // always fall back to abstract
+
             echo '<dt>';
-            echo html_wikilink($page);
+            echo '<a href="'.wl($page).'" class="wikilink1" title="'.hsc($page).'">';
+            echo $title;
+            echo '</a>';
             echo '<div>';
             if($row->getSource()['namespace']) {
                 echo '<span class="ns"><b>' . $this->getLang('ns') . '</b> ' . hsc($row->getSource()['namespace']) . '</span><br />';
@@ -175,11 +197,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             // snippets
             echo '<dd>';
-            echo str_replace(
-                array('ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'),
-                array('<strong class="search_hit">', '</strong>'),
-                hsc(join(' … ', (array) $row->getHighlights()['content']))
-            );
+            echo $snippet;
             echo '</dd>';
             $found++;
         }
