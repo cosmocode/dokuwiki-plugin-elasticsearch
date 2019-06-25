@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * DokuWiki Plugin elasticsearch (CLI Component)
@@ -7,11 +6,11 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
-if(!defined('DOKU_INC')) define('DOKU_INC', realpath(dirname(__FILE__).'/../../../').'/');
-require_once(DOKU_INC.'inc/init.php');
+if (!defined('DOKU_INC')) die();
 
+use splitbrain\phpcli\Options;
 
-class elasticsearch_cli extends DokuCLI {
+class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
 
     /** @var helper_plugin_elasticsearch_client */
     protected $hlp;
@@ -28,10 +27,10 @@ class elasticsearch_cli extends DokuCLI {
     /**
      * Register options and arguments on the given $options object
      *
-     * @param DokuCLI_Options $options
+     * @param Options $options
      * @return void
      */
-    protected function setup(DokuCLI_Options $options) {
+    protected function setup(Options $options) {
         $options->setHelp('Manage the elastic search index');
 
         $options->registerCommand('index', 'Index all pages in the wiki');
@@ -47,10 +46,10 @@ class elasticsearch_cli extends DokuCLI {
      *
      * Arguments and options have been parsed when this is run
      *
-     * @param DokuCLI_Options $options
+     * @param Options $options
      * @return void
      */
-    protected function main(DokuCLI_Options $options) {
+    protected function main(Options $options) {
         $cmd = $options->getCmd();
         switch ($cmd) {
             case 'createindex':
@@ -102,6 +101,3 @@ class elasticsearch_cli extends DokuCLI {
     }
 
 }
-
-$cli = new elasticsearch_cli();
-$cli->run();
