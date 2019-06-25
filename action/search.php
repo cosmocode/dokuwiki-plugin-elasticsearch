@@ -76,48 +76,49 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $equery->setSize($this->getConf('perpage'));
         $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
 
-        $filters = new \Elastica\Filter\BoolAnd();
+        $subqueries = new \Elastica\Query\BoolQuery();
 
-        // add groupfilter
+        // add group subquery
         $groups = array('all');
         if(isset($USERINFO['grps'])) {
             $groups = array_merge($groups, $USERINFO['grps']);
         }
-        $groupFilter = new \Elastica\Filter\BoolOr();
+        $groupSubquery = new \Elastica\Query\BoolQuery();
         foreach($groups as $group) {
             $group  = str_replace('-', '', strtolower($group));
-            $filter = new \Elastica\Filter\Term();
-            $filter->setTerm('groups', $group);
-            $groupFilter->addFilter($filter);
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('groups', $group);
+            $groupSubquery->addShould($term);
         }
-        $filters->addFilter($groupFilter);
+        $subqueries->addMust($groupSubquery);
 
         // add namespace filter
         if($INPUT->has('ns')) {
-            $facetFilter = new \Elastica\Filter\BoolOr();
-            foreach($INPUT->arr('ns') as $term) {
-                $filter = new \Elastica\Filter\Term();
-                $filter->setTerm('namespace', $term);
-                $facetFilter->addFilter($filter);
+            $nsSubquery = new \Elastica\Query\BoolQuery();
+            foreach($INPUT->arr('ns') as $ns) {
+                $term = new \Elastica\Query\Term();
+                $term->setTerm('namespace', $ns);
+                $nsSubquery->addShould($term);
             }
-            $filters->addFilter($facetFilter);
+            $subqueries->addMust($nsSubquery);
         }
 
         // set all filters
-        $equery->setFilter($filters);
+        // FIXME is filtering the right thing here?
+        $equery->setPostFilter($subqueries);
 
-        // add Facets for namespaces
-        $facet = new \Elastica\Facet\Terms('namespace');
-        $facet->setField('namespace');
-        $facet->setSize(25);
-        $equery->addFacet($facet);
+        // add aggregations for namespaces
+        $agg = new \Elastica\Aggregation\Terms('namespace');
+        $agg->setField('namespace.keyword');
+        $agg->setSize(25);
+        $equery->addAggregation($agg);
 
         try {
             $result = $index->search($equery);
-            $facets = $result->getFacets();
+            $aggs = $result->getAggregations();
 
             $this->print_intro();
-            $this->print_facets($facets['namespace']['terms']);
+            $this->print_aggregations($aggs['namespace']['buckets']);
             $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
@@ -135,7 +136,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // just reuse the standard search page intro:
         $intro = p_locale_xhtml('searchpage');
         // allow use of placeholder in search intro
-        $pagecreateinfo = (auth_quickaclcheck($ID) >= AUTH_CREATE) ? $lang['searchcreatepage'] : '';
+        $pagecreateinfo = '';
+        if (auth_quickaclcheck($ID) >= AUTH_CREATE) {
+            $pagecreateinfo = sprintf($lang['searchcreatepage'], $QUERY);
+        }
         $intro          = str_replace(
             array('@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'),
             array(hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo),
@@ -148,7 +152,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Output the search results
      *
-     * @param \Elastica\Result[] $results
+     * @param \Elastica\ResultSet $results
      * @return bool true when results where shown
      */
     protected function print_results($results) {
@@ -210,30 +214,33 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Output the namespace facets
+     * Output the namespace aggregations
      *
-     * @param array $facets Facet terms
+     * @param array $aggs Aggregation terms
      */
-    protected function print_facets($facets) {
+    protected function print_aggregations($aggs) {
         global $INPUT;
         global $QUERY;
         global $lang;
 
         echo '<form action="' . wl() . '" class="elastic_facets">';
         echo '<legend>' . $this->getLang('nsp') . '</legend>';
-        echo '<input name="id" type="hidden" value="' . formText($QUERY) . '" />';
+        echo '<input name="q" type="hidden" value="' . formText($QUERY) . '" />';
         echo '<input name="do" type="hidden" value="elasticsearch" />';
         echo '<ul>';
-        foreach($facets as $facet) {
+        foreach($aggs as $agg) {
+
+            if ($agg['key'] === 'false') continue;
 
             echo '<li><div class="li">';
-            if(in_array($facet['term'], $INPUT->arr('ns'))) {
+            if(in_array($agg['key'], $INPUT->arr('ns'))) {
                 $on = ' checked="checked"';
             } else {
                 $on = '';
             }
 
-            echo '<label><input name="ns[]" type="checkbox"' . $on . ' value="' . formText($facet['term']) . '" /> ' . hsc($facet['term']) . '</label>';
+            echo '<label><input name="ns[]" type="checkbox"' . $on . ' value="' . formText($agg['key']) . '" /> '
+                . hsc($agg['key']) . ' / ' . $agg['doc_count'] . '</label>';
             echo '</div></li>';
         }
         echo '</ul>';
