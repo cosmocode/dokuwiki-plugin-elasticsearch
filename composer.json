@@ -1,5 +1,5 @@
 {
     "require": {
-        "ruflin/elastica": "v1.0.1.1"
+        "ruflin/elastica": "^6.0"
     }
 }
