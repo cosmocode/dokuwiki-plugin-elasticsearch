@@ -284,7 +284,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         echo '<ul class="elastic_pagination">';
         if($cur > 1) {
             echo '<li class="prev">';
-            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
             echo '«';
             echo '</a>';
             echo '</li>';
@@ -295,7 +295,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 echo '<li class="cur">' . $toshow[$i] . '</li>';
             } else {
                 echo '<li>';
-                echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => $toshow[$i]))) . '">';
+                echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => $toshow[$i]))) . '">';
                 echo $toshow[$i];
                 echo '</a>';
                 echo '</li>';
@@ -309,7 +309,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         if($cur < $pages) {
             echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query(array('id' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur+1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur+1)))) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
