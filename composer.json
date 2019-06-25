@@ -1,5 +1,6 @@
 {
+    "minimum-stability": "dev",
     "require": {
-        "ruflin/elastica": "^6.0"
+        "ruflin/elastica": "dev-master"
     }
 }
