@@ -12,6 +12,40 @@ require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
 
+    /** @var array Map of ISO codes to Elasticsearch analyzer names */
+    const ANALYZERS = [
+        'ar' => 'arabic',
+        'hy' => 'armenian',
+        'eu' => 'basque',
+        'bn' => 'bengali',
+        'bg' => 'bulgarian',
+        'ca' => 'catalan',
+        'cs' => 'czech',
+        'da' => 'danish',
+        'nl' => 'dutch',
+        'en' => 'english',
+        'fi' => 'finnish',
+        'fr' => 'french',
+        'gl' => 'galician',
+        'de' => 'german',
+        'el' => 'greek',
+        'hi' => 'hindi',
+        'hu' => 'hungarian',
+        'id' => 'indonesian',
+        'ga' => 'irish',
+        'it' => 'italian',
+        'lv' => 'latvian',
+        'lt' => 'lithuanian',
+        'no' => 'norwegian',
+        'fa' => 'persian',
+        'pt' => 'portuguese',
+        'ro' => 'romanian',
+        'ru' => 'russian',
+        'es' => 'spanish',
+        'sv' => 'swedish',
+        'tr' => 'turkish',
+        'th' => 'thai',
+        ];
     /**
      * @var \Elastica\Client $elasticaClient
      */
@@ -58,34 +92,48 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     }
 
     /**
-     * Create the field mapping
+     * Create the field mapping: language analyzers for the content field
      *
      * @return \Elastica\Response
      */
     public function createMapping() {
+        global $conf;
+
         $client = $this->connect();
         $index = $client->getIndex($this->getConf('indexname'));
         $type = $index->getType($this->getConf('documenttype'));
 
+        // default language
+        $props = [
+            'content' => [
+                'type'  => 'text',
+                'fields' => [
+                    $conf['lang'] => [
+                        'type'  => 'text',
+                        'analyzer' => self::ANALYZERS[$conf['lang']]
+                    ],
+                ]
+            ]
+        ];
+
+        // other languages as configured in the translation plugin
+        /** @var helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if ($trans) {
+            foreach (array_diff($trans->translations, [$conf['lang']]) as $lang) {
+                $props['content']['fields'][$lang] = [
+                    'type'  => 'text',
+                    'analyzer' => self::ANALYZERS[$lang]
+                ];
+            }
+        }
+
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
-        $mapping->setProperties(
-            array(
-                'uri'       => array(
-                    'type' => 'string'
-                ),
-                'namespace' => array(
-                    'type'  => 'string',
-                    'index' => 'not_analyzed',
-                    'store' => 'yes'
-                )
-            )
-        );
+        $mapping->setProperties($props);
         $response = $mapping->send();
         return $response;
     }
-
-
 }
 
 // vim:ts=4:sw=4:et:
