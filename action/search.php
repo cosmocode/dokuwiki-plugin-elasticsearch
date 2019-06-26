@@ -162,11 +162,18 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         global $lang;
 
         // output results
-        $found = 0;
-        echo '<dl class="search_results">';
-        foreach($results as $row) {
-            /** @var Elastica\Result $row */
+        $found = $results->getTotalHits();
 
+        if(!$found) {
+            echo '<h2>' . $lang['nothingfound'] . '</h2>';
+            return (bool)$found;
+        }
+
+        echo '<dl class="search_results">';
+        echo '<h2>' . sprintf($this->getLang('totalfound'), $found) . '</h2>';
+        foreach($results as $row) {
+
+            /** @var Elastica\Result $row */
             $page = $row->getSource()['uri'];
             if(!page_exists($page) || auth_quickaclcheck($page) < AUTH_READ) continue;
 
@@ -192,24 +199,27 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '<a href="'.wl($page).'" class="wikilink1" title="'.hsc($page).'">';
             echo $title;
             echo '</a>';
-            echo '<div>';
-            if($row->getSource()['namespace']) {
-                echo '<span class="ns"><b>' . $this->getLang('ns') . '</b> ' . hsc($row->getSource()['namespace']) . '</span><br />';
-            }
-            if($row->getSource()['creator']) {
-                echo '<span class="author"><b>' . $this->getLang('author') . '</b> ' . hsc($row->getSource()['creator']) . '</span>';
-            }
-            echo '</div>';
             echo '</dt>';
 
+            // meta
+            echo '<dd class="meta">';
+            if($row->getSource()['namespace']) {
+                echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($row->getSource()['namespace']) . '</span>';
+            }
+            if($row->getSource()['creator']) {
+                echo ' <span class="author">' . $this->getLang('author') . ' ' . hsc($row->getSource()['creator']) . '</span>';
+            }
+            if($row->getSource()['modified']) {
+                $lastmod = strtotime($row->getSource()['modified']);
+                echo ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
+            }
+            echo '</dd>';
+
             // snippets
-            echo '<dd>';
+            echo '<dd class="snippet">';
             echo $snippet;
             echo '</dd>';
-            $found++;
-        }
-        if(!$found) {
-            echo '<dt class="none">' . $lang['nothingfound'] . '</dt>';
+
         }
         echo '</dl>';
 

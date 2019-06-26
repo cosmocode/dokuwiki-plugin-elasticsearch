@@ -5,6 +5,7 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-$lang['ns']     = 'Bereich:';
-$lang['nsp']    = 'Bereiche:';
+$lang['ns']     = 'Namensraum:';
+$lang['nsp']    = 'Namensräume:';
 $lang['author'] = 'Autor:';
+$lang['totalfound'] = 'Ergebnisse gefunden: %s';
