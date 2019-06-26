@@ -230,6 +230,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return array
      */
     private function getPageACL($id) {
+        // FIXME why is global $AUTH_ACL null???
+        auth_setup();
+
         global $AUTH_ACL;
         global $conf;
 
