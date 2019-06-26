@@ -7,27 +7,66 @@
  */
 
 // must be run within Dokuwiki
+use dokuwiki\Form\Form;
+
 if(!defined('DOKU_INC')) die();
 
-class helper_plugin_elasticsearch_form extends DokuWiki_Plugin {
+class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
+{
 
     /**
      * Replacement for the standard search form
      *
-     * @return bool always true
+     * @param null $aggregations
      */
-    public function tpl() {
+    public function tpl ($aggregations = null)
+    {
         global $lang;
-        global $ACT;
         global $QUERY;
 
-        print '<form action="' . wl() . '" accept-charset="utf-8" class="search" id="dw__search" method="get" role="search"><div class="no">';
-        print '<input type="hidden" name="do" value="elasticsearch" />';
-        print '<input type="text" ';
-        if($ACT == 'elasticsearch') print 'value="' . htmlspecialchars($QUERY) . '" ';
-        print 'accesskey="f" name="id" class="edit" title="[F]" />';
-        print '<input type="submit" value="' . $lang['btn_search'] . '" class="button" title="' . $lang['btn_search'] . '" />';
-        print '</div></form>';
-        return true;
+        $searchForm = (new Form(['method' => 'get'], true))->addClass('search-results-form');
+        $searchForm->setHiddenField('do', 'elasticsearch');
+
+        $searchForm->addFieldsetOpen()->addClass('search-form');
+        $searchForm->addTextInput('q')->val($QUERY)->useInput(false);
+        $searchForm->addButton('', $lang['btn_search'])->attr('type', 'submit');
+
+        $this->addAdvancedSearch($searchForm, $aggregations);
+
+        $searchForm->addFieldsetClose();
+
+        echo $searchForm->toHTML();
+    }
+
+    /**
+     * Advanced search
+     *
+     * @param Form $searchForm
+     * @param array $aggregations
+     */
+    protected function addAdvancedSearch(Form $searchForm, array $aggregations)
+    {
+        $searchForm->addTagOpen('div')
+            ->addClass('advancedOptions')
+            ->attr('style', 'display: none;')
+            ->attr('aria-hidden', 'true');
+
+        $this->addNamespaceSelector($searchForm, $aggregations);
+        $searchForm->addTagClose('div');
+    }
+
+    /**
+     * Namespace filter
+     *
+     * @param Form $searchForm
+     * @param array $aggregations Namespace aggregations
+     */
+    protected function addNamespaceSelector(Form $searchForm, array $aggregations)
+    {
+        foreach ($aggregations as $agg) {
+            if ($agg['key'] === 'false') continue;
+            $searchForm->addCheckbox('ns[]', formText($agg['key']) . ' (' . $agg['doc_count'] . ')')
+                ->val($agg['key']);
+        }
     }
 }

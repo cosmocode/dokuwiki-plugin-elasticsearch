@@ -53,6 +53,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
 
+        /** @var helper_plugin_elasticsearch_form $hlpform */
+        $hlpform = plugin_load('helper', 'elasticsearch_form');
+
         $client = $hlp->connect();
         $index  = $client->getIndex($this->getConf('indexname'));
 
@@ -118,7 +121,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $aggs = $result->getAggregations();
 
             $this->print_intro();
-            $this->print_aggregations($aggs['namespace']['buckets']);
+            $hlpform->tpl($aggs['namespace']['buckets']);
             $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
@@ -211,41 +214,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         echo '</dl>';
 
         return (bool) $found;
-    }
-
-    /**
-     * Output the namespace aggregations
-     *
-     * @param array $aggs Aggregation terms
-     */
-    protected function print_aggregations($aggs) {
-        global $INPUT;
-        global $QUERY;
-        global $lang;
-
-        echo '<form action="' . wl() . '" class="elastic_facets">';
-        echo '<legend>' . $this->getLang('nsp') . '</legend>';
-        echo '<input name="q" type="hidden" value="' . formText($QUERY) . '" />';
-        echo '<input name="do" type="hidden" value="elasticsearch" />';
-        echo '<ul>';
-        foreach($aggs as $agg) {
-
-            if ($agg['key'] === 'false') continue;
-
-            echo '<li><div class="li">';
-            if(in_array($agg['key'], $INPUT->arr('ns'))) {
-                $on = ' checked="checked"';
-            } else {
-                $on = '';
-            }
-
-            echo '<label><input name="ns[]" type="checkbox"' . $on . ' value="' . formText($agg['key']) . '" /> '
-                . hsc($agg['key']) . ' / ' . $agg['doc_count'] . '</label>';
-            echo '</div></li>';
-        }
-        echo '</ul>';
-        echo '<input type="submit" value="' . $lang['btn_search'] . '" class="button" />';
-        echo '</form>';
     }
 
     /**
