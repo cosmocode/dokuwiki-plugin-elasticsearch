@@ -96,7 +96,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      *
      * @return \Elastica\Response
      */
-    public function createMapping() {
+    public function createLanguageMapping() {
         global $conf;
 
         $client = $this->connect();
@@ -119,7 +119,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         // other languages as configured in the translation plugin
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
-        if ($trans) {
+        if ($trans && !empty(array_filter($trans->translations))) {
             foreach (array_diff($trans->translations, [$conf['lang']]) as $lang) {
                 $props['content']['fields'][$lang] = [
                     'type'  => 'text',

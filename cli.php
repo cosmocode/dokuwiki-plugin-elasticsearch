@@ -29,6 +29,7 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
      *
      * @param Options $options
      * @return void
+     * @throws \splitbrain\phpcli\Exception
      */
     protected function setup(Options $options) {
         $options->setHelp('Manage the elastic search index');
@@ -38,7 +39,7 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         $options->registerCommand('createindex', 'Create a simple index named "'.$this->hlp->getConf('indexname').'".');
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
 
-        $options->registerCommand('createmapping', 'Create the needed field mapping at the configured servers');
+        $options->registerCommand('createlangmapping', 'Create the field mapping for multilanguage setup');
     }
 
     /**
@@ -60,8 +61,8 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
                     $this->success('Index created');
                 }
                 break;
-            case 'createmapping':
-                $result = $this->hlp->createMapping();
+            case 'createlangmapping':
+                $result = $this->hlp->createLanguageMapping();
                 if($result->hasError()){
                     $this->error($result->getError());
                 } else {
