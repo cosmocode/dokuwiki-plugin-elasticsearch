@@ -9,5 +9,4 @@ $lang['servers']      = 'ElasticSearch servers: one per line, add port number af
 $lang['indexname']    = 'Index name to use, must exist or can be created with the cli.php tool.';
 $lang['documenttype'] = 'Document type to use when indexing';
 $lang['perpage']      = 'How many hits to show per page';
-$lang['realmonly']    = 'Index pages within a realm (top namespace) only?';
 $lang['debug']        = 'Log messages to data/cache/debug.log - needs allowdebug enabled';
