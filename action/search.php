@@ -64,7 +64,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         // create the actual search object
         $equery = new \Elastica\Query();
-        $equery->setQuery($qstring);
+        $subqueries = new \Elastica\Query\BoolQuery();
+        $subqueries->addMust($qstring);
+
         $equery->setHighlight(
             array(
                 "pre_tags"  => array('ELASTICSEARCH_MARKER_IN'),
@@ -78,8 +80,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // paginate
         $equery->setSize($this->getConf('perpage'));
         $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
-
-        $subqueries = new \Elastica\Query\BoolQuery();
 
         // add group subquery
         $groups = array('all');
@@ -103,12 +103,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 $term->setTerm('namespace', $ns);
                 $nsSubquery->addShould($term);
             }
-            $subqueries->addMust($nsSubquery);
+            $equery->setPostFilter($nsSubquery);
         }
 
-        // set all filters
-        // FIXME is filtering the right thing here?
-        $equery->setPostFilter($subqueries);
+        $equery->setQuery($subqueries);
 
         // add aggregations for namespaces
         $agg = new \Elastica\Aggregation\Terms('namespace');
