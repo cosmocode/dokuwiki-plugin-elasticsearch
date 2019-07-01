@@ -206,8 +206,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             if($row->getSource()['namespace']) {
                 echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($row->getSource()['namespace']) . '</span>';
             }
-            if($row->getSource()['creator']) {
-                echo ' <span class="author">' . $this->getLang('author') . ' ' . hsc($row->getSource()['creator']) . '</span>';
+            if($row->getSource()['user']) {
+                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($row->getSource()['user']) . '</span>';
             }
             if($row->getSource()['modified']) {
                 $lastmod = strtotime($row->getSource()['modified']);
