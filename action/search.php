@@ -200,7 +200,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '</dt>';
 
             // meta
-            echo '<dd class="meta">';
+            echo '<dd class="meta elastic-resultmeta">';
             if($row->getSource()['namespace']) {
                 echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($row->getSource()['namespace']) . '</span>';
             }

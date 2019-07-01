@@ -1,31 +1,29 @@
-.dokuwiki form.elastic_facets {
-
-    ul {
+.dokuwiki {
+    ul.elastic_pagination {
         list-style-type: none;
+        text-align: center;
+        margin: 3em 0 0 0;
+        clear: both;
+        padding: 0;
 
         li {
-            float: left;
+            display: inline;
+            border: 1px solid @ini_border;
+            padding: 5px;
         }
-        overflow: auto;
-    }
-    display: block;
-    margin-bottom: 2em;
-}
 
-.dokuwiki ul.elastic_pagination {
-    list-style-type: none;
-    text-align: center;
-    margin: 3em 0 0 0;
-    clear: both;
-    padding: 0;
-
-    li {
-        display: inline;
-        border: 1px solid @ini_border;
-        padding: 5px;
+        li.sep {
+            border: none;
+        }
     }
 
-    li.sep {
-        border: none;
+    dd.elastic-resultmeta {
+        font-size: smaller;
+    }
+
+    form {
+        input[type=checkbox] {
+            margin-right: 5px;
+        }
     }
 }
