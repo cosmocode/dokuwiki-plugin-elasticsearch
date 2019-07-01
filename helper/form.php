@@ -63,10 +63,24 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
      */
     protected function addNamespaceSelector(Form $searchForm, array $aggregations)
     {
-        foreach ($aggregations as $agg) {
-            if ($agg['key'] === 'false') continue;
-            $searchForm->addCheckbox('ns[]', formText($agg['key']) . ' (' . $agg['doc_count'] . ')')
-                ->val($agg['key']);
+        if (!empty($aggregations)) {
+            // popup toggler
+            $searchForm->addTagOpen('div')->addClass('toggle')->attr('aria-haspopup', 'true');
+            $searchForm->addTagOpen('div')->addClass('current');
+            $searchForm->addHTML($this->getLang('nsp'));
+            $searchForm->addTagClose('div');
+
+            // options
+            $i = 0;
+            $searchForm->addTagOpen('ul')->attr('aria-expanded', 'false');
+            foreach ($aggregations as $agg) {
+                $searchForm->addTagOpen('li');
+                $searchForm->addCheckbox('ns[]')->val($agg['key'])->id('__ns-' . $i);
+                $searchForm->addLabel(formText($agg['key']) . ' (' . $agg['doc_count'] . ')', '__ns-' . $i);
+                $searchForm->addTagClose('li');
+                $i++;
+            }
+            $searchForm->addTagClose('ul');
         }
     }
 }
