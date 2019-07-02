@@ -82,18 +82,26 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
 
         // add group subquery
-        $groups = array('all');
+        $groups = [];
         if(isset($USERINFO['grps'])) {
             $groups = array_merge($groups, $USERINFO['grps']);
         }
-        $groupSubquery = new \Elastica\Query\BoolQuery();
+        $groupIncludeSubquery = new \Elastica\Query\BoolQuery();
         foreach($groups as $group) {
             $group  = str_replace('-', '', strtolower($group));
             $term = new \Elastica\Query\Term();
-            $term->setTerm('groups', $group);
-            $groupSubquery->addShould($term);
+            $term->setTerm('groups_include', $group);
+            $groupIncludeSubquery->addShould($term);
         }
-        $subqueries->addMust($groupSubquery);
+        $subqueries->addMust($groupIncludeSubquery);
+        $groupExcludeSubquery = new \Elastica\Query\BoolQuery();
+        foreach($groups as $group) {
+            $group  = str_replace('-', '', strtolower($group));
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('groups_exclude', $group);
+            $groupExcludeSubquery->addShould($term);
+        }
+        $subqueries->addMustNot($groupExcludeSubquery);
 
         // add namespace filter
         if($INPUT->has('ns')) {
