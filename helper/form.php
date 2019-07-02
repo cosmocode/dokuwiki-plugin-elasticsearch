@@ -76,7 +76,8 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
             foreach ($aggregations as $agg) {
                 $searchForm->addTagOpen('li');
                 $searchForm->addCheckbox('ns[]')->val($agg['key'])->id('__ns-' . $i);
-                $searchForm->addLabel(formText($agg['key']) . ' (' . $agg['doc_count'] . ')', '__ns-' . $i);
+                $searchForm->addLabel(shorten('', $agg['key'], 25) . ' (' . $agg['doc_count'] . ')', '__ns-' . $i)
+                    ->attr('title', $agg['key']);
                 $searchForm->addTagClose('li');
                 $i++;
             }
