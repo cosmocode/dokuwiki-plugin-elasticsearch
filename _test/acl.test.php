@@ -33,6 +33,15 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
         return [
             ['mini:micro:nano:stop', 'user', 'group', 0],
             ['mini:micro:nano:stop', 'spots', 'group', 8],
+            ['mini:micro:nano:start', 'user', 'micra', 8],
+            ['mini:micro:nano:start', 'user', 'nana', 8],
+            ['mini:micro:start', 'user', 'user', 8],
+            ['mini:micro:start', 'mirco', 'user', 8],
+            ['mini:micro:start', 'mirco', 'group', 0],
+            ['super:start', 'user', 'ALL', 8],
+            ['super:start', 'user', 'group', 8],
+            ['super:mini:start', 'user', 'nana', 0],
+            ['super:mini:stop', 'user', 'nana', 8],
         ];
     }
 
@@ -82,6 +91,15 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
             ],
             [
                 'super:mini:start',
+                [
+                    'groups_include' => [],
+                    'groups_exclude' => [],
+                    'users_include' => [],
+                    'users_exclude' => [],
+                ]
+            ],
+            [
+                'super:mini:stop',
                 [
                     'groups_include' => ['nana'],
                     'groups_exclude' => [],
