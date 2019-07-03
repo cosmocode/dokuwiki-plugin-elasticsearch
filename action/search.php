@@ -25,13 +25,12 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * FIXME is this necessary?
      * allow our custom do command
      *
      * @param Doku_Event $event
      * @param $param
      */
-    public function handle_preprocess(Doku_Event &$event, $param) {
+    public function handle_preprocess(Doku_Event $event, $param) {
         if($event->data != 'elasticsearch') return;
         $event->preventDefault();
         $event->stopPropagation();
@@ -43,7 +42,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      * @param $param
      */
-    public function handle_action(Doku_Event &$event, $param) {
+    public function handle_action(Doku_Event $event, $param) {
         if($event->data != 'elasticsearch') return;
         $event->preventDefault();
         $event->stopPropagation();
@@ -83,7 +82,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $equery->setSize($this->getConf('perpage'));
         $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
 
-        // TODO
         // add ACL subqueries
         $this->addACLSubqueries($subqueries);
 
@@ -123,7 +121,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      *
      * @param \Elastica\Query\BoolQuery $subqueries
      */
-    protected function addACLSubqueries(&$subqueries)
+    protected function addACLSubqueries($subqueries)
     {
         global $USERINFO;
         global $conf;

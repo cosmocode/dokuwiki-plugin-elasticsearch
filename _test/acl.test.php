@@ -120,6 +120,9 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
      */
     public function testACL($page, $expected)
     {
+        global $AUTH_ACL;
+        $AUTH_ACL = $this->acl;
+
         /** @var helper_plugin_elasticsearch_acl $helper */
         $helper = plugin_load('helper', 'elasticsearch_acl');
 

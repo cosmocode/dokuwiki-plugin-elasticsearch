@@ -23,19 +23,10 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
      * Traverses the whole rule set and resolves overrides and exclusions.
      *
      * @param string $id Page id
-     * @param array $aclArray Only provided by tests
      * @return array
      */
-    public function getPageACL($id, $aclArray = []) {
-        global $conf;
-        global $AUTH_ACL;
-        // FIXME global $AUTH_ACL is missing in CLI context
-        if (empty($AUTH_ACL)) {
-            auth_setup();
-        }
-        $AUTH_ACL = array_merge($AUTH_ACL, $aclArray);
+    public function getPageACL($id) {
         $id    = cleanID($id);
-
         $rules = [];
 
         /** @var admin_plugin_acl $hlpACL */
@@ -46,10 +37,8 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
         $acl = $hlpACL->acl;
         ksort($acl);
 
-        $aclKeys = array_keys($acl);
-
         // check for exact id
-        if (in_array($id, $aclKeys)) {
+        if (isset($acl[$id])) {
             // process matched rule
             $this->addRule($acl[$id], $rules);
         }
@@ -59,12 +48,12 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
         do {
             $ns = getNS($ns);
             // no namespace, check permissions for root
-            if (!$ns && in_array('*', $aclKeys)) {
+            if (!$ns && isset($acl['*'])) {
                 $this->addRule($acl['*'], $rules);
                 continue;
             }
             // check namespace
-            if (in_array($ns . ':*', $aclKeys)) {
+            if (isset($acl[$ns . ':*'])) {
                 $this->addRule($acl[$ns . ':*'], $rules);
             }
         } while ($ns);
