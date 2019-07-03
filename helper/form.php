@@ -1,15 +1,13 @@
 <?php
 /**
- * DokuWiki Plugin elasticsearch (Helper Component)
+ * DokuWiki Plugin elasticsearch (Form Helper Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
+ * @author  Anna Dabrowska <dabrowska@cosmocode.de>
  */
 
-// must be run within Dokuwiki
 use dokuwiki\Form\Form;
-
-if(!defined('DOKU_INC')) die();
 
 class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
 {
@@ -17,9 +15,9 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
     /**
      * Replacement for the standard search form
      *
-     * @param null $aggregations
+     * @param array $aggregations
      */
-    public function tpl ($aggregations = null)
+    public function tpl($aggregations)
     {
         global $lang;
         global $QUERY;
@@ -52,6 +50,7 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
             ->attr('aria-hidden', 'true');
 
         $this->addNamespaceSelector($searchForm, $aggregations);
+        $this->addDateSelector($searchForm);
         $searchForm->addTagClose('div');
     }
 
@@ -64,8 +63,9 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
     protected function addNamespaceSelector(Form $searchForm, array $aggregations)
     {
         if (!empty($aggregations)) {
-            // popup toggler
             $searchForm->addTagOpen('div')->addClass('toggle')->attr('aria-haspopup', 'true');
+
+            // popup toggler
             $searchForm->addTagOpen('div')->addClass('current');
             $searchForm->addHTML($this->getLang('nsp'));
             $searchForm->addTagClose('div');
@@ -82,6 +82,46 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
                 $i++;
             }
             $searchForm->addTagClose('ul');
+
+            $searchForm->addTagClose('div');
         }
+    }
+
+    /**
+     * Date range filter
+     *
+     * @param Form $searchForm
+     */
+    protected function addDateSelector(Form $searchForm)
+    {
+        global $lang;
+
+        $options = [
+            'any' => $lang['search_any_time'],
+            'week' =>  $lang['search_past_7_days'],
+            'month' => $lang['search_past_month'],
+            'year' => $lang['search_past_year'],
+        ];
+
+        $searchForm->addTagOpen('div')->addClass('toggle')->attr('aria-haspopup', 'true');
+
+        // popup toggler
+        $searchForm->addTagOpen('div')->addClass('current');
+        $searchForm->addHTML($this->getLang('lastmod'));
+        $searchForm->addTagClose('div');
+
+        // options
+        $i = 0;
+        $searchForm->addTagOpen('ul')->attr('aria-expanded', 'false');
+        foreach ($options as $opt => $label) {
+            $searchForm->addTagOpen('li');
+            $searchForm->addRadioButton('min')->val($opt)->id('__min-' . $i);
+            $searchForm->addLabel($label, '__min-' . $i);
+            $searchForm->addTagClose('li');
+            $i++;
+        }
+        $searchForm->addTagClose('ul');
+
+        $searchForm->addTagClose('div');
     }
 }
