@@ -8,8 +8,6 @@
  */
 
 // must be run within Dokuwiki
-use dokuwiki\Form\Form;
-
 if(!defined('DOKU_INC')) die();
 
 /**
@@ -41,6 +39,8 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
         if (isset($acl[$id])) {
             // process matched rule
             $this->addRule($acl[$id], $rules);
+            // stop traversing if we reached a total access block for @ALL
+            if (isset($acl[$id]['@ALL'])) return $rules;
         }
 
         // walk namespace segments up
@@ -50,11 +50,17 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
             // no namespace, check permissions for root
             if (!$ns && isset($acl['*'])) {
                 $this->addRule($acl['*'], $rules);
-                continue;
+                // stop traversing if we reached a total access block for @ALL
+                if (isset($acl['*']['@ALL'])) {
+                    $ns = false;
+                    continue;
+                }
             }
             // check namespace
             if (isset($acl[$ns . ':*'])) {
                 $this->addRule($acl[$ns . ':*'], $rules);
+                // stop traversing if we reached a total access block for @ALL
+                if (isset($acl[$ns . ':*']['@ALL'])) $ns = false;
             }
         } while ($ns);
 
@@ -90,6 +96,7 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
 
     /**
      * Adds specific access rules to a rule set covering a full namespace path.
+     * Omit access block for @ALL since it is assumed.
      *
      * @param array $rule Collection of access permissions for a certain location
      * @param array $rules Set of rules already
@@ -99,10 +106,12 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
         $localrules = [];
 
         foreach ($rule as $key => $perm) {
-            // read permissions for a given group or user
-            // set only if not yet defined and there are no total access blocks on lower levels
-            if (!array_key_exists($key, $rules) && (!isset($rules['@ALL']) || $rules['@ALL'] !== false)) {
+            // set read permissions for a given group or user
+            // but skip if already defined for a more specific path
+            if ($key !== '@ALL' && !array_key_exists($key, $rules)) {
                 $localrules[$key] = $perm > AUTH_NONE;
+            } elseif ($key === '@ALL' && $perm > AUTH_NONE) {
+                $localrules[$key] = true;
             }
         }
 
