@@ -48,7 +48,7 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
                 'mini:micro:nano:stop',
                 [
                     'groups_include' => [],
-                    'groups_exclude' => ['ALL'],
+                    'groups_exclude' => [],
                     'users_include' => ['spots'],
                     'users_exclude' => [],
                 ]
@@ -57,7 +57,7 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
                 'mini:micro:nano:start',
                 [
                     'groups_include' => ['micra', 'nana'],
-                    'groups_exclude' => ['ALL'],
+                    'groups_exclude' => [],
                     'users_include' => [],
                     'users_exclude' => [],
                 ]
@@ -66,9 +66,27 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
                 'mini:micro:start',
                 [
                     'groups_include' => ['user'],
-                    'groups_exclude' => ['ALL'],
+                    'groups_exclude' => [],
                     'users_include' => [],
                     'users_exclude' => ['mirco'],
+                ]
+            ],
+            [
+                'super:start',
+                [
+                    'groups_include' => ['ALL'],
+                    'groups_exclude' => [],
+                    'users_include' => [],
+                    'users_exclude' => [],
+                ]
+            ],
+            [
+                'super:mini:start',
+                [
+                    'groups_include' => ['nana'],
+                    'groups_exclude' => [],
+                    'users_include' => [],
+                    'users_exclude' => [],
                 ]
             ],
         ];
