@@ -25,6 +25,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * FIXME is this necessary?
      * allow our custom do command
      *
      * @param Doku_Event $event
@@ -48,7 +49,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $event->stopPropagation();
         global $QUERY;
         global $INPUT;
-        global $USERINFO;
+
+        if (empty($QUERY)) $QUERY = $INPUT->str('q');
 
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -81,27 +83,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $equery->setSize($this->getConf('perpage'));
         $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
 
-        // add group subquery
-        $groups = [];
-        if(isset($USERINFO['grps'])) {
-            $groups = array_merge($groups, $USERINFO['grps']);
-        }
-        $groupIncludeSubquery = new \Elastica\Query\BoolQuery();
-        foreach($groups as $group) {
-            $group  = str_replace('-', '', strtolower($group));
-            $term = new \Elastica\Query\Term();
-            $term->setTerm('groups_include', $group);
-            $groupIncludeSubquery->addShould($term);
-        }
-        $subqueries->addMust($groupIncludeSubquery);
-        $groupExcludeSubquery = new \Elastica\Query\BoolQuery();
-        foreach($groups as $group) {
-            $group  = str_replace('-', '', strtolower($group));
-            $term = new \Elastica\Query\Term();
-            $term->setTerm('groups_exclude', $group);
-            $groupExcludeSubquery->addShould($term);
-        }
-        $subqueries->addMustNot($groupExcludeSubquery);
+        // TODO
+        // add ACL subqueries
+        $this->addACLSubqueries($subqueries);
 
         // add namespace filter
         if($INPUT->has('ns')) {
@@ -131,6 +115,59 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
+        }
+    }
+
+    /**
+     * Inserts subqueries based on current user's ACLs, none for superusers
+     *
+     * @param \Elastica\Query\BoolQuery $subqueries
+     */
+    protected function addACLSubqueries(&$subqueries)
+    {
+        global $USERINFO;
+        global $conf;
+
+        // FIXME @ALL handling
+        $groups = isset($USERINFO['grps']) ? $USERINFO['grps'] : ['ALL'];
+
+        // no ACL filters for superusers
+        if (in_array(ltrim($conf['superuser'], '@'), $groups)) return;
+
+        // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
+        $includeSubquery = new \Elastica\Query\BoolQuery();
+        foreach($groups as $group) {
+            $group  = str_replace('-', '', strtolower($group));
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('groups_include', $group);
+            $includeSubquery->addShould($term);
+        }
+        if (isset($_SERVER['REMOTE_USER'])) {
+            $userIncludeSubquery = new \Elastica\Query\BoolQuery();
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('users_include', $_SERVER['REMOTE_USER']);
+            $userIncludeSubquery->addMust($term);
+            $includeSubquery->addShould($userIncludeSubquery);
+        }
+        $subqueries->addMust($includeSubquery);
+
+        // groups exclusion SHOULD be respected, not MUST, since that would not allow for exceptions
+        $groupExcludeSubquery = new \Elastica\Query\BoolQuery();
+        foreach($groups as $group) {
+            $group  = str_replace('-', '', strtolower($group));
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('groups_exclude', $group);
+            $groupExcludeSubquery->addShould($term);
+        }
+        $excludeSubquery = new \Elastica\Query\BoolQuery();
+        $excludeSubquery->addMustNot($groupExcludeSubquery);
+        $subqueries->addShould($excludeSubquery);
+
+        // user specific excludes must always be respected
+        if (isset($_SERVER['REMOTE_USER'])) {
+            $term = new \Elastica\Query\Term();
+            $term->setTerm('users_exclude', $_SERVER['REMOTE_USER']);
+            $subqueries->addMustNot($term);
         }
     }
 

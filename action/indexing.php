@@ -185,8 +185,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
         $fullACL = $hlpAcl->getPageACL($id);
         $queryACL = $hlpAcl->splitRules($fullACL);
-        $data['groups_include'] = $queryACL['groups_include'];
-        $data['groups_exclude'] = $queryACL['groups_exclude'];
+        $data = array_merge($data, $queryACL);
 
         // check if the document still exists to update it or add it as a new one
         try {
