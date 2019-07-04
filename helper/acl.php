@@ -4,11 +4,10 @@
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
+ * @author  Anna Dabrowska <dabrowska@cosmocode.de>
  */
 
 // must be run within Dokuwiki
-use dokuwiki\Form\Form;
-
 if(!defined('DOKU_INC')) die();
 
 /**
@@ -17,75 +16,105 @@ if(!defined('DOKU_INC')) die();
 class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
 {
     /**
-     * Lists all groups that have at least read permissions on the given page
+     * Returns a full list of (read) permissions for users and groups whose access to a given page
+     * is defined in the ACLs.
+     * Traverses the whole rule set and resolves overrides and exclusions.
      *
-     * @param $id
-     * @param array $aclArray
+     * @param string $id Page id
      * @return array
      */
-    public function getPageACL($id, $aclArray = []) {
-
-        if (!empty($aclArray)) {
-            $AUTH_ACL = $aclArray;
-        } else {
-            // FIXME why is global $AUTH_ACL null???
-            auth_setup();
-            global $AUTH_ACL;
-        }
-
-        global $conf;
-
+    public function getPageACL($id) {
         $id    = cleanID($id);
-        $ns    = getNS($id);
-        $perms = array();
+        $rules = [];
 
-        $matches = preg_grep('/^' . preg_quote($id, '/') . '\s+/', $AUTH_ACL);
-        if(count($matches)) {
-            foreach($matches as $match) {
-                $match = preg_replace('/#.*$/', '', $match); //ignore comments
-                $acl   = preg_split('/\s+/', $match);
-                if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
-                if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
-            }
+        /** @var admin_plugin_acl $hlpACL */
+        $hlpACL = plugin_load('admin', 'acl');
+        $hlpACL->_init_acl_config();
+
+        // ACL lines as array
+        $acl = $hlpACL->acl;
+        ksort($acl);
+
+        // check for exact id
+        if (isset($acl[$id])) {
+            // process matched rule
+            $this->addRule($acl[$id], $rules);
+            // stop traversing if we reached a total access block for @ALL
+            if (isset($acl[$id]['@ALL'])) return $rules;
         }
-        //still here? do the namespace checks
-        if($ns) {
-            $path = $ns . ':\*';
-        } else {
-            $path = '\*'; //root document
-        }
+
+        // walk namespace segments up
+        $ns = $id;
         do {
-            $matches = preg_grep('/^' . $path . '\s+/', $AUTH_ACL);
-            if(count($matches)) {
-                foreach($matches as $match) {
-                    $match = preg_replace('/#.*$/', '', $match); //ignore comments
-                    $acl   = preg_split('/\s+/', $match);
-                    if($acl[2] > AUTH_DELETE) $acl[2] = AUTH_DELETE; //no admins in the ACL!
-                    if(!isset($perms[$acl[1]])) $perms[$acl[1]] = $acl[2];
+            $ns = getNS($ns);
+            // no namespace, check permissions for root
+            if (!$ns && isset($acl['*'])) {
+                $this->addRule($acl['*'], $rules);
+                // stop traversing if we reached a total access block for @ALL
+                if (isset($acl['*']['@ALL'])) {
+                    $ns = false;
+                    continue;
                 }
             }
-
-            //get next higher namespace
-            $ns = getNS($ns);
-
-            if($path != '\*') {
-                $path = $ns . ':\*';
-                if($path == ':\*') $path = '\*';
-            } else {
-                //we did this already
-                //break here
-                break;
+            // check namespace
+            if (isset($acl[$ns . ':*'])) {
+                $this->addRule($acl[$ns . ':*'], $rules);
+                // stop traversing if we reached a total access block for @ALL
+                if (isset($acl[$ns . ':*']['@ALL'])) $ns = false;
             }
-        } while(1); //this should never loop endless
-        $groups = array(str_replace('-', '', str_replace('@', '', strtolower(urldecode($conf['superuser'])))));
-        foreach($perms as $group => $permission) {
-            if($permission > AUTH_NONE) {
-                $groups[] = str_replace('-', '', str_replace('@', '', strtolower(urldecode($group))));
-                // FIXME debug log
-//                $this->log(sprintf("%s = %s", $group, $permission));
-            }
-        }
-        return $groups;
+        } while ($ns);
+
+        return $rules;
     }
 
+    /**
+     * Splits a rule set into query-digestible chunks
+     *
+     * @param array $rules
+     * @return array
+     */
+    public function splitRules($rules)
+    {
+        $splitACL = [
+            'groups_include' => [],
+            'groups_exclude' => [],
+            'users_include' => [],
+            'users_exclude' => [],
+        ];
+
+        foreach ($rules as $key => $perm) {
+            if (strpos($key, '@') === 0) {
+                $type = $perm ? 'groups_include' : 'groups_exclude';
+            } else {
+                $type = $perm ? 'users_include' : 'users_exclude';
+            }
+            $splitACL[$type][] = ltrim($key, '@');
+        }
+
+        return $splitACL;
+    }
+
+    /**
+     * Adds specific access rules to a rule set covering a full namespace path.
+     * Omit access block for @ALL since it is assumed.
+     *
+     * @param array $rule Collection of access permissions for a certain location
+     * @param array $rules Set of rules already
+     */
+    protected function addRule($rule, &$rules)
+    {
+        $localrules = [];
+
+        foreach ($rule as $key => $perm) {
+            // set read permissions for a given group or user
+            // but skip if already defined for a more specific path
+            if ($key !== '@ALL' && !array_key_exists($key, $rules)) {
+                $localrules[$key] = $perm > AUTH_NONE;
+            } elseif ($key === '@ALL' && $perm > AUTH_NONE) {
+                $localrules[$key] = true;
+            }
+        }
+
+        $rules = array_merge($rules, $localrules);
+    }
 }

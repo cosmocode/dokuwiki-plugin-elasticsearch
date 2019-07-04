@@ -67,7 +67,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param string $id
      * @return boolean
      */
-    private function needs_indexing($id) {
+    protected function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         $dataFile       = wikiFN($id);
 
@@ -99,7 +99,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param string $id
      * @return int
      */
-    private function update_indexstate($id) {
+    protected function update_indexstate($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         return io_saveFile($indexStateFile, '');
     }
@@ -183,17 +183,22 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             unset($data['namespace']);
         }
 
-        $data['groups'] = $hlpAcl->getPageACL($id);
+        $fullACL = $hlpAcl->getPageACL($id);
+        $queryACL = $hlpAcl->splitRules($fullACL);
+        $data = array_merge($data, $queryACL);
 
         // check if the document still exists to update it or add it as a new one
         try {
-            $document = $type->getDocument($documentId);
             $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
         } catch(\Elastica\Exception\NotFoundException $e) {
             $document = new \Elastica\Document($documentId, $data);
             $type->addDocument($document);
         } catch(Exception $e) {
-            msg('Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
+            msg(
+                'Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' .
+                hsc($e->getMessage()) . '</pre>',
+                -1
+            );
             return;
         }
         $index->refresh();
@@ -204,18 +209,15 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * Log something to the debug log
      *
-     * @param string $txt
+     * @param string|string[] $txt
      */
-    private function log($txt) {
-        if(!$this->getConf('debug')) {
+    protected function log($txt) {
+        if (!$this->getConf('debug')) {
             return;
         }
-        if(!is_array($txt)) {
-            $logs = array($txt);
-        } else {
-            $logs = $txt;
-        }
-        foreach($logs as $entry) {
+        $logs = (array)$txt;
+
+        foreach ($logs as $entry) {
             dbglog($entry);
         }
     }
