@@ -1,7 +1,7 @@
 base   elasticsearch
-author Kieback&Peter IT
-email  it-support@kieback-peter.de
-date   2013-11-26
-name   elasticsearch plugin
+author Andreas Gohr, Anna Dabrowska
+email  dokuwiki@cosmocode.de
+date   2019-07-04
+name   Elasticsearch plugin
 desc   Elasticsearch indexing and searching
-url    https://git.kieback-peter.de/it/dokuwiki-elasticsearch
+url    https://www.dokuwiki.org/plugin:elasticsearch
