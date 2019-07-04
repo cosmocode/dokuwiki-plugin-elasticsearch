@@ -126,8 +126,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         global $USERINFO;
         global $conf;
 
-        // FIXME @ALL handling
-        $groups = isset($USERINFO['grps']) ? $USERINFO['grps'] : ['ALL'];
+        $groups = array_merge(['ALL'], $USERINFO['grps']);
 
         // no ACL filters for superusers
         if (in_array(ltrim($conf['superuser'], '@'), $groups)) return;
