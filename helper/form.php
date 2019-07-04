@@ -25,7 +25,7 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
         global $QUERY;
 
         $searchForm = (new Form(['method' => 'get'], true))->addClass('search-results-form');
-        $searchForm->setHiddenField('do', 'elasticsearch');
+        $searchForm->setHiddenField('do', 'search');
 
         $searchForm->addFieldsetOpen()->addClass('search-form');
         $searchForm->addTextInput('q')->val($QUERY)->useInput(false);

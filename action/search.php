@@ -31,7 +31,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @param $param
      */
     public function handle_preprocess(Doku_Event $event, $param) {
-        if($event->data != 'elasticsearch') return;
+        if($event->data != 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
     }
@@ -43,7 +43,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @param $param
      */
     public function handle_action(Doku_Event $event, $param) {
-        if($event->data != 'elasticsearch') return;
+        if($event->data != 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
         global $QUERY;
@@ -302,7 +302,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         echo '<ul class="elastic_pagination">';
         if($cur > 1) {
             echo '<li class="prev">';
-            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur-1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur-1)))) . '">';
             echo '«';
             echo '</a>';
             echo '</li>';
@@ -313,7 +313,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 echo '<li class="cur">' . $toshow[$i] . '</li>';
             } else {
                 echo '<li>';
-                echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => $toshow[$i]))) . '">';
+                echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => $toshow[$i]))) . '">';
                 echo $toshow[$i];
                 echo '</a>';
                 echo '</li>';
@@ -327,7 +327,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         if($cur < $pages) {
             echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'elasticsearch', 'ns' => $INPUT->arr('ns'), 'p' => ($cur+1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur+1)))) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
