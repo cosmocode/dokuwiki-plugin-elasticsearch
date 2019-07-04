@@ -85,6 +85,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // add ACL subqueries
         $this->addACLSubqueries($subqueries);
 
+        // add date subquery
+        if ($INPUT->has('min')) {
+            $this->addDateSubquery($subqueries, $INPUT->str('min'));
+        }
+
         // add namespace filter
         if($INPUT->has('ns')) {
             $nsSubquery = new \Elastica\Query\BoolQuery();
@@ -114,6 +119,24 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
         }
+    }
+
+    /**
+     * Adds date subquery
+     *
+     * @param Elastica\Query\BoolQuery $subqueries
+     * @param string $min Modified at the latest one {year|month|week} ago
+     */
+    protected function addDateSubquery($subqueries, $min)
+    {
+        // FIXME
+        if (!in_array($min, ['year', 'month', 'week'])) return;
+
+        $dateSubquery = new \Elastica\Query\Range(
+            'modified',
+            ['gte' => date('Y-m-d', strtotime('1 ' . $min . ' ago'))]
+        );
+        $subqueries->addMust($dateSubquery);
     }
 
     /**

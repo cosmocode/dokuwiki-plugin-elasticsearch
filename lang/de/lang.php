@@ -7,5 +7,6 @@
 
 $lang['ns']     = 'Namensraum:';
 $lang['nsp']    = 'Namensräume:';
+$lang['lastmod'] = 'Zuletzt geändert:';
 $lang['author'] = 'Autor:';
 $lang['totalfound'] = 'Ergebnisse gefunden: %s';
