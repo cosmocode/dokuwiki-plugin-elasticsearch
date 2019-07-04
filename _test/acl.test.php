@@ -28,6 +28,11 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
         'super:mini:stop	@nana	8',
     ];
 
+    /**
+     * Expected permissions
+     *
+     * @return array
+     */
     public function dataSanity()
     {
         return [
@@ -144,7 +149,7 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
         /** @var helper_plugin_elasticsearch_acl $helper */
         $helper = plugin_load('helper', 'elasticsearch_acl');
 
-        $raw = $helper->getPageACL($page, $this->acl);
+        $raw = $helper->getPageACL($page);
         $actual = $helper->splitRules($raw);
 
         $this->assertEquals($expected, $actual);
