@@ -27,6 +27,7 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
         $id    = cleanID($id);
         $rules = [];
 
+        auth_setup();
         /** @var admin_plugin_acl $hlpACL */
         $hlpACL = plugin_load('admin', 'acl');
         $hlpACL->_init_acl_config();
