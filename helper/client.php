@@ -110,7 +110,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
                 'fields' => [
                     $conf['lang'] => [
                         'type'  => 'text',
-                        'analyzer' => self::ANALYZERS[$conf['lang']]
+                        'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
                     ],
                 ]
             ]
@@ -124,7 +124,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             if ($translations) foreach ($translations as $lang) {
                 $props['content']['fields'][$lang] = [
                     'type' => 'text',
-                    'analyzer' => self::ANALYZERS[$lang]
+                    'analyzer' => $this->getLanguageAnalyzer($lang)
                 ];
             }
         }
@@ -134,6 +134,20 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         $mapping->setProperties($props);
         $response = $mapping->send();
         return $response;
+    }
+
+    /**
+     * Get the correct analyzer for the given language code
+     *
+     * Returns the standard analalyzer for unknown languages
+     *
+     * @param string $lang
+     * @return string
+     */
+    protected function getLanguageAnalyzer($lang)
+    {
+        if (isset(self::ANALYZERS[$lang])) return self::ANALYZERS[$lang];
+        return 'standard';
     }
 }
 
