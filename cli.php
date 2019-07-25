@@ -51,6 +51,11 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
      * @return void
      */
     protected function main(Options $options) {
+        // manually initialize auth system
+        // see https://github.com/splitbrain/dokuwiki/issues/2823
+        global $AUTH_ACL;
+        if(!$AUTH_ACL) auth_setup();
+
         $cmd = $options->getCmd();
         switch ($cmd) {
             case 'createindex':
