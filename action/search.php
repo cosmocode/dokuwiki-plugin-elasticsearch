@@ -159,7 +159,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
         $includeSubquery = new \Elastica\Query\BoolQuery();
         foreach($groups as $group) {
-            $group  = str_replace('-', '', strtolower($group));
             $term = new \Elastica\Query\Term();
             $term->setTerm('groups_include', $group);
             $includeSubquery->addShould($term);
