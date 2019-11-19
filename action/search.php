@@ -48,8 +48,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $event->stopPropagation();
         global $QUERY;
         global $INPUT;
+        global $ID;
 
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
+        if (empty($QUERY)) $QUERY = $ID;
 
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -114,7 +116,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $aggs = $result->getAggregations();
 
             $this->print_intro();
-            $hlpform->tpl($aggs['namespace']['buckets']);
+            $hlpform->tpl($aggs['namespace']['buckets'] ?: []);
             $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
