@@ -90,8 +90,10 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     public function createIndex($clear=false) {
         $client = $this->connect();
         $index = $client->getIndex($this->getConf('indexname'));
-        $response = $index->create(array(), $clear);
-        return $response;
+
+        $index->create([], $clear);
+
+        return $this->mapAccessFields($index);
     }
 
     /**
@@ -151,6 +153,40 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     {
         if (isset(self::ANALYZERS[$lang])) return self::ANALYZERS[$lang];
         return 'standard';
+    }
+
+    /**
+     * Define special mappings for ACL fields
+     *
+     * Standard mapping could break the search because ACL fields
+     * might contain word-split tokens such as underscores and so must not
+     * be indexed using the standard text analyzer.
+     *
+     * @param \Elastica\Index $index
+     * @return \Elastica\Response
+     */
+    protected function mapAccessFields(\Elastica\Index $index): \Elastica\Response
+    {
+        $type = $index->getType($this->getConf('documenttype'));
+        $props = [
+            'groups_include' => [
+                'type' => 'keyword',
+            ],
+            'groups_exclude' => [
+                'type' => 'keyword',
+            ],
+            'users_include' => [
+                'type' => 'keyword',
+            ],
+            'users_exclude' => [
+                'type' => 'keyword',
+            ],
+        ];
+
+        $mapping = new \Elastica\Type\Mapping();
+        $mapping->setType($type);
+        $mapping->setProperties($props);
+        return $mapping->send();
     }
 }
 
