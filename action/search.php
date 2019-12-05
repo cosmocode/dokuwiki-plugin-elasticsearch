@@ -9,6 +9,9 @@
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
 
+/**
+ * Main search helper
+ */
 class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
     /**
@@ -71,13 +74,13 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $subqueries->addMust($qstring);
 
         $equery->setHighlight(
-            array(
-                "pre_tags"  => array('ELASTICSEARCH_MARKER_IN'),
-                "post_tags" => array('ELASTICSEARCH_MARKER_OUT'),
-                "fields"    => array(
-                    $this->getConf('snippets') => new \StdClass(),
-                    'title' => new \StdClass())
-            )
+            [
+                "pre_tags"  => ['ELASTICSEARCH_MARKER_IN'],
+                "post_tags" => ['ELASTICSEARCH_MARKER_OUT'],
+                "fields"    => [
+                    $this->getConf('snippets') => new \stdClass(),
+                    'title' => new \stdClass()]
+            ]
         );
 
         // paginate
@@ -208,8 +211,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $pagecreateinfo = sprintf($lang['searchcreatepage'], $QUERY);
         }
         $intro          = str_replace(
-            array('@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'),
-            array(hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo),
+            ['@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'],
+            [hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo],
             $intro
         );
         echo $intro;
@@ -243,8 +246,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             // get highlighted title
             $title = str_replace(
-                array('ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'),
-                array('<strong class="search_hit">', '</strong>'),
+                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
+                ['<strong class="search_hit">', '</strong>'],
                 hsc(join(' … ', (array) $row->getHighlights()['title']))
             );
             if(!$title) $title = hsc($row->getSource()['title']);
@@ -253,8 +256,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             // get highlighted snippet
             $snippet = str_replace(
-                array('ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'),
-                array('<strong class="search_hit">', '</strong>'),
+                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
+                ['<strong class="search_hit">', '</strong>'],
                 hsc(join(' … ', (array) $row->getHighlights()[$this->getConf('snippets')]))
             );
             if(!$snippet) $snippet = hsc($row->getSource()['abstract']); // always fall back to abstract
@@ -304,7 +307,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if($pages < 2) return;
 
         // which pages to show
-        $toshow = array(1, 2, $cur, $pages, $pages - 1);
+        $toshow = [1, 2, $cur, $pages, $pages - 1];
         if($cur - 1 > 1) $toshow[] = $cur - 1;
         if($cur + 1 < $pages) $toshow[] = $cur + 1;
         $toshow = array_unique($toshow);
@@ -326,7 +329,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         echo '<ul class="elastic_pagination">';
         if($cur > 1) {
             echo '<li class="prev">';
-            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur-1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur-1)])) . '">';
             echo '«';
             echo '</a>';
             echo '</li>';
@@ -337,7 +340,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 echo '<li class="cur">' . $toshow[$i] . '</li>';
             } else {
                 echo '<li>';
-                echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => $toshow[$i]))) . '">';
+                echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => $toshow[$i]])) . '">';
                 echo $toshow[$i];
                 echo '</a>';
                 echo '</li>';
@@ -351,7 +354,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         if($cur < $pages) {
             echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query(array('q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur+1)))) . '">';
+            echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur+1)])) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
