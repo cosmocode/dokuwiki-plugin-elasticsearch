@@ -10,6 +10,9 @@
 if(!defined('DOKU_INC')) die();
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
+/**
+ * Access to the Elastica client
+ */
 class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
 
     /** @var array Map of ISO codes to Elasticsearch analyzer names */
@@ -60,7 +63,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         if(!is_null($this->elasticaClient)) return $this->elasticaClient;
 
         // parse servers config into DSN array
-        $dsn = array('servers' => array());
+        $dsn = ['servers' => []];
         $servers = $this->getConf('servers');
         $lines   = explode("\n", $servers);
         foreach($lines as $line) {
