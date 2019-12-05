@@ -178,7 +178,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // groups exclusion SHOULD be respected, not MUST, since that would not allow for exceptions
         $groupExcludeSubquery = new \Elastica\Query\BoolQuery();
         foreach($groups as $group) {
-            $group  = str_replace('-', '', strtolower($group));
             $term = new \Elastica\Query\Term();
             $term->setTerm('groups_exclude', $group);
             $groupExcludeSubquery->addShould($term);
