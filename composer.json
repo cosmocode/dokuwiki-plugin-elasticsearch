@@ -1,6 +1,7 @@
 {
     "minimum-stability": "dev",
     "require": {
-        "ruflin/elastica": "dev-master"
+        "ruflin/elastica": "dev-master",
+        "patrickschur/language-detection": "dev-master"
     }
 }
