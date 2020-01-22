@@ -94,6 +94,47 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * @param string $id
+     * @param array $data
+     */
+    protected function write_index($id, $data)
+    {
+        /** @var helper_plugin_elasticsearch_client $hlp */
+        $hlp = plugin_load('helper', 'elasticsearch_client');
+
+        $indexName    = $this->getConf('indexname');
+        $documentType = $this->getConf('documenttype');
+        $client       = $hlp->connect();
+        $index        = $client->getIndex($indexName);
+        $type         = $index->getType($documentType);
+        $documentId   = $documentType . '_' . $id;
+
+        // check if the document still exists to update it or add it as a new one
+        try {
+            $client->updateDocument($documentId, ['doc' => $data], $index->getName(), $type->getName());
+        } catch (\Elastica\Exception\NotFoundException $e) {
+            $document = new \Elastica\Document($documentId, $data);
+            $type->addDocument($document);
+        } catch (\Elastica\Exception\ResponseException $e) {
+            if ($e->getResponse()->getStatus() == 404) {
+                $document = new \Elastica\Document($documentId, $data);
+                $type->addDocument($document);
+            } else {
+                throw $e;
+            }
+        } catch (Exception $e) {
+            msg(
+                'Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' .
+                hsc(get_class($e) . ' ' . $e->getMessage()) . '</pre>',
+                -1
+            );
+            return;
+        }
+        $index->refresh();
+        $this->update_indexstate($id);
+    }
+
+    /**
      * Save indexed state for a page
      *
      * @param string $id
@@ -141,18 +182,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     public function index_page($id) {
         global $conf;
 
-        /** @var helper_plugin_elasticsearch_client $hlp */
-        $hlp = plugin_load('helper', 'elasticsearch_client');
         /** @var helper_plugin_elasticsearch_acl $hlpAcl */
         $hlpAcl = plugin_load('helper', 'elasticsearch_acl');
 
         $this->log('Indexing page ' . $id);
-        $indexName    = $this->getConf('indexname');
-        $documentType = $this->getConf('documenttype');
-        $client       = $hlp->connect();
-        $index        = $client->getIndex($indexName);
-        $type         = $index->getType($documentType);
-        $documentId   = $documentType . '_' . $id;
 
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', METADATA_RENDER_UNLIMITED);
@@ -186,31 +219,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $fullACL = $hlpAcl->getPageACL($id);
         $queryACL = $hlpAcl->splitRules($fullACL);
         $data = array_merge($data, $queryACL);
-
-        // check if the document still exists to update it or add it as a new one
-        try {
-            $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
-        } catch(\Elastica\Exception\NotFoundException $e) {
-            $document = new \Elastica\Document($documentId, $data);
-            $type->addDocument($document);
-        } catch(\Elastica\Exception\ResponseException $e) {
-            if($e->getResponse()->getStatus() == 404) {
-                $document = new \Elastica\Document($documentId, $data);
-                $type->addDocument($document);
-            } else {
-                throw $e;
-            }
-        } catch(Exception $e) {
-            msg(
-                'Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' .
-                hsc(get_class($e).' '.$e->getMessage()) . '</pre>',
-                -1
-            );
-            return;
-        }
-        $index->refresh();
-        $this->update_indexstate($id);
-
+        $this->write_index($id, $data);
     }
 
     /**
