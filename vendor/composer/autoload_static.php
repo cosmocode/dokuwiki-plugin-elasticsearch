@@ -19,6 +19,10 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         array (
             'Psr\\Log\\' => 8,
         ),
+        'L' => 
+        array (
+            'LanguageDetection\\' => 18,
+        ),
         'G' => 
         array (
             'GuzzleHttp\\Stream\\' => 18,
@@ -39,6 +43,10 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
+        'LanguageDetection\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/patrickschur/language-detection/src/LanguageDetection',
         ),
         'GuzzleHttp\\Stream\\' => 
         array (
