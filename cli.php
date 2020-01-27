@@ -34,7 +34,14 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
     protected function setup(Options $options) {
         $options->setHelp('Manage the elastic search index');
 
-        $options->registerCommand('index', 'Index all pages in the wiki');
+        $options->registerCommand('index', 'Index all pages and/or media in the wiki');
+        $options->registerOption(
+            'only',
+            'Which document type to index: pages or media',
+            'o',
+            true,
+            'index'
+        );
 
         $options->registerCommand('createindex', 'Create a simple index named "'.$this->hlp->getConf('indexname').'".');
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
@@ -75,7 +82,12 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
                 }
                 break;
             case 'index':
-                $this->indexAllPages();
+                if ($options->getOpt('only') !== 'media') {
+                    $this->indexAllPages();
+                }
+                if ($options->getOpt('only') !== 'pages') {
+                    $this->indexAllMedia();
+                }
                 break;
             default:
                 $this->error('No command provided');
@@ -103,6 +115,27 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
             $n++;
             $this->info(sprintf("Indexing page %s (%d of %d)\n", $ID, $n, $pages));
             $act->index_page($ID);
+        }
+    }
+    /**
+     * Index all media
+     */
+    protected function indexAllMedia() {
+        global $conf;
+
+        /** @var action_plugin_elasticsearch_indexing $act */
+        $act = plugin_load('action', 'elasticsearch_indexing');
+
+        $data = [];
+        search($data, $conf['mediadir'], 'search_media', ['skipacl' => true]);
+        $media = count($data);
+        $n     = 0;
+        foreach($data as $val) {
+            $id = $val['id'];
+            $n++;
+            $this->info(sprintf("Indexing media %s (%d of %d)\n", $id, $n, $media));
+
+            $act->index_file($id);
         }
     }
 
