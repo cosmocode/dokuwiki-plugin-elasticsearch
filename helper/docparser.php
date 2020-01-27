@@ -20,16 +20,16 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
     protected $parsers;
 
     /**
-     * Maps fields returned by Tika or other JSON returining parsers to our own field names.
+     * Maps fields returned by Tika or other JSON returning parsers to our own field names.
      * Order does matter. Last non-empty field wins.
      */
     const FILEDMAP = [
         'title' => 'title',
         'dc:title' => 'title',
-        'content' => 'body',
-        'body' => 'body',
-        'dc:description' => 'body',
-        'X-TIKA:content' => 'body',
+        'content' => 'content',
+        'body' => 'content',
+        'dc:description' => 'content',
+        'X-TIKA:content' => 'content',
     ];
 
     /**
@@ -82,14 +82,14 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
             'content' => '',
             'mime' => $mime,
             'ext' => $ext,
-            'lang' => '',
+            'language' => '',
         ];
 
         // add what we got from the parser
         $data = array_merge($data, $this->processParserResult($result));
 
-        // add languageinfo
-        $data['lang'] = $this->detectLanguage($data['content']);
+        // add language info
+        $data['language'] = $this->detectLanguage($data['content']);
 
         return $data;
     }
