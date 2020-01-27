@@ -34,15 +34,19 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
 
     /**
      * Load the parser setup
-     *
-     * @fixme load this from a config setup
      */
     public function __construct()
     {
-        $this->parsers = [
-            'pdf' => 'pdftotext',
-            'doc' => 'http://givemetext.okfnlabs.org/tika/rmeta',
-        ];
+        $parsers = [];
+        $configs = explode("\n", $this->getConf('mediaparsers'));
+
+        foreach ($configs as $c) {
+            $p = explode(';', $c);
+            $parsers[$p[0]] = $p[1];
+        }
+        array_walk($parsers, 'trim');
+
+        $this->parsers = $parsers;
     }
 
     /**
