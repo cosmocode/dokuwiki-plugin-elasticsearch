@@ -135,15 +135,15 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
         // decode json responses
         if (
             (
-                $result[0] !== '[' && $result !== '{'
+                $result[0] !== '[' && $result[0] !== '{'
             )
             ||
             (
-            $decoded = json_decode($result, true) === false
+                ($decoded = json_decode($result, true)) === null
             )
         ) {
             return [
-                'body' => $result,
+                'content' => $result,
             ];
         };
         // we only want the first result from an Apache Tika response
