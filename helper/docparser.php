@@ -178,7 +178,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
 
         $ld = new \LanguageDetection\Language();
 
-        $langs = $ld->detect($body)->whitelist($trans->translations)->close();
+        $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
         return array_shift($langs);
     }
 }
