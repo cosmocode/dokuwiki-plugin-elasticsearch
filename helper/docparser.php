@@ -76,7 +76,6 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
 
         // defaults
         $data = [
-            'uri' => $file,
             'title' => basename($file),
             'content' => '',
             'mime' => $mime,

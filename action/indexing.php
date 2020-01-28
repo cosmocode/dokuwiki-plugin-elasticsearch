@@ -12,6 +12,10 @@ if(!defined('DOKU_INC')) die();
 
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
+    const MIME_DOKUWIKI = 'text/dokuwiki';
+    const DOCTYPE_PAGE = 'page';
+    const DOCTYPE_MEDIA = 'media';
+
     /**
      * Registers a callback function for a given event
      *
@@ -21,6 +25,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     public function register(Doku_Event_Handler $controller) {
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'handle_delete');
+        $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
+        $controller->register_hook('MEDIA_DELETE_FILE', 'BEFORE', $this, 'handle_media_delete');
     }
 
     /**
@@ -44,6 +50,18 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if($this->needs_indexing($ID)) {
             $this->index_page($ID);
         }
+    }
+
+    /**
+     * Update index on media upload
+     *
+     * @param Doku_Event $event
+     * @param $param
+     * @throws Exception
+     */
+    public function handle_media_upload(Doku_Event $event, $param)
+    {
+        $this->index_file($event->data[2]);
     }
 
     /**
@@ -94,10 +112,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * @param string $id
      * @param array $data
      */
-    protected function write_index($id, $data)
+    protected function write_index($data)
     {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -107,7 +124,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
-        $documentId   = $documentType . '_' . $id;
+        $documentId   = $data['doctype'] . '_' . $data['uri'];
 
         // check if the document still exists to update it or add it as a new one
         try {
@@ -131,7 +148,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             return;
         }
         $index->refresh();
-        $this->update_indexstate($id);
+        $this->update_indexstate($data['uri']);
     }
 
     /**
@@ -158,7 +175,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
-        $documentId   = $documentType . '_' . $id;
+        $documentId   = self::DOCTYPE_PAGE . '_' . $id;
 
         try {
             $type->deleteById($documentId);
@@ -198,6 +215,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['title']    = $meta['title'];
         $data['abstract'] = $meta['description']['abstract'];
         $data['content']  = rawWiki($id);
+        $data['mime']     = self::MIME_DOKUWIKI;
+        $data['doctype']  = self::DOCTYPE_PAGE;
 
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
@@ -219,7 +238,39 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $fullACL = $hlpAcl->getPageACL($id);
         $queryACL = $hlpAcl->splitRules($fullACL);
         $data = array_merge($data, $queryACL);
-        $this->write_index($id, $data);
+        $this->write_index($data);
+    }
+
+    /**
+     * Index a file
+     *
+     * @param string $fileId
+     * @return void
+     * @throws Exception
+     */
+    public function index_file($fileId) {
+        global $conf;
+
+        $this->log('Indexing file ' . $fileId);
+
+        $docparser = new \helper_plugin_elasticsearch_docparser();
+
+        $data = $docparser->parse(mediaFN($fileId));
+        $data['uri'] = $fileId;
+        $data['doctype'] = self::DOCTYPE_MEDIA;
+        $data['namespace'] = getNS($fileId);
+        if(trim($data['namespace']) == '') {
+            unset($data['namespace']);
+        }
+
+        /** @var helper_plugin_elasticsearch_acl $hlpAcl */
+        $hlpAcl = plugin_load('helper', 'elasticsearch_acl');
+
+        $fullACL = $hlpAcl->getPageACL($fileId);
+        $queryACL = $hlpAcl->splitRules($fullACL);
+        $data = array_merge($data, $queryACL);
+
+        $this->write_index($data);
     }
 
     /**
