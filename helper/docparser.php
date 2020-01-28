@@ -37,14 +37,12 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      */
     public function __construct()
     {
-        $parsers = [];
-        $configs = explode("\n", $this->getConf('mediaparsers'));
+        $configFile = DOKU_CONF . 'docparsers.php';
+        $parsers = confToHash($configFile);
 
-        foreach ($configs as $c) {
-            $p = explode(';', $c);
-            $parsers[$p[0]] = $p[1];
+        if (empty($parsers)) {
+            throw new Exception("Cannot process media, the parser configuration is missing.");
         }
-        array_walk($parsers, 'trim');
 
         $this->parsers = $parsers;
     }
@@ -78,6 +76,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
 
         // defaults
         $data = [
+            'uri' => $file,
             'title' => basename($file),
             'content' => '',
             'mime' => $mime,
@@ -113,12 +112,12 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
                 return $http->resp_body;
             }
             return false;
-        } elseif (is_executable($parser)) {
+        } elseif (is_executable(strtok($parser, ' '))) {
             $output = [];
             $ok = 0;
-            exec($parser . ' ' . escapeshellarg($file), $output, $ok);
+            exec(str_replace('%in%', escapeshellarg($file), $parser), $output, $ok);
             if ($ok === 0) {
-                return join('', $output);
+                return join(' ', $output);
             }
             return false;
         }

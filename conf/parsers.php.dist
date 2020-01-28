@@ -1,0 +1,13 @@
+#<?php die() ?>
+# PHP include hack
+
+#
+# Use this file to setup media parsers. The parsers must return text or JSON.
+#
+# Configure one file type per line: file extension followed by parser location (full file system path or URL).
+# You can use %in% for the input file.
+#
+# example
+#
+#pdf				/usr/bin/pdftotext %in% -
+#docx				http://givemetext.okfnlabs.org/tika/rmeta

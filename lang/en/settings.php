@@ -8,6 +8,5 @@
 $lang['servers']      = 'ElasticSearch servers: one per line, add port number after a colon, give optional proxy after a comma';
 $lang['indexname']    = 'Index name to use, must exist or can be created with the cli.php tool.';
 $lang['documenttype'] = 'Document type to use when indexing wiki pages';
-$lang['mediaparsers'] = 'Media parsers returning text or JSON: one per line, file extension separated by semicolon from parser location (file system path or URL)';
 $lang['perpage']      = 'How many hits to show per page';
 $lang['debug']        = 'Log messages to data/cache/debug.log - needs allowdebug enabled';

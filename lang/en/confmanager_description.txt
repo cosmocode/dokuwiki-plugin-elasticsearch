@@ -1,0 +1,5 @@
+Elasticsearch can index media files if it can use external tools/parsers to extract the content of the files.
+
+The parsers can be command line tools or web services. They must return text or JSON.
+
+Define parsers for each file extension that should be processed. Use %in% for the input file.
