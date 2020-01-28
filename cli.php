@@ -10,6 +10,9 @@ if (!defined('DOKU_INC')) die();
 
 use splitbrain\phpcli\Options;
 
+/**
+ * CLI tools for managing the index
+ */
 class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
 
     /** @var helper_plugin_elasticsearch_client */
@@ -43,10 +46,11 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
             'index'
         );
 
-        $options->registerCommand('createindex', 'Create a simple index named "'.$this->hlp->getConf('indexname').'".');
+        $options->registerCommand(
+            'createindex',
+            'Create index named "'.$this->hlp->getConf('indexname').' and all required field mappings".'
+        );
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
-
-        $options->registerCommand('createlangmapping', 'Create the field mapping for multilanguage setup');
     }
 
     /**
@@ -66,19 +70,11 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         $cmd = $options->getCmd();
         switch ($cmd) {
             case 'createindex':
-                $result = $this->hlp->createIndex($options->getOpt('clear'));
-                if($result->hasError()){
-                    $this->error($result->getError());
-                } else {
+                try {
+                    $this->hlp->createIndex($options->getOpt('clear'));
                     $this->success('Index created');
-                }
-                break;
-            case 'createlangmapping':
-                $result = $this->hlp->createLanguageMapping();
-                if($result->hasError()){
-                    $this->error($result->getError());
-                } else {
-                    $this->success('Mapping created');
+                } catch (\Exception $e) {
+                    $this->error($e->getMessage());
                 }
                 break;
             case 'index':

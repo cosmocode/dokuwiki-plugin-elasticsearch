@@ -86,14 +86,19 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      *
      * @param bool $clear rebuild index
      * @return \Elastica\Response
+     * @throws \splitbrain\phpcli\Exception
      */
     public function createIndex($clear=false) {
         $client = $this->connect();
         $index = $client->getIndex($this->getConf('indexname'));
 
-        $index->create([], $clear);
+        if ($index->create([], $clear)->hasError()) {
+            throw new \splitbrain\phpcli\Exception("Failed to create index!");
+        }
 
-        return $this->mapAccessFields($index);
+        if ($this->createMappings($index)->hasError()) {
+            throw new \splitbrain\phpcli\Exception("Failed to create field mappings!");
+        }
     }
 
     /**
@@ -108,31 +113,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         $index = $client->getIndex($this->getConf('indexname'));
         $type = $index->getType($this->getConf('documenttype'));
 
-        // default language
-        $props = [
-            'content' => [
-                'type'  => 'text',
-                'fields' => [
-                    $conf['lang'] => [
-                        'type'  => 'text',
-                        'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
-                    ],
-                ]
-            ]
-        ];
 
-        // other languages as configured in the translation plugin
-        /** @var helper_plugin_translation $transplugin */
-        $transplugin = plugin_load('helper', 'translation');
-        if ($transplugin) {
-            $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
-            if ($translations) foreach ($translations as $lang) {
-                $props['content']['fields'][$lang] = [
-                    'type' => 'text',
-                    'analyzer' => $this->getLanguageAnalyzer($lang)
-                ];
-            }
-        }
 
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
@@ -156,19 +137,53 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     }
 
     /**
-     * Define special mappings for ACL fields
+     * Define mappings for custom fields
      *
-     * Standard mapping could break the search because ACL fields
+     * All languages get their separate fields configured with appropriate linguistic analyzers.
+     *
+     * ACL fields require custom mappings as well, or else they could break the search. They
      * might contain word-split tokens such as underscores and so must not
      * be indexed using the standard text analyzer.
+     *
+     * Fields containing metadata are configured as sparsely as possible, no analyzers are necessary.
      *
      * @param \Elastica\Index $index
      * @return \Elastica\Response
      */
-    protected function mapAccessFields(\Elastica\Index $index): \Elastica\Response
+    protected function createMappings(\Elastica\Index $index): \Elastica\Response
     {
+        global $conf;
+
         $type = $index->getType($this->getConf('documenttype'));
-        $props = [
+
+        // default language
+        $langprops = [
+            'content' => [
+                'type'  => 'text',
+                'fields' => [
+                    $conf['lang'] => [
+                        'type'  => 'text',
+                        'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
+                    ],
+                ]
+            ]
+        ];
+
+        // other languages as configured in the translation plugin
+        /** @var helper_plugin_translation $transplugin */
+        $transplugin = plugin_load('helper', 'translation');
+        if ($transplugin) {
+            $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
+            if ($translations) foreach ($translations as $lang) {
+                $langprops['content']['fields'][$lang] = [
+                    'type' => 'text',
+                    'analyzer' => $this->getLanguageAnalyzer($lang)
+                ];
+            }
+        }
+
+        // document permissions
+        $aclprops = [
             'groups_include' => [
                 'type' => 'keyword',
             ],
@@ -183,9 +198,22 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             ],
         ];
 
+        // differentiate media types
+        $mediaprops = [
+            'doctype' => [
+                'type' => 'keyword',
+            ],
+            'mime' => [
+                'type' => 'keyword',
+            ],
+            'ext' => [
+                'type' => 'keyword',
+            ],
+        ];
+
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
-        $mapping->setProperties($props);
+        $mapping->setProperties(array_merge($langprops, $aclprops, $mediaprops));
         return $mapping->send();
     }
 }
