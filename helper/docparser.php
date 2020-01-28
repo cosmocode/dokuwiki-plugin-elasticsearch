@@ -105,8 +105,8 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      */
     protected function runParser($file, $parser)
     {
-        if (preg_match('/^https?:\/\/', $parser)) {
-            $http = new \dokuwiki\HTTP\DokuHTTPClient();
+        if (preg_match('/^https?:\/\//', $parser)) {
+            $http = new DokuHTTPClient();
             $http->timeout = 90;
             $ok = $http->sendRequest($parser, io_readFile($file, false), 'PUT');
             if ($ok) {
