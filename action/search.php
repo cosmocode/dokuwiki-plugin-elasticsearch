@@ -241,7 +241,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
             /** @var Elastica\Result $row */
             $page = $row->getSource()['uri'];
-            if(!page_exists($page) || auth_quickaclcheck($page) < AUTH_READ) continue;
+            if(!(page_exists($page) || is_file(mediaFN($page))) || auth_quickaclcheck($page) < AUTH_READ) continue;
 
             // get highlighted title
             $title = str_replace(
@@ -261,9 +261,12 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             );
             if(!$snippet) $snippet = hsc($row->getSource()['abstract']); // always fall back to abstract
 
+            $href = $row->getSource()['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE ? wl($page) : ml($page);
+            $ext = !empty($row->getSource()['ext']) ? '[ ' . $row->getSource()['ext'] . ' ] ' : '';
+
             echo '<dt>';
-            echo '<a href="'.wl($page).'" class="wikilink1" title="'.hsc($page).'">';
-            echo $title;
+            echo '<a href="' . $href . '" class="wikilink1" title="'.hsc($page).'">';
+            echo $ext . $title;
             echo '</a>';
             echo '</dt>';
 
