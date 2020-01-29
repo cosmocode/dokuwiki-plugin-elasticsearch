@@ -258,9 +258,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
         $docparser = new \helper_plugin_elasticsearch_docparser();
 
-        $data = $docparser->parse(mediaFN($fileId));
+        $file = mediaFN($fileId);
+        $data = $docparser->parse($file);
         $data['uri'] = $fileId;
         $data['doctype'] = self::DOCTYPE_MEDIA;
+        $data['modified'] = date('Y-m-d\TH:i:s\Z', filemtime($file));
         $data['namespace'] = getNS($fileId);
         if(trim($data['namespace']) == '') {
             unset($data['namespace']);

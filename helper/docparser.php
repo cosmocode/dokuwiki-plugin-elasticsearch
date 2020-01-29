@@ -30,6 +30,9 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
         'body' => 'content',
         'dc:description' => 'content',
         'X-TIKA:content' => 'content',
+        'Creation-Date' => 'created',
+        'dcterms:created' => 'created',
+        'meta:creation-date' => 'created',
     ];
 
     /**
@@ -56,7 +59,8 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      * content - the content to index
      * mime - the mime type as determined by us
      * ext - the extension of the file
-     * lang - the language code the file is written in
+     * language - the language code the file is written in
+     * created - creation time
      *
      * Returns false if the file can not be parsed and thus should not be indexed
      *
@@ -81,6 +85,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
             'mime' => $mime,
             'ext' => $ext,
             'language' => '',
+            'created' => date('Y-m-d\TH:i:s\Z', filemtime($file)),
         ];
 
         // add what we got from the parser
