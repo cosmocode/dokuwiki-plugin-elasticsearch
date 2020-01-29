@@ -26,7 +26,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'handle_delete');
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
-        $controller->register_hook('MEDIA_DELETE_FILE', 'BEFORE', $this, 'handle_media_delete');
+        $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_delete');
     }
 
     /**
@@ -76,7 +76,18 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if($event->data[3]) return; // is old revision stuff
         if(!empty($event->data[0][1])) return; // page still exists
         // still here? delete from index
-        $this->delete_page($event->data[2]);
+        $this->delete_entry($event->data[2], self::DOCTYPE_PAGE);
+    }
+
+    /**
+     * Remove deleted media from index
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    public function handle_media_delete(Doku_Event $event, $param)
+    {
+        if ($event->data['unl']) $this->delete_entry($event->data['id'], self::DOCTYPE_MEDIA);
     }
 
     /**
@@ -93,7 +104,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if(!file_exists($dataFile)) {
             // page does not exist but has a state file, try to remove from index
             if(file_exists($indexStateFile)) {
-                $this->delete_page($id);
+                $this->delete_entry($id, self::DOCTYPE_PAGE);
             }
             return false;
         }
@@ -169,8 +180,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * Remove the given document from the index
      *
      * @param $id
+     * @param $doctype
      */
-    public function delete_page($id) {
+    public function delete_entry($id, $doctype) {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp          = plugin_load('helper', 'elasticsearch_client');
         $indexName    = $this->getConf('indexname');
@@ -178,7 +190,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
         $type         = $index->getType($documentType);
-        $documentId   = self::DOCTYPE_PAGE . '_' . $id;
+        $documentId   = $doctype . '_' . $id;
 
         try {
             $type->deleteById($documentId);
@@ -190,7 +202,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
 
         // delete state file
-        @unlink(metaFN($id, '.elasticsearch_indexed'));
+        $stateFile = ($doctype === self::DOCTYPE_MEDIA) ?
+            mediaMetaFN($id, '.elasticsearch_indexed') :
+            metaFN($id, '.elasticsearch_indexed');
+        @unlink($stateFile);
     }
 
     /**
