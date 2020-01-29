@@ -259,23 +259,28 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $docparser = new \helper_plugin_elasticsearch_docparser();
 
         $file = mediaFN($fileId);
-        $data = $docparser->parse($file);
-        $data['uri'] = $fileId;
-        $data['doctype'] = self::DOCTYPE_MEDIA;
-        $data['modified'] = date('Y-m-d\TH:i:s\Z', filemtime($file));
-        $data['namespace'] = getNS($fileId);
-        if(trim($data['namespace']) == '') {
-            unset($data['namespace']);
+
+        try {
+            $data = $docparser->parse($file);
+            $data['uri'] = $fileId;
+            $data['doctype'] = self::DOCTYPE_MEDIA;
+            $data['modified'] = date('Y-m-d\TH:i:s\Z', filemtime($file));
+            $data['namespace'] = getNS($fileId);
+            if(trim($data['namespace']) == '') {
+                unset($data['namespace']);
+            }
+
+            /** @var helper_plugin_elasticsearch_acl $hlpAcl */
+            $hlpAcl = plugin_load('helper', 'elasticsearch_acl');
+
+            $fullACL = $hlpAcl->getPageACL($fileId);
+            $queryACL = $hlpAcl->splitRules($fullACL);
+            $data = array_merge($data, $queryACL);
+
+            $this->write_index($data);
+        } catch (RuntimeException $e) {
+            $this->log('Skipping ' . $fileId . ': ' . $e->getMessage());
         }
-
-        /** @var helper_plugin_elasticsearch_acl $hlpAcl */
-        $hlpAcl = plugin_load('helper', 'elasticsearch_acl');
-
-        $fullACL = $hlpAcl->getPageACL($fileId);
-        $queryACL = $hlpAcl->splitRules($fullACL);
-        $data = array_merge($data, $queryACL);
-
-        $this->write_index($data);
     }
 
     /**

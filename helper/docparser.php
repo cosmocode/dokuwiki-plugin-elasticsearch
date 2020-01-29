@@ -65,18 +65,26 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      * Returns false if the file can not be parsed and thus should not be indexed
      *
      * @param string $file
-     * @return false|array
-     * @fixme we may want to throw exceptions here for better error handling
+     * @return array
+     * @fixme throw smarter exceptions
      */
     public function parse($file)
     {
-        if (!file_exists($file)) return false;
+        if (!file_exists($file)) {
+            throw new RuntimeException('File ' . $file . 'does not exist');
+        }
         list($ext, $mime) = mimetype($file);
-        if (!$ext) return false;
-        if (!isset($this->parsers[$ext])) return false;
+        if (!$ext) {
+            throw new RuntimeException('Cannot parse file with unidentified extension');
+        }
+        if (!isset($this->parsers[$ext])) {
+            throw new RuntimeException('No parser configured for files of type ' . $ext);
+        };
 
         $result = $this->runParser($file, $this->parsers[$ext]);
-        if ($result === false) return false;
+        if ($result === false) {
+            throw new RuntimeException('No response from parser');
+        }
 
         // defaults
         $data = [
