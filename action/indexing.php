@@ -152,13 +152,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Save indexed state for a page
+     * Save indexed state for a page or a media file
      *
      * @param string $id
+     * @param string $doctype
      * @return int
      */
-    protected function update_indexstate($id) {
-        $indexStateFile = metaFN($id, '.elasticsearch_indexed');
+    protected function update_indexstate($id, $doctype = self::DOCTYPE_PAGE) {
+        $indexStateFile = ($doctype === self::DOCTYPE_MEDIA) ?
+            mediaMetaFN($id, '.elasticsearch_indexed') :
+            metaFN($id, '.elasticsearch_indexed');
         return io_saveFile($indexStateFile, '');
     }
 
