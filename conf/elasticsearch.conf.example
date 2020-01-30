@@ -11,3 +11,7 @@ pdf    /usr/bin/pdftotext %in% -
 
 # use a free installation of Apache Tika on the Web for Word Documents
 docx   http://givemetext.okfnlabs.org/tika/rmeta
+
+# use our own parser for JPEGs
+jpg    bin/plugin.php elasticsearch_img %in%
+jpeg   bin/plugin.php elasticsearch_img %in%
