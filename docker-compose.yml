@@ -1,0 +1,23 @@
+version: '3'
+services:
+    elasticsearch:
+        image: elasticsearch:7.5.2
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        networks:
+            - elastic
+    kibana:
+        image: kibana:7.5.2
+        ports:
+            - "5601:5601"
+        networks:
+            - elastic
+    tika:
+        image: mattfullerton/tika-tesseract-docker
+        ports:
+            - "9998:9998"
+networks:
+    elastic:
+        driver: bridge
+
