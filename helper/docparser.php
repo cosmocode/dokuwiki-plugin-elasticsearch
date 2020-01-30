@@ -13,6 +13,8 @@ require_once dirname(__FILE__) . '/../vendor/autoload.php';
  */
 class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
 {
+    const CONFFILE = DOKU_CONF . 'elasticsearch.conf';
+
     /**
      * @var array maps extensions to parsers. A parser may be a local cli tool (file is passed as argument)
      * or an URL accepting input by PUT (like Apache Tika). They need to return plain text or a JSON response.
@@ -40,11 +42,12 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      */
     public function __construct()
     {
-        $configFile = DOKU_CONF . 'docparsers.php';
-        $parsers = confToHash($configFile);
+        $parsers = confToHash(self::CONFFILE);
 
         if (empty($parsers)) {
-            throw new Exception("Cannot process media, the parser configuration is missing.");
+            throw new RuntimeException(
+                'Cannot process media, the parser configuration in ' . self::CONFFILE . ' is missing.'
+            );
         }
 
         $this->parsers = $parsers;
