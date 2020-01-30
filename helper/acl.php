@@ -29,7 +29,12 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
 
         /** @var admin_plugin_acl $hlpACL */
         $hlpACL = plugin_load('admin', 'acl');
-        $hlpACL->_init_acl_config();
+        if(method_exists($hlpACL, 'initAclConfig')) {
+            $hlpACL->initAclConfig();
+        } else {
+            /** @deprecated Call for current stable release */
+            $hlpACL->_init_acl_config();
+        }
 
         // ACL lines as array
         $acl = $hlpACL->acl;
