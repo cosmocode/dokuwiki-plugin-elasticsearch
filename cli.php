@@ -42,13 +42,13 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
             'only',
             'Which document type to index: pages or media',
             'o',
-            true,
+            'pages OR media',
             'index'
         );
 
         $options->registerCommand(
             'createindex',
-            'Create index named "'.$this->hlp->getConf('indexname').' and all required field mappings".'
+            'Create index named "'.$this->hlp->getConf('indexname').'" and all required field mappings.'
         );
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
     }
