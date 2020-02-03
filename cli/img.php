@@ -43,6 +43,7 @@ class cli_plugin_elasticsearch_img extends DokuWiki_CLI_Plugin
                 $meta->getField([
                     'Iptc.Caption',
                     'Exif.UserComment',
+                    'Exif.ImageDescription',
                     'Exif.TIFFImageDescription',
                     'Exif.TIFFUserComment',
                 ]),
