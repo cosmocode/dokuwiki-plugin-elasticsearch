@@ -207,7 +207,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // allow use of placeholder in search intro
         $pagecreateinfo = '';
         if (auth_quickaclcheck($ID) >= AUTH_CREATE) {
-            $pagecreateinfo = sprintf($lang['searchcreatepage'], $QUERY);
+            $pagecreateinfo = sprintf($lang['searchcreatepage'], html_wikilink($QUERY.'?do=edit', $QUERY));
         }
         $intro          = str_replace(
             ['@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'],
