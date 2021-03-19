@@ -95,9 +95,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $additions);
         // if query is empty, return all results
         if (empty($QUERY)) $QUERY = '*';
-        // let plugins add their fields to query
+
+        // get fields to use in query
         $fields = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_SEARCHFIELDS', $fields);
+
+        if ($this->getConf('searchSyntax')) {
+            array_push($this->searchFields, 'syntax');
+        }
+
         // finally define the elastic query
         $qstring = new \Elastica\Query\SimpleQueryString($QUERY, array_merge($this->searchFields, $fields));
         // restore the original query

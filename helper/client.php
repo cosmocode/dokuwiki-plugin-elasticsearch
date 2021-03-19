@@ -60,20 +60,20 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      * @return \Elastica\Client
      */
     public function connect() {
-        if(!is_null($this->elasticaClient)) return $this->elasticaClient;
+        if (!is_null($this->elasticaClient)) return $this->elasticaClient;
 
         // parse servers config into DSN array
         $dsn = ['servers' => []];
         $servers = $this->getConf('servers');
         $lines   = explode("\n", $servers);
-        foreach($lines as $line) {
-            list($host, $proxy) = explode(',', $line, 2);
+        foreach ($lines as $line) {
+            list($host, $proxy) = array_pad(explode(',', $line, 2),2, null);
             list($host, $port) = explode(':', $host, 2);
             $host = trim($host);
             $port = (int) trim($port);
-            if(!$port) $port = 80;
+            if (!$port) $port = 80;
             $proxy = trim($proxy);
-            if(!$host) continue;
+            if (!$host) continue;
             $dsn['servers'][] = compact('host', 'port', 'proxy');
         }
 
