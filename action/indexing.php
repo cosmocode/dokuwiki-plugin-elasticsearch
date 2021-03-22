@@ -8,6 +8,8 @@
  */
 
 // must be run within Dokuwiki
+use dokuwiki\Extension\Event;
+
 if(!defined('DOKU_INC')) die();
 
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
