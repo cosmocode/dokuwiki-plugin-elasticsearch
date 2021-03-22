@@ -66,6 +66,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * Check if the page $id has changed since the last indexing.
      *
+     * FIXME we must be cleverer now because we let plugins contribute to index
+     *
      * @param string $id
      * @return boolean
      */
@@ -189,6 +191,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $queryACL = $hlpAcl->splitRules($fullACL);
         $data = array_merge($data, $queryACL);
 
+        // let plugins add their own data to index
+        $pluginData = $this->getPluginData($data['uri']);
+        $data = array_merge($data, $pluginData);
+
         // check if the document still exists to update it or add it as a new one
         try {
             $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
@@ -213,6 +219,22 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $index->refresh();
         $this->update_indexstate($id);
 
+    }
+
+    /**
+     * Get plugin data to feed into the index.
+     * If data does not match previously defined mappings, it will be ignored.
+     *
+     * @see \helper_plugin_elasticsearch_client::mapPluginFields
+     *
+     * @param $id
+     * @return array
+     */
+    protected function getPluginData($id): array
+    {
+        $pluginData = ['uri' => $id];
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_INDEXPAGE', $pluginData);
+        return $pluginData;
     }
 
     /**
