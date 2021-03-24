@@ -6,13 +6,24 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
+use dokuwiki\Extension\Event;
 
 /**
  * Main search helper
  */
 class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
+
+    /**
+     * Example array element for search field 'tagging':
+     * 'tagging' => [                       // also used as search query parameter
+     *   'label' => 'Tag',
+     *   'fieldPath' => 'tagging',          // dot notation in more complex mappings
+     *   'limit' => '50',
+     * ]
+     *
+     * @var Array
+     */
+    protected static $pluginSearchConfigs;
 
     /**
      * Registers a callback function for a given event
@@ -34,7 +45,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @param $param
      */
     public function handle_preprocess(Doku_Event $event, $param) {
-        if($event->data != 'search') return;
+        if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
     }
@@ -46,7 +57,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @param $param
      */
     public function handle_action(Doku_Event $event, $param) {
-        if($event->data != 'search') return;
+        if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
         global $QUERY;
@@ -56,11 +67,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
         if (empty($QUERY)) $QUERY = $ID;
 
+        // get extended search configurations from plugins
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', self::$pluginSearchConfigs);
+
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
-
-        /** @var helper_plugin_elasticsearch_form $hlpform */
-        $hlpform = plugin_load('helper', 'elasticsearch_form');
 
         $client = $hlp->connect();
         $index  = $client->getIndex($this->getConf('indexname'));
@@ -99,9 +110,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if($INPUT->has('ns')) {
             $nsSubquery = new \Elastica\Query\BoolQuery();
             foreach($INPUT->arr('ns') as $ns) {
-                $term = new \Elastica\Query\Term();
-                $term->setTerm('namespace', $ns);
-                $nsSubquery->addShould($term);
+                $eterm = new \Elastica\Query\Term();
+                $eterm->setTerm('namespace', $ns);
+                $nsSubquery->addShould($eterm);
             }
             $equery->setPostFilter($nsSubquery);
         }
@@ -114,15 +125,60 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $agg->setSize(25);
         $equery->addAggregation($agg);
 
+        // add search configurations from other plugins
+        $this->addPluginConfigurations($equery);
+
         try {
             $result = $index->search($equery);
             $aggs = $result->getAggregations();
 
             $this->print_intro();
-            $hlpform->tpl($aggs['namespace']['buckets'] ?: []);
+            /** @var helper_plugin_elasticsearch_form $hlpform */
+            $hlpform = plugin_load('helper', 'elasticsearch_form');
+            $hlpform->tpl($aggs);
             $this->print_results($result) && $this->print_pagination($result);
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public static function getRawPluginSearchConfigs()
+    {
+        return self::$pluginSearchConfigs;
+    }
+
+    /**
+     * Add search configurations supplied by other plugins
+     *
+     * @param \Elastica\Query $equery
+     */
+    protected function addPluginConfigurations($equery)
+    {
+        global $INPUT;
+
+        if (!empty(self::$pluginSearchConfigs)) {
+            foreach (self::$pluginSearchConfigs as $param => $config) {
+                // handle search parameter
+                if ($INPUT->has($param)) {
+                    $pluginSubquery = new \Elastica\Query\BoolQuery();
+                    foreach($INPUT->arr($param) as $item) {
+                        $eterm = new \Elastica\Query\Term();
+                        $eterm->setTerm($param, $item);
+                        $pluginSubquery->addShould($eterm);
+                    }
+                    $equery->setPostFilter($pluginSubquery);
+                }
+                // build aggregation for use as filter in advanced search
+                $agg = new \Elastica\Aggregation\Terms($param);
+                $agg->setField($config['fieldPath']);
+                if (isset($config['limit'])) {
+                    $agg->setSize($config['limit']);
+                }
+                $equery->addAggregation($agg);
+            }
         }
     }
 
@@ -134,7 +190,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      */
     protected function addDateSubquery($subqueries, $min)
     {
-        // FIXME
         if (!in_array($min, ['year', 'month', 'week'])) return;
 
         $dateSubquery = new \Elastica\Query\Range(

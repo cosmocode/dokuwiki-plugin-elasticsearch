@@ -49,25 +49,32 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
             ->attr('style', 'display: none;')
             ->attr('aria-hidden', 'true');
 
-        $this->addNamespaceSelector($searchForm, $aggregations);
+        foreach ($aggregations as $term => $aggregation) {
+            // keep canonical 'ns' search parameter for namespaces
+            $param = $term === 'namespace' ? 'ns' : $term;
+            $this->addCheckboxSelector($searchForm, $aggregation['buckets'], $param);
+        }
         $this->addDateSelector($searchForm);
         $searchForm->addTagClose('div');
     }
 
     /**
-     * Namespace filter
+     * Filter with checkboxes
      *
      * @param Form $searchForm
      * @param array $aggregations Namespace aggregations
+     * @param string $param Prefix to use in input names
      */
-    protected function addNamespaceSelector(Form $searchForm, array $aggregations)
+    protected function addCheckboxSelector(Form $searchForm, array $aggregations, $param)
     {
         if (!empty($aggregations)) {
             $searchForm->addTagOpen('div')->addClass('toggle')->attr('aria-haspopup', 'true');
 
             // popup toggler
             $searchForm->addTagOpen('div')->addClass('current');
-            $searchForm->addHTML($this->getLang('nsp'));
+            $pluginSearchConfigs = \action_plugin_elasticsearch_search::getRawPluginSearchConfigs();
+            $label = $param === 'ns' ? $this->getLang('nsp') : $pluginSearchConfigs[$param]['label'];
+            $searchForm->addHTML($label);
             $searchForm->addTagClose('div');
 
             // options
@@ -75,8 +82,8 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
             $searchForm->addTagOpen('ul')->attr('aria-expanded', 'false');
             foreach ($aggregations as $agg) {
                 $searchForm->addTagOpen('li');
-                $searchForm->addCheckbox('ns[]')->val($agg['key'])->id('__ns-' . $i);
-                $searchForm->addLabel(shorten('', $agg['key'], 25) . ' (' . $agg['doc_count'] . ')', '__ns-' . $i)
+                $searchForm->addCheckbox($param . '[]')->val($agg['key'])->id("__$param-" . $i);
+                $searchForm->addLabel(shorten('', $agg['key'], 25) . ' (' . $agg['doc_count'] . ')', "__$param-" . $i)
                     ->attr('title', $agg['key']);
                 $searchForm->addTagClose('li');
                 $i++;
