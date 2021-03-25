@@ -79,13 +79,18 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // store copy of the original query string
         $q = $QUERY;
         // let plugins manipulate the query
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $eventData);
+        $additions = [];
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $additions);
         // if query is empty, return all results
         if (empty($QUERY)) $QUERY = '*';
         // finally define the elastic query string
         $qstring = new \Elastica\Query\SimpleQueryString($QUERY);
         // restore the original query
         $QUERY = $q;
+        // append additions provided by plugins
+        if (!empty($additions)) {
+            $QUERY .= ' ' . implode(' ', $additions);
+        }
 
         // create the actual search object
         $equery = new \Elastica\Query();
