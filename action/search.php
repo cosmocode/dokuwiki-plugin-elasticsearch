@@ -76,8 +76,16 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $client = $hlp->connect();
         $index  = $client->getIndex($this->getConf('indexname'));
 
-        // define the query string
+        // store copy of the original query string
+        $q = $QUERY;
+        // let plugins manipulate the query
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $eventData);
+        // if query is empty, return all results
+        if (empty($QUERY)) $QUERY = '*';
+        // finally define the elastic query string
         $qstring = new \Elastica\Query\SimpleQueryString($QUERY);
+        // restore the original query
+        $QUERY = $q;
 
         // create the actual search object
         $equery = new \Elastica\Query();
