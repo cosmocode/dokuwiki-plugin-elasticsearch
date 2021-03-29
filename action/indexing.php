@@ -63,8 +63,6 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * Check if the page $id has changed since the last indexing.
      *
-     * FIXME we must be cleverer now because we let plugins contribute to index
-     *
      * @param string $id
      * @return boolean
      */
