@@ -168,7 +168,16 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['user']     = $meta['user'];
         $data['title']    = $meta['title'];
         $data['abstract'] = $meta['description']['abstract'];
-        $data['content']  = rawWiki($id);
+        $data['syntax']   = rawWiki($id);
+
+        // prefer rendered plaintext over raw syntax output
+        /** @var \renderer_plugin_text $textRenderer */
+        $textRenderer = plugin_load('renderer', 'text');
+        if ($textRenderer) {
+            $data['content'] = p_cached_output(wikiFN($id),'text');
+        } else {
+            $data['content']  = $data['syntax'];
+        }
 
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
