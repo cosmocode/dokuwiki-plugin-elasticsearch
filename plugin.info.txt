@@ -1,7 +1,7 @@
 base   elasticsearch
 author Andreas Gohr, Anna Dabrowska
 email  dokuwiki@cosmocode.de
-date   2020-01-30
+date   2021-03-19
 name   Elasticsearch plugin
 desc   Elasticsearch indexing and searching
 url    https://www.dokuwiki.org/plugin:elasticsearch
