@@ -6,8 +6,8 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
+use dokuwiki\Extension\Event;
+
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 /**
@@ -93,7 +93,21 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
 
         $index->create([], $clear);
 
-        return $this->mapAccessFields($index);
+        $response = $this->mapAccessFields($index);
+        if ($response->hasError()) return $response;
+
+        $pluginMappings = [];
+        // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginMappings);
+
+        if (!empty($pluginMappings)) {
+            foreach ($pluginMappings as $mapping) {
+                $response = $this->mapPluginFields($index, $mapping);
+                if ($response->hasError()) return $response;
+            }
+        }
+
+        return $response;
     }
 
     /**
@@ -182,6 +196,24 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
                 'type' => 'keyword',
             ],
         ];
+
+        $mapping = new \Elastica\Type\Mapping();
+        $mapping->setType($type);
+        $mapping->setProperties($props);
+        return $mapping->send();
+    }
+
+    /**
+     * Add mappings provided by plugins
+     * via PLUGIN_ELASTICSEARCH_CREATEMAPPING event
+     *
+     * @param \Elastica\Index $index
+     * @param array $props
+     * @return \Elastica\Response
+     */
+    public function mapPluginFields(\Elastica\Index $index, Array $props): \Elastica\Response
+    {
+        $type = $index->getType($this->getConf('documenttype'));
 
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);

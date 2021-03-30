@@ -1,4 +1,7 @@
 <?php
+
+use dokuwiki\Extension\Event;
+
 /**
  * DokuWiki Plugin elasticsearch (Action Component)
  *
@@ -6,10 +9,6 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
-
 class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
 
     /**
@@ -69,24 +68,29 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     protected function needs_indexing($id) {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
-        $dataFile       = wikiFN($id);
+        $refreshStateFile = metaFN($id, '.elasticsearch_refresh');
+        $dataFile = wikiFN($id);
 
         // no data file -> no indexing
-        if(!file_exists($dataFile)) {
+        if (!file_exists($dataFile)) {
             // page does not exist but has a state file, try to remove from index
-            if(file_exists($indexStateFile)) {
+            if (file_exists($indexStateFile)) {
                 $this->delete_page($id);
             }
             return false;
         }
 
         // force indexing if we're called via cli (e.g. cron)
-        if(php_sapi_name() == 'cli') {
+        if (php_sapi_name() == 'cli') {
             return true;
         }
         // check if latest indexing attempt is done after page update
-        if(file_exists($indexStateFile)) {
-            if(filemtime($indexStateFile) > filemtime($dataFile)) {
+        // and after other updates related to the page made by plugins
+        if (file_exists($indexStateFile)) {
+            if (
+                (filemtime($indexStateFile) > filemtime($dataFile)) &&
+                (!file_exists($refreshStateFile) || filemtime($indexStateFile) > filemtime($refreshStateFile))
+            ) {
                 return false;
             }
         }
@@ -187,6 +191,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $queryACL = $hlpAcl->splitRules($fullACL);
         $data = array_merge($data, $queryACL);
 
+        // let plugins add their own data to index
+        $pluginData = $this->getPluginData($data['uri']);
+        $data = array_merge($data, $pluginData);
+
         // check if the document still exists to update it or add it as a new one
         try {
             $client->updateDocument($documentId, array('doc' => $data), $index->getName(), $type->getName());
@@ -211,6 +219,22 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $index->refresh();
         $this->update_indexstate($id);
 
+    }
+
+    /**
+     * Get plugin data to feed into the index.
+     * If data does not match previously defined mappings, it will be ignored.
+     *
+     * @see \helper_plugin_elasticsearch_client::mapPluginFields
+     *
+     * @param $id
+     * @return array
+     */
+    protected function getPluginData($id): array
+    {
+        $pluginData = ['uri' => $id];
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_INDEXPAGE', $pluginData);
+        return $pluginData;
     }
 
     /**
