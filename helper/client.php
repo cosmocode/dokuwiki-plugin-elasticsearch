@@ -122,9 +122,11 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         $index = $client->getIndex($this->getConf('indexname'));
         $type = $index->getType($this->getConf('documenttype'));
 
-        // default language
-        $props = [
-            'content' => [
+        $langFields = ['title', 'abstract', 'content', 'syntax'];
+
+        foreach ($langFields as $langField) {
+            // default language
+            $props[$langField] = [
                 'type'  => 'text',
                 'fields' => [
                     $conf['lang'] => [
@@ -132,19 +134,19 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
                         'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
                     ],
                 ]
-            ]
-        ];
+            ];
 
-        // other languages as configured in the translation plugin
-        /** @var helper_plugin_translation $transplugin */
-        $transplugin = plugin_load('helper', 'translation');
-        if ($transplugin) {
-            $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
-            if ($translations) foreach ($translations as $lang) {
-                $props['content']['fields'][$lang] = [
-                    'type' => 'text',
-                    'analyzer' => $this->getLanguageAnalyzer($lang)
-                ];
+            // other languages as configured in the translation plugin
+            /** @var helper_plugin_translation $transplugin */
+            $transplugin = plugin_load('helper', 'translation');
+            if ($transplugin) {
+                $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
+                if ($translations) foreach ($translations as $lang) {
+                    $props[$langField]['fields'][$lang] = [
+                        'type' => 'text',
+                        'analyzer' => $this->getLanguageAnalyzer($lang)
+                    ];
+                }
             }
         }
 
