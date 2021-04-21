@@ -31,9 +31,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * @var string[]
      */
     protected $searchFields = [
-        'title',
-        'abstract',
-        'content',
+        'title*',
+        'abstract*',
+        'content*',
         'uri',
     ];
 
@@ -101,7 +101,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_SEARCHFIELDS', $fields);
 
         if ($this->getConf('searchSyntax')) {
-            array_push($this->searchFields, 'syntax');
+            array_push($this->searchFields, 'syntax*');
         }
 
         // finally define the elastic query
