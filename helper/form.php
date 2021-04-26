@@ -68,11 +68,16 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
     protected function addCheckboxSelector(Form $searchForm, array $aggregations, $param)
     {
         if (!empty($aggregations)) {
-            $searchForm->addTagOpen('div')->addClass('toggle')->attr('aria-haspopup', 'true');
+            $pluginSearchConfigs = \action_plugin_elasticsearch_search::getRawPluginSearchConfigs();
+            $selectorId = !empty($pluginSearchConfigs[$param]['id']) ? $pluginSearchConfigs[$param]['id'] : 'plugin__elasticsearch-' . $param;
+
+            $searchForm->addTagOpen('div')
+                ->addClass('toggle')
+                ->id($selectorId)
+                ->attr('aria-haspopup', 'true');
 
             // popup toggler
             $searchForm->addTagOpen('div')->addClass('current');
-            $pluginSearchConfigs = \action_plugin_elasticsearch_search::getRawPluginSearchConfigs();
             $label = $param === 'ns' ? $this->getLang('nsp') : $pluginSearchConfigs[$param]['label'];
             $searchForm->addHTML($label);
             $searchForm->addTagClose('div');
