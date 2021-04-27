@@ -94,7 +94,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $additions = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $additions);
         // if query is empty, return all results
-        if (empty($QUERY)) $QUERY = '*';
+        if (empty(trim($QUERY))) $QUERY = '*';
 
         // get fields to use in query
         $fields = [];
