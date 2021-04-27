@@ -93,6 +93,8 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
 
         $index->create([], $clear);
 
+        $response = $this->mapNonstandardFields($index);
+        if ($response->hasError()) return $response;
         $response = $this->mapAccessFields($index);
         if ($response->hasError()) return $response;
 
@@ -216,6 +218,30 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     public function mapPluginFields(\Elastica\Index $index, Array $props): \Elastica\Response
     {
         $type = $index->getType($this->getConf('documenttype'));
+
+        $mapping = new \Elastica\Type\Mapping();
+        $mapping->setType($type);
+        $mapping->setProperties($props);
+        return $mapping->send();
+    }
+
+    /**
+     * Explicitly map fields which require something other that
+     * the default: type text, standard analyzer
+     *
+     * @param \Elastica\Index $index
+     * @return \Elastica\Response
+     */
+    protected function mapNonstandardFields(\Elastica\Index $index): \Elastica\Response
+    {
+        $type = $index->getType($this->getConf('documenttype'));
+
+        $props = [
+            'uri' => [
+                'type' => 'text',
+                'analyzer' => 'pattern', // because colons surrounded by letters are part of word in standard analyzer
+            ],
+        ];
 
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
