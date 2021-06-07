@@ -9,9 +9,11 @@
 
 use dokuwiki\Form\Form;
 
+/**
+ * Search form helper
+ */
 class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
 {
-
     /**
      * Replacement for the standard search form
      *
@@ -55,6 +57,7 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
             $this->addCheckboxSelector($searchForm, $aggregation['buckets'], $param);
         }
         $this->addDateSelector($searchForm);
+        $this->addLanguageSelector($searchForm);
         $searchForm->addTagClose('div');
     }
 
@@ -134,6 +137,46 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
         }
         $searchForm->addTagClose('ul');
 
+        $searchForm->addTagClose('div');
+    }
+
+    /**
+     * Language filter based on the translation plugin
+     *
+     * @param Form $searchForm
+     */
+    protected function addLanguageSelector(Form $searchForm)
+    {
+        /** @var helper_plugin_translation $transplugin */
+        $transplugin = plugin_load('helper', 'translation');
+        if (!$transplugin) return;
+
+        $translations = $transplugin->translations;
+        if (empty($translations)) return;
+
+        $searchForm->addTagOpen('div')
+            ->addClass('toggle')
+            ->id('plugin__elasticsearch-lang')
+            ->attr('aria-haspopup', 'true');
+
+        // popup toggler
+        $searchForm->addTagOpen('div')->addClass('current');
+        $label = $this->getLang('lang');
+        $searchForm->addHTML($label);
+        $searchForm->addTagClose('div');
+
+        // options
+        $i = 0;
+        $searchForm->addTagOpen('ul')->attr('aria-expanded', 'false');
+        foreach ($translations as $lang) {
+            $searchForm->addTagOpen('li');
+            $searchForm->addCheckbox('lang[]')->val($lang)->id("__lang-" . $i);
+            $searchForm->addLabel($lang, "__lang-" . $i)
+                ->attr('title', $lang);
+            $searchForm->addTagClose('li');
+            $i++;
+        }
+        $searchForm->addTagClose('ul');
         $searchForm->addTagClose('div');
     }
 }

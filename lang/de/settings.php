@@ -11,4 +11,5 @@ $lang['documenttype'] = 'Dokumententyp unter dem die Wikiseiten abgelegt werden 
 $lang['snippets']     = 'Text, der in den Suchergebnissen als Vorschau angezeigt wird';
 $lang['searchSyntax'] = 'Wiki-Syntax zusätzlich zum Seiteninhalt durchsuchen';
 $lang['perpage']      = 'Anzahl der Treffer pro Seite';
+$lang['detectTranslation'] = 'Translation Plugin Integration: Zunächst im aktuellen Übersetzungnamensraum suchen';
 $lang['debug']        = 'Debugging messages nach data/cache/debug.log schreiben - benötigt eingeschaltete allowdebug Option';
