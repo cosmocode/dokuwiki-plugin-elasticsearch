@@ -135,6 +135,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // add ACL subqueries
         $this->addACLSubqueries($subqueries);
 
+        // add language subquery
+        $this->addLanguageSubquery($subqueries, $this->getLanguageFilter());
+
         // add date subquery
         if ($INPUT->has('min')) {
             $this->addDateSubquery($subqueries, $INPUT->str('min'));
@@ -231,6 +234,53 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             ['gte' => date('Y-m-d', strtotime('1 ' . $min . ' ago'))]
         );
         $subqueries->addMust($dateSubquery);
+    }
+
+    /**
+     * Adds language subquery
+     *
+     * @param Elastica\Query\BoolQuery $subqueries
+     * @param array $langFilter
+     */
+    protected function addLanguageSubquery($subqueries, $langFilter)
+    {
+        if (empty($langFilter)) return;
+
+        $langSubquery = new \Elastica\Query\Match();
+        $langSubquery->setField('language', implode(',', $langFilter));
+        $subqueries->addMust($langSubquery);
+    }
+
+    /**
+     * Languages to be used in the current search, determined by:
+     * 1. $INPUT variables, or 2. translation plugin
+     *
+     * @return array
+     */
+    protected function getLanguageFilter()
+    {
+        global $ID;
+        global $INPUT;
+
+        $ns = getNS($ID);
+        $langFilter = $INPUT->arr('lang');
+
+        /** @var helper_plugin_translation $transplugin */
+        $transplugin = plugin_load('helper', 'translation');
+
+        // optional translation detection: use current top namespace if it matches translation config
+        if (empty($langFilter) && $transplugin && $this->getConf('detectTranslation') && $ns) {
+            $topNs = strtok($ns, ':');
+            if (in_array($topNs, $transplugin->translations)) {
+                $langFilter = [$topNs];
+                $INPUT->set('lang', $langFilter);
+            }
+        } else if (empty($langFilter) && $transplugin) {
+            // select all available translations
+            $INPUT->set('lang', $transplugin->translations);
+        }
+
+        return $langFilter;
     }
 
     /**
