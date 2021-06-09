@@ -47,7 +47,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'handle_preprocess');
         $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'handle_action');
-
+        $controller->register_hook('FORM_QUICKSEARCH_OUTPUT', 'BEFORE', $this, 'quicksearch');
     }
 
     /**
@@ -177,6 +177,22 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         } catch(Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
         }
+    }
+
+    /**
+     * Optionally disable "quick search"
+     *
+     * @param Doku_Event $event
+     */
+    public function quicksearch(Doku_Event $event)
+    {
+        if (!$this->getConf('disableQuicksearch')) return;
+
+        /** @var \dokuwiki\Form\Form $form */
+        $form = $event->data;
+        $pos = $form->findPositionByAttribute('id', 'qsearch__out');
+        $form->removeElement($pos);
+        $form->removeElement($pos + 1); // div closing tag
     }
 
     /**
