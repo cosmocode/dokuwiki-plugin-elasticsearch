@@ -80,6 +80,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             return false;
         }
 
+        // respect 'hidepages' configuration
+        if (isHiddenPage($id)) return false;
+
         // force indexing if we're called via cli (e.g. cron)
         if (php_sapi_name() == 'cli') {
             return true;
