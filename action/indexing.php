@@ -71,17 +71,14 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $refreshStateFile = metaFN($id, '.elasticsearch_refresh');
         $dataFile = wikiFN($id);
 
-        // no data file -> no indexing
-        if (!file_exists($dataFile)) {
-            // page does not exist but has a state file, try to remove from index
+        // no data file or page is hidden ('hidepages' configuration option) -> no indexing
+        if (!file_exists($dataFile) || isHiddenPage($id)) {
+            // page should not be indexed but has a state file, try to remove from index
             if (file_exists($indexStateFile)) {
                 $this->delete_page($id);
             }
             return false;
         }
-
-        // respect 'hidepages' configuration
-        if (isHiddenPage($id)) return false;
 
         // force indexing if we're called via cli (e.g. cron)
         if (php_sapi_name() == 'cli') {
