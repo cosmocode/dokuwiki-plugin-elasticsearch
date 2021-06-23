@@ -14,3 +14,5 @@ $meta['perpage']      = array('numeric', '_min' => 1);
 $meta['detectTranslation'] = array('onoff');
 $meta['debug']        = array('onoff');
 $meta['disableQuicksearch'] = array('onoff');
+$meta['fuzzySearch']  = array('onoff');
+$meta['fuzzySearchDistance'] = array('numeric', '_min' => 1);

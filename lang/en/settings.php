@@ -14,3 +14,5 @@ $lang['perpage']      = 'How many hits to show per page';
 $lang['detectTranslation'] = 'Translation plugin support: search in current language namespace by default';
 $lang['debug']        = 'Log messages to data/cache/debug.log - needs allowdebug enabled';
 $lang['disableQuicksearch'] = 'Disable quick search (page id suggestions)';
+$lang['fuzzySearch'] = 'Enable fuzzy search';
+$lang['fuzzySearchDistance'] = 'Maximum edit distance for fuzzy search';

@@ -14,3 +14,5 @@ $conf['perpage']      = 20;
 $conf['detectTranslation'] = 0;
 $conf['debug']        = 0;
 $conf['disableQuicksearch'] = 0;
+$conf['fuzzySearch']  = 0;
+$conf['fuzzySearchDistance'] = 1;
