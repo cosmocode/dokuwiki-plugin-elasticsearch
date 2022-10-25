@@ -85,78 +85,19 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      * Create the index
      *
      * @param bool $clear rebuild index
-     * @return \Elastica\Response
+     * @throws \splitbrain\phpcli\Exception
      */
-    public function createIndex($clear=false) {
+    public function createIndex($clear = false) {
         $client = $this->connect();
         $index = $client->getIndex($this->getConf('indexname'));
 
-        $index->create([], $clear);
-
-        $response = $this->mapNonstandardFields($index);
-        if ($response->hasError()) return $response;
-        $response = $this->mapAccessFields($index);
-        if ($response->hasError()) return $response;
-
-        $pluginMappings = [];
-        // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginMappings);
-
-        if (!empty($pluginMappings)) {
-            foreach ($pluginMappings as $mapping) {
-                $response = $this->mapPluginFields($index, $mapping);
-                if ($response->hasError()) return $response;
-            }
+        if ($index->create([], $clear)->hasError()) {
+            throw new \splitbrain\phpcli\Exception("Failed to create index!");
         }
 
-        return $response;
-    }
-
-    /**
-     * Create the field mapping: language analyzers for the content field
-     *
-     * @return \Elastica\Response
-     */
-    public function createLanguageMapping() {
-        global $conf;
-
-        $client = $this->connect();
-        $index = $client->getIndex($this->getConf('indexname'));
-        $type = $index->getType($this->getConf('documenttype'));
-
-        $langFields = ['title', 'abstract', 'content', 'syntax'];
-
-        foreach ($langFields as $langField) {
-            // default language
-            $props[$langField] = [
-                'type'  => 'text',
-                'fields' => [
-                    $conf['lang'] => [
-                        'type'  => 'text',
-                        'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
-                    ],
-                ]
-            ];
-
-            // other languages as configured in the translation plugin
-            /** @var helper_plugin_translation $transplugin */
-            $transplugin = plugin_load('helper', 'translation');
-            if ($transplugin) {
-                $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
-                if ($translations) foreach ($translations as $lang) {
-                    $props[$langField]['fields'][$lang] = [
-                        'type' => 'text',
-                        'analyzer' => $this->getLanguageAnalyzer($lang)
-                    ];
-                }
-            }
+        if ($this->createMappings($index)->hasError()) {
+            throw new \splitbrain\phpcli\Exception("Failed to create field mappings!");
         }
-
-        $mapping = new \Elastica\Type\Mapping();
-        $mapping->setType($type);
-        $mapping->setProperties($props);
-        $response = $mapping->send();
-        return $response;
     }
 
     /**
@@ -174,19 +115,30 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
     }
 
     /**
-     * Define special mappings for ACL fields
+     * Define mappings for custom fields
      *
-     * Standard mapping could break the search because ACL fields
+     * All languages get their separate fields configured with appropriate linguistic analyzers.
+     *
+     * ACL fields require custom mappings as well, or else they could break the search. They
      * might contain word-split tokens such as underscores and so must not
      * be indexed using the standard text analyzer.
+     *
+     * Fields containing metadata are configured as sparsely as possible, no analyzers are necessary.
+     *
+     * Plugins may provide their own fields via PLUGIN_ELASTICSEARCH_CREATEMAPPING event.
      *
      * @param \Elastica\Index $index
      * @return \Elastica\Response
      */
-    protected function mapAccessFields(\Elastica\Index $index): \Elastica\Response
+    protected function createMappings(\Elastica\Index $index): \Elastica\Response
     {
+
         $type = $index->getType($this->getConf('documenttype'));
-        $props = [
+
+        $langProps = $this->getLangProps();
+
+        // document permissions
+        $aclProps = [
             'groups_include' => [
                 'type' => 'keyword',
             ],
@@ -201,52 +153,73 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             ],
         ];
 
-        $mapping = new \Elastica\Type\Mapping();
-        $mapping->setType($type);
-        $mapping->setProperties($props);
-        return $mapping->send();
-    }
+        // differentiate media types
+        $mediaProps = [
+            'doctype' => [
+                'type' => 'keyword',
+            ],
+            'mime' => [
+                'type' => 'keyword',
+            ],
+            'ext' => [
+                'type' => 'keyword',
+            ],
+        ];
 
-    /**
-     * Add mappings provided by plugins
-     * via PLUGIN_ELASTICSEARCH_CREATEMAPPING event
-     *
-     * @param \Elastica\Index $index
-     * @param array $props
-     * @return \Elastica\Response
-     */
-    public function mapPluginFields(\Elastica\Index $index, Array $props): \Elastica\Response
-    {
-        $type = $index->getType($this->getConf('documenttype'));
-
-        $mapping = new \Elastica\Type\Mapping();
-        $mapping->setType($type);
-        $mapping->setProperties($props);
-        return $mapping->send();
-    }
-
-    /**
-     * Explicitly map fields which require something other that
-     * the default: type text, standard analyzer
-     *
-     * @param \Elastica\Index $index
-     * @return \Elastica\Response
-     */
-    protected function mapNonstandardFields(\Elastica\Index $index): \Elastica\Response
-    {
-        $type = $index->getType($this->getConf('documenttype'));
-
-        $props = [
+        // additional fields which require something other than type text, standard analyzer
+        $additionalProps = [
             'uri' => [
                 'type' => 'text',
                 'analyzer' => 'pattern', // because colons surrounded by letters are part of word in standard analyzer
             ],
         ];
 
+        $pluginProps = [];
+        // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginProps);
+
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
-        $mapping->setProperties($props);
+        $mapping->setProperties(array_merge($langProps, $aclProps, $mediaProps, $additionalProps, $pluginProps));
         return $mapping->send();
+    }
+
+    /**
+     * Language mappings recognize languages defined by translation plugin
+     *
+     * @return array
+     */
+    protected function getLangProps()
+    {
+        global $conf;
+
+        // default language
+        $langprops = [
+            'content' => [
+                'type'  => 'text',
+                'fields' => [
+                    $conf['lang'] => [
+                        'type'  => 'text',
+                        'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
+                    ],
+                ]
+            ]
+        ];
+
+        // other languages as configured in the translation plugin
+        /** @var helper_plugin_translation $transplugin */
+        $transplugin = plugin_load('helper', 'translation');
+        if ($transplugin) {
+            $translations = array_diff(array_filter($transplugin->translations), [$conf['lang']]);
+            if ($translations) foreach ($translations as $lang) {
+                $langprops['content']['fields'][$lang] = [
+                    'type' => 'text',
+                    'analyzer' => $this->getLanguageAnalyzer($lang)
+                ];
+            }
+        }
+
+        return $langprops;
     }
 }
 

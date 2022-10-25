@@ -1,0 +1,12 @@
+Elasticsearch can index media files by using external tools/parsers to extract the text content of the files.
+
+The parsers can be command line tools or web services. They must return plain text or a JSON structure.
+
+Define parsers for each file extension that should be processed. Use ''%in%'' to specify the input file for CLI tools. Web services must accept the input file as POST data.
+
+Here's a short example:
+
+<code>
+pdf    /usr/bin/pdftotext %in% -
+docx   http://givemetext.okfnlabs.org/tika/rmeta
+</code>

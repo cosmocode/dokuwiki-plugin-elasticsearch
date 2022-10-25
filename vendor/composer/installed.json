@@ -112,7 +112,8 @@
                 "homepage": "https://github.com/mtdowling"
             }
         ],
-        "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function."
+        "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function.",
+        "abandoned": true
     },
     {
         "name": "guzzlehttp/streams",
@@ -164,6 +165,56 @@
         "keywords": [
             "Guzzle",
             "stream"
+        ],
+        "abandoned": true
+    },
+    {
+        "name": "patrickschur/language-detection",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/patrickschur/language-detection.git",
+            "reference": "9d7a45118289939ef46d8a02763c7fec32eed7ba"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/patrickschur/language-detection/zipball/9d7a45118289939ef46d8a02763c7fec32eed7ba",
+            "reference": "9d7a45118289939ef46d8a02763c7fec32eed7ba",
+            "shasum": ""
+        },
+        "require": {
+            "ext-json": "*",
+            "ext-mbstring": "*",
+            "php": "^7.2"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "^8.4.3"
+        },
+        "time": "2019-11-16T14:23:06+00:00",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "LanguageDetection\\": "src/LanguageDetection"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Patrick Schur",
+                "email": "patrick_schur@outlook.de"
+            }
+        ],
+        "description": "A language detection library for PHP. Detects the language from a given text string.",
+        "homepage": "https://github.com/patrickschur/language-detection",
+        "keywords": [
+            "detect",
+            "detection",
+            "language"
         ]
     },
     {

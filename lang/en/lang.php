@@ -11,3 +11,4 @@ $lang['lastmod'] = 'Last modified:';
 $lang['lang']   = 'Language:';
 $lang['author'] = 'Author:';
 $lang['totalfound'] = 'Results found: %s';
+$lang['confmanager title'] = 'Elasticsearch';

@@ -147,9 +147,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if($INPUT->has('ns')) {
             $nsSubquery = new \Elastica\Query\BoolQuery();
             foreach($INPUT->arr('ns') as $ns) {
-                $eterm = new \Elastica\Query\Term();
-                $eterm->setTerm('namespace', $ns);
-                $nsSubquery->addShould($eterm);
+                $term = new \Elastica\Query\Term();
+                $term->setTerm('namespace', $ns);
+                $nsSubquery->addShould($term);
             }
             $equery->setPostFilter($nsSubquery);
         }
@@ -395,8 +395,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         foreach($results as $row) {
 
             /** @var Elastica\Result $row */
-            $page = $row->getSource()['uri'];
-            if(!page_exists($page) || isHiddenPage($page) || auth_quickaclcheck($page) < AUTH_READ) continue;
+            $doc = $row->getSource();
+            $page = $doc['uri'];
+            if(!page_exists($page) || isHiddenPage($page) || is_file(mediaFN($page)) || auth_quickaclcheck($page) < AUTH_READ) continue;
 
             // get highlighted title
             $title = str_replace(
@@ -404,7 +405,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 ['<strong class="search_hit">', '</strong>'],
                 hsc(join(' … ', (array) $row->getHighlights()['title']))
             );
-            if(!$title) $title = hsc($row->getSource()['title']);
+            if(!$title) $title = hsc($doc['title']);
             if(!$title) $title = hsc(p_get_first_heading($page));
             if(!$title) $title = hsc($page);
 
@@ -414,24 +415,33 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 ['<strong class="search_hit">', '</strong>'],
                 hsc(join(' … ', (array) $row->getHighlights()[$this->getConf('snippets')]))
             );
-            if(!$snippet) $snippet = hsc($row->getSource()['abstract']); // always fall back to abstract
+            if(!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
+
+            $href = $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE ? wl($page) : ml($page);
 
             echo '<dt>';
-            echo '<a href="'.wl($page).'" class="wikilink1" title="'.hsc($page).'">';
+            if (is_file(DOKU_INC . 'lib/images/fileicons/'. $doc['ext'] .'.png')) {
+                echo sprintf(
+                    '<img src="%s" alt="%s" /> ',
+                    DOKU_BASE . 'lib/images/fileicons/'. $doc['ext'] .'.png',
+                    $doc['ext']
+                );
+            }
+            echo '<a href="' . $href . '" class="wikilink1" title="'.hsc($page).'">';
             echo $title;
             echo '</a>';
             echo '</dt>';
 
             // meta
             echo '<dd class="meta elastic-resultmeta">';
-            if($row->getSource()['namespace']) {
-                echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($row->getSource()['namespace']) . '</span>';
+            if($doc['namespace']) {
+                echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($doc['namespace']) . '</span>';
             }
-            if($row->getSource()['user']) {
-                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($row->getSource()['user']) . '</span>';
+            if($doc['user']) {
+                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
             }
-            if($row->getSource()['modified']) {
-                $lastmod = strtotime($row->getSource()['modified']);
+            if($doc['modified']) {
+                $lastmod = strtotime($doc['modified']);
                 echo ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
             }
             echo '</dd>';

@@ -10,6 +10,9 @@ if (!defined('DOKU_INC')) die();
 
 use splitbrain\phpcli\Options;
 
+/**
+ * CLI tools for managing the index
+ */
 class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
 
     /** @var helper_plugin_elasticsearch_client */
@@ -23,7 +26,6 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         $this->hlp = plugin_load('helper', 'elasticsearch_client');
     }
 
-
     /**
      * Register options and arguments on the given $options object
      *
@@ -34,12 +36,20 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
     protected function setup(Options $options) {
         $options->setHelp('Manage the elastic search index');
 
-        $options->registerCommand('index', 'Index all pages in the wiki');
+        $options->registerCommand('index', 'Index all pages and/or media in the wiki');
+        $options->registerOption(
+            'only',
+            'Which document type to index: pages or media',
+            'o',
+            'pages OR media',
+            'index'
+        );
 
-        $options->registerCommand('createindex', 'Create a simple index named "'.$this->hlp->getConf('indexname').'".');
+        $options->registerCommand(
+            'createindex',
+            'Create index named "'.$this->hlp->getConf('indexname').'" and all required field mappings.'
+        );
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
-
-        $options->registerCommand('createlangmapping', 'Create the field mapping for multilanguage setup');
     }
 
     /**
@@ -54,34 +64,30 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         // manually initialize auth system
         // see https://github.com/splitbrain/dokuwiki/issues/2823
         global $AUTH_ACL;
-        if(!$AUTH_ACL) auth_setup();
+        if (!$AUTH_ACL) auth_setup();
 
         $cmd = $options->getCmd();
         switch ($cmd) {
             case 'createindex':
-                $result = $this->hlp->createIndex($options->getOpt('clear'));
-                if($result->hasError()){
-                    $this->error($result->getError());
-                } else {
+                try {
+                    $this->hlp->createIndex($options->getOpt('clear'));
                     $this->success('Index created');
-                }
-                break;
-            case 'createlangmapping':
-                $result = $this->hlp->createLanguageMapping();
-                if($result->hasError()){
-                    $this->error($result->getError());
-                } else {
-                    $this->success('Mapping created');
+                } catch (\Exception $e) {
+                    $this->error($e->getMessage());
                 }
                 break;
             case 'index':
-                $this->indexAllPages();
+                if ($options->getOpt('only') !== 'media') {
+                    $this->indexAllPages();
+                }
+                if ($options->getOpt('only') !== 'pages') {
+                    $this->indexAllMedia();
+                }
                 break;
             default:
                 $this->error('No command provided');
                 exit(1);
         }
-
 
     }
 
@@ -89,7 +95,8 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
      * Index all the pages
      */
     protected function indexAllPages() {
-        global $conf, $ID;
+        global $conf;
+        global $ID;
 
         /** @var action_plugin_elasticsearch_indexing $act */
         $act = plugin_load('action', 'elasticsearch_indexing');
@@ -98,7 +105,7 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
         $pages = count($data);
         $n     = 0;
-        foreach($data as $val) {
+        foreach ($data as $val) {
             $ID = $val['id'];
             $n++;
             $this->info(sprintf("Indexing page %s (%d of %d)\n", $ID, $n, $pages));
@@ -106,4 +113,25 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
         }
     }
 
+    /**
+     * Index all media
+     */
+    protected function indexAllMedia() {
+        global $conf;
+
+        /** @var action_plugin_elasticsearch_indexing $act */
+        $act = plugin_load('action', 'elasticsearch_indexing');
+
+        $data = [];
+        search($data, $conf['mediadir'], 'search_media', ['skipacl' => true]);
+        $media = count($data);
+        $n     = 0;
+        foreach ($data as $val) {
+            $id = $val['id'];
+            $n++;
+            $this->info(sprintf("Indexing media %s (%d of %d)\n", $id, $n, $media));
+
+            $act->index_file($id);
+        }
+    }
 }
