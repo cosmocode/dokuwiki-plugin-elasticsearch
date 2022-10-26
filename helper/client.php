@@ -174,13 +174,18 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             ],
         ];
 
-        $pluginProps = [];
         // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
+        $pluginProps = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginProps);
+
+        $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps);
+        foreach ($pluginProps as $plugin => $fields) {
+            $props = array_merge($props, $fields);
+        }
 
         $mapping = new \Elastica\Type\Mapping();
         $mapping->setType($type);
-        $mapping->setProperties(array_merge($langProps, $aclProps, $mediaProps, $additionalProps, $pluginProps));
+        $mapping->setProperties($props);
         return $mapping->send();
     }
 
