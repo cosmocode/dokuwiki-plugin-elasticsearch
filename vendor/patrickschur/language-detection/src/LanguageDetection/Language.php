@@ -29,7 +29,7 @@ class Language extends NgramParser
     {
         if (empty($dirname))
         {
-            $dirname = __DIR__ . '/../../resources/*/*.json';
+            $dirname = __DIR__ . '/../../resources/*/*.php';
         }
         else if (!\is_dir($dirname) || !\is_readable($dirname))
         {
@@ -38,16 +38,16 @@ class Language extends NgramParser
         else
         {
             $dirname = \rtrim($dirname, '/');
-            $dirname .= '/*/*.json';
+            $dirname .= '/*/*.php';
         }
 
         $isEmpty = empty($lang);
 
-        foreach (\glob($dirname) as $json)
+        foreach (\glob($dirname) as $file)
         {
-            if ($isEmpty || \in_array(\basename($json, '.json'), $lang))
+            if ($isEmpty || \in_array(\basename($file, '.php'), $lang))
             {
-                $this->tokens += \json_decode(\file_get_contents($json), true);
+                $this->tokens += require $file;
             }
         }
     }

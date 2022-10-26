@@ -8,33 +8,32 @@
     "packages": [
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "dev-master",
+            "version": "7.17.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/elastic/elasticsearch-php.git",
-                "reference": "2b9a84d606a21b7be55909fd2ab342fc66642fc8"
+                "url": "git@github.com:elastic/elasticsearch-php.git",
+                "reference": "85e86965864e4777cd726ac90faa96bf52fe35c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/2b9a84d606a21b7be55909fd2ab342fc66642fc8",
-                "reference": "2b9a84d606a21b7be55909fd2ab342fc66642fc8",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/85e86965864e4777cd726ac90faa96bf52fe35c4",
+                "reference": "85e86965864e4777cd726ac90faa96bf52fe35c4",
                 "shasum": ""
             },
             "require": {
                 "ext-json": ">=1.3.7",
-                "guzzlehttp/ringphp": "~1.0",
-                "php": "^7.1",
-                "psr/log": "~1.0"
+                "ezimuel/ringphp": "^1.1.2",
+                "php": "^7.3 || ^8.0",
+                "psr/log": "^1|^2|^3"
             },
             "require-dev": {
-                "cpliakas/git-wrapper": "~2.0",
-                "doctrine/inflector": "^1.3",
+                "ext-yaml": "*",
+                "ext-zip": "*",
                 "mockery/mockery": "^1.2",
-                "phpstan/phpstan-shim": "^0.11",
-                "phpunit/phpunit": "^7.5",
+                "phpstan/phpstan": "^0.12",
+                "phpunit/phpunit": "^9.3",
                 "squizlabs/php_codesniffer": "^3.4",
-                "symfony/finder": "~4.0",
-                "symfony/yaml": "~4.0"
+                "symfony/finder": "~4.0"
             },
             "suggest": {
                 "ext-curl": "*",
@@ -42,13 +41,17 @@
             },
             "type": "library",
             "autoload": {
+                "files": [
+                    "src/autoload.php"
+                ],
                 "psr-4": {
                     "Elasticsearch\\": "src/Elasticsearch/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "Apache-2.0"
+                "Apache-2.0",
+                "LGPL-2.1-only"
             ],
             "authors": [
                 {
@@ -64,30 +67,86 @@
                 "elasticsearch",
                 "search"
             ],
-            "time": "2019-07-01T10:50:26+00:00"
+            "time": "2022-10-06T13:27:04+00:00"
         },
         {
-            "name": "guzzlehttp/ringphp",
-            "version": "dev-master",
+            "name": "ezimuel/guzzlestreams",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/guzzle/RingPHP.git",
-                "reference": "5e2a174052995663dd68e6b5ad838afd47dd615b"
+                "url": "https://github.com/ezimuel/guzzlestreams.git",
+                "reference": "b4b5a025dfee70d6cd34c780e07330eb93d5b997"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/RingPHP/zipball/5e2a174052995663dd68e6b5ad838afd47dd615b",
-                "reference": "5e2a174052995663dd68e6b5ad838afd47dd615b",
+                "url": "https://api.github.com/repos/ezimuel/guzzlestreams/zipball/b4b5a025dfee70d6cd34c780e07330eb93d5b997",
+                "reference": "b4b5a025dfee70d6cd34c780e07330eb93d5b997",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/streams": "~3.0",
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "GuzzleHttp\\Stream\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                }
+            ],
+            "description": "Fork of guzzle/streams (abandoned) to be used with elasticsearch-php",
+            "homepage": "http://guzzlephp.org/",
+            "keywords": [
+                "Guzzle",
+                "stream"
+            ],
+            "support": {
+                "source": "https://github.com/ezimuel/guzzlestreams/tree/3.1.0"
+            },
+            "time": "2022-10-24T12:58:50+00:00"
+        },
+        {
+            "name": "ezimuel/ringphp",
+            "version": "1.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ezimuel/ringphp.git",
+                "reference": "8d00384f9e5c04713ef8448adf47824265791b50"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ezimuel/ringphp/zipball/8d00384f9e5c04713ef8448adf47824265791b50",
+                "reference": "8d00384f9e5c04713ef8448adf47824265791b50",
+                "shasum": ""
+            },
+            "require": {
+                "ezimuel/guzzlestreams": "^3.0.1",
                 "php": ">=5.4.0",
                 "react/promise": "~2.0"
             },
+            "replace": {
+                "guzzlehttp/ringphp": "self.version"
+            },
             "require-dev": {
                 "ext-curl": "*",
-                "phpunit/phpunit": "~4.0"
+                "phpunit/phpunit": "~9.0"
             },
             "suggest": {
                 "ext-curl": "Guzzle will use specific adapters if cURL is present"
@@ -114,39 +173,42 @@
                     "homepage": "https://github.com/mtdowling"
                 }
             ],
-            "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function.",
-            "abandoned": true,
-            "time": "2018-07-31T13:22:33+00:00"
+            "description": "Fork of guzzle/RingPHP (abandoned) to be used with elasticsearch-php",
+            "support": {
+                "source": "https://github.com/ezimuel/ringphp/tree/1.2.1"
+            },
+            "time": "2022-10-25T12:54:22+00:00"
         },
         {
-            "name": "guzzlehttp/streams",
+            "name": "nyholm/dsn",
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/guzzle/streams.git",
-                "reference": "d99a261c616210618ab94fd319cb17eda458cc3e"
+                "url": "https://github.com/Nyholm/dsn.git",
+                "reference": "9445621b426bac8c0ca161db8cd700da00a4e618"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/streams/zipball/d99a261c616210618ab94fd319cb17eda458cc3e",
-                "reference": "d99a261c616210618ab94fd319cb17eda458cc3e",
+                "url": "https://api.github.com/repos/Nyholm/dsn/zipball/9445621b426bac8c0ca161db8cd700da00a4e618",
+                "reference": "9445621b426bac8c0ca161db8cd700da00a4e618",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0"
+                "php": ">=7.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.0"
+                "symfony/phpunit-bridge": "^5.1"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-master": "2.0-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "GuzzleHttp\\Stream\\": "src/"
+                    "Nyholm\\Dsn\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -155,19 +217,29 @@
             ],
             "authors": [
                 {
-                    "name": "Michael Dowling",
-                    "email": "mtdowling@gmail.com",
-                    "homepage": "https://github.com/mtdowling"
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com"
                 }
             ],
-            "description": "Provides a simple abstraction over streams of data",
-            "homepage": "http://guzzlephp.org/",
+            "description": "Parse your DSN strings in a powerful and flexible way",
+            "homepage": "http://tnyholm.se",
             "keywords": [
-                "Guzzle",
-                "stream"
+                "database",
+                "dsn",
+                "dsn parser",
+                "parser"
             ],
-            "abandoned": true,
-            "time": "2016-04-13T16:32:01+00:00"
+            "support": {
+                "issues": "https://github.com/Nyholm/dsn/issues",
+                "source": "https://github.com/Nyholm/dsn/tree/2.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Nyholm",
+                    "type": "github"
+                }
+            ],
+            "time": "2021-11-18T09:23:29+00:00"
         },
         {
             "name": "patrickschur/language-detection",
@@ -175,22 +247,23 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/patrickschur/language-detection.git",
-                "reference": "9d7a45118289939ef46d8a02763c7fec32eed7ba"
+                "reference": "4849c2e8618cce09dbe15d5b534b51137bd6d477"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/patrickschur/language-detection/zipball/9d7a45118289939ef46d8a02763c7fec32eed7ba",
-                "reference": "9d7a45118289939ef46d8a02763c7fec32eed7ba",
+                "url": "https://api.github.com/repos/patrickschur/language-detection/zipball/4849c2e8618cce09dbe15d5b534b51137bd6d477",
+                "reference": "4849c2e8618cce09dbe15d5b534b51137bd6d477",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "php": "^7.2"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^8.4.3"
+                "phpunit/phpunit": "^9.5.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -214,7 +287,11 @@
                 "detection",
                 "language"
             ],
-            "time": "2019-11-16T14:23:06+00:00"
+            "support": {
+                "issues": "https://github.com/patrickschur/language-detection/issues",
+                "source": "https://github.com/patrickschur/language-detection/tree/v5.2.0"
+            },
+            "time": "2022-03-01T22:22:41+00:00"
         },
         {
             "name": "psr/log",
@@ -222,26 +299,27 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "c4421fcac1edd5a324fda73e589a5cf96e52ffd0"
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/c4421fcac1edd5a324fda73e589a5cf96e52ffd0",
-                "reference": "c4421fcac1edd5a324fda73e589a5cf96e52ffd0",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/fe5ea303b0887d5caefd3d431c3e61ad47037001",
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=8.0.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.1.x-dev"
+                    "dev-master": "3.x-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Psr\\Log\\": "Psr/Log/"
+                    "Psr\\Log\\": "src"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -251,7 +329,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for logging libraries",
@@ -261,7 +339,10 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2018-11-21T13:42:00+00:00"
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/3.0.0"
+            },
+            "time": "2021-07-14T16:46:02+00:00"
         },
         {
             "name": "react/promise",
@@ -269,28 +350,29 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "f16348c33d45ac47a838a70304014ee5079b73c8"
+                "reference": "f23788b1a9e7b1ae98576343a2dc59354b6c7f6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/f16348c33d45ac47a838a70304014ee5079b73c8",
-                "reference": "f16348c33d45ac47a838a70304014ee5079b73c8",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/f23788b1a9e7b1ae98576343a2dc59354b6c7f6d",
+                "reference": "f23788b1a9e7b1ae98576343a2dc59354b6c7f6d",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.8"
+                "phpunit/phpunit": "^9.3 || ^5.7 || ^4.8.36"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
-                "psr-4": {
-                    "React\\Promise\\": "src/"
-                },
                 "files": [
                     "src/functions_include.php"
-                ]
+                ],
+                "psr-4": {
+                    "React\\Promise\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -299,7 +381,23 @@
             "authors": [
                 {
                     "name": "Jan Sorgalla",
-                    "email": "jsorgalla@gmail.com"
+                    "email": "jsorgalla@gmail.com",
+                    "homepage": "https://sorgalla.com/"
+                },
+                {
+                    "name": "Christian Lück",
+                    "email": "christian@clue.engineering",
+                    "homepage": "https://clue.engineering/"
+                },
+                {
+                    "name": "Cees-Jan Kiewiet",
+                    "email": "reactphp@ceesjankiewiet.nl",
+                    "homepage": "https://wyrihaximus.net/"
+                },
+                {
+                    "name": "Chris Boden",
+                    "email": "cboden@gmail.com",
+                    "homepage": "https://cboden.dev/"
                 }
             ],
             "description": "A lightweight implementation of CommonJS Promises/A for PHP",
@@ -307,7 +405,21 @@
                 "promise",
                 "promises"
             ],
-            "time": "2019-06-21T14:44:24+00:00"
+            "support": {
+                "issues": "https://github.com/reactphp/promise/issues",
+                "source": "https://github.com/reactphp/promise/tree/2.x"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/WyriHaximus",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/clue",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-09-18T11:18:52+00:00"
         },
         {
             "name": "ruflin/elastica",
@@ -315,38 +427,46 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ruflin/Elastica.git",
-                "reference": "f070d3bc9f9836648efd120a6164f85c6831da4b"
+                "reference": "5fc25a4966b48ae9a631e345b167c867250a43c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ruflin/Elastica/zipball/f070d3bc9f9836648efd120a6164f85c6831da4b",
-                "reference": "f070d3bc9f9836648efd120a6164f85c6831da4b",
+                "url": "https://api.github.com/repos/ruflin/Elastica/zipball/5fc25a4966b48ae9a631e345b167c867250a43c7",
+                "reference": "5fc25a4966b48ae9a631e345b167c867250a43c7",
                 "shasum": ""
             },
             "require": {
-                "elasticsearch/elasticsearch": "dev-master",
-                "php": "^7.0",
-                "psr/log": "~1.0"
+                "elasticsearch/elasticsearch": "^7.10",
+                "ext-json": "*",
+                "nyholm/dsn": "^2.0.0",
+                "php": "^7.2 || ^8.0",
+                "psr/log": "^1.0 || ^2.0 || ^3.0",
+                "symfony/deprecation-contracts": "^2.2 || ^3.0",
+                "symfony/polyfill-php73": "^1.19"
             },
             "require-dev": {
-                "aws/aws-sdk-php": "~3.0",
-                "guzzlehttp/guzzle": "~6.0"
+                "aws/aws-sdk-php": "^3.155",
+                "guzzlehttp/guzzle": "^6.3 || ^7.2",
+                "phpstan/phpstan": "^1.5",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/phpunit": "^8.5.8 || ^9.4",
+                "symfony/phpunit-bridge": "^6.0"
             },
             "suggest": {
                 "aws/aws-sdk-php": "Allow using IAM authentication with Amazon ElasticSearch Service",
-                "egeloen/http-adapter": "Allow using httpadapter transport",
-                "guzzlehttp/guzzle": "Allow using guzzle 6 as the http transport",
+                "guzzlehttp/guzzle": "Allow using guzzle as transport",
                 "monolog/monolog": "Logging request"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "6.0.x-dev"
+                    "dev-master": "7.0.x-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Elastica\\": "lib/Elastica/"
+                    "Elastica\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -365,7 +485,159 @@
                 "client",
                 "search"
             ],
-            "time": "2019-06-07T10:56:46+00:00"
+            "support": {
+                "issues": "https://github.com/ruflin/Elastica/issues",
+                "source": "https://github.com/ruflin/Elastica/tree/master"
+            },
+            "time": "2022-10-11T06:53:58+00:00"
+        },
+        {
+            "name": "symfony/deprecation-contracts",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/deprecation-contracts.git",
+                "reference": "4912000e79dc2d6df029d35d8755be1ed79b6691"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/4912000e79dc2d6df029d35d8755be1ed79b6691",
+                "reference": "4912000e79dc2d6df029d35d8755be1ed79b6691",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "3.2-dev"
+                },
+                "thanks": {
+                    "name": "symfony/contracts",
+                    "url": "https://github.com/symfony/contracts"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "function.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "A generic function and convention to trigger deprecation notices",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/deprecation-contracts/tree/main"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-20T13:56:22+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php73",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php73.git",
+                "reference": "e440d35fa0286f77fb45b79a03fedbeda9307e85"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/e440d35fa0286f77fb45b79a03fedbeda9307e85",
+                "reference": "e440d35fa0286f77fb45b79a03fedbeda9307e85",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.26-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php73\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 7.3+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php73/tree/v1.26.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-24T11:49:31+00:00"
         }
     ],
     "packages-dev": [],
@@ -378,5 +650,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
 }

@@ -1,15 +1,16 @@
 # language-detection
-| Build Status | Code Coverage | Version | Total Downloads | Minimum PHP Version | License |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [![Build Status](https://travis-ci.org/patrickschur/language-detection.svg?branch=master)](https://travis-ci.org/patrickschur/language-detection) | [![codecov](https://codecov.io/gh/patrickschur/language-detection/branch/master/graph/badge.svg)](https://codecov.io/gh/patrickschur/language-detection) | [![Version](https://img.shields.io/packagist/v/patrickschur/language-detection.svg?style=flat-square)](https://packagist.org/packages/patrickschur/language-detection) | [![Total Downloads](https://img.shields.io/packagist/dt/patrickschur/language-detection.svg?style=flat-square)](https://packagist.org/packages/patrickschur/language-detection) | [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.2-4AC51C.svg?style=flat-square)](https://php.net/) | [![License](https://img.shields.io/packagist/l/patrickschur/language-detection.svg?style=flat-square)](https://opensource.org/licenses/MIT) |
+| Build Status | Code Coverage | Version | Total Downloads |                                                  Minimum PHP Version                                                   | License |
+| :---: | :---: | :---: | :---: |:----------------------------------------------------------------------------------------------------------------------:| :---: |
+| [![Build Status](https://travis-ci.org/patrickschur/language-detection.svg?branch=master)](https://travis-ci.org/patrickschur/language-detection) | [![codecov](https://codecov.io/gh/patrickschur/language-detection/branch/master/graph/badge.svg)](https://codecov.io/gh/patrickschur/language-detection) | [![Version](https://img.shields.io/packagist/v/patrickschur/language-detection.svg?style=flat-square)](https://packagist.org/packages/patrickschur/language-detection) | [![Total Downloads](https://img.shields.io/packagist/dt/patrickschur/language-detection.svg?style=flat-square)](https://packagist.org/packages/patrickschur/language-detection) | [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-4AC51C.svg?style=flat-square)](https://php.net/) | [![License](https://img.shields.io/packagist/l/patrickschur/language-detection.svg?style=flat-square)](https://opensource.org/licenses/MIT) |
 
 This library can detect the language of a given text string.
-It can parse given training text in many different idioms into a sequence of [N-grams](https://en.wikipedia.org/wiki/N-gram) and builds a database file in JSON format to be used in the detection phase.
+It can parse given training text in many different idioms into a sequence of [N-grams](https://en.wikipedia.org/wiki/N-gram) and builds a database file in PHP to be used in the detection phase.
 Then it can take a given text and detect its language using the database previously generated in the training phase.
 The library comes with text samples used for training and detecting text in 110 languages.
 
 ## Table of Contents
 - [Installation with Composer](#installation-with-composer)
+- [How to upgrade from 3.y.z to 4.y.z?](#how-to-upgrade)
 - [Basic Usage](#basic-usage)
 - [API](#api)
 - [Method Chaining](#method-chaining)
@@ -25,6 +26,18 @@ The library comes with text samples used for training and detecting text in 110 
 
 ```bash
 $ composer require patrickschur/language-detection
+```
+
+## <a name="how-to-upgrade"></a> How to upgrade from `3.y.z` to `4.y.z`?
+
+**Important**: Only for people who are using a **custom directory** with their **own** translation files.
+
+Starting with version `4.y.z` we have updated the resource files. For performance reasons we now use PHP instead of JSON as a format. That means people who want to use `4.y.z` and used `3.y.z` before, have to upgrade their JSON files to PHP. To upgrade your resource files you must generate a language profile again. The JSON files are then no longer needed.
+
+You can delete unnecessary JSON files under Linux with the following command.
+
+```sh
+rm resources/*/*.json
 ```
 
 ## Basic Usage

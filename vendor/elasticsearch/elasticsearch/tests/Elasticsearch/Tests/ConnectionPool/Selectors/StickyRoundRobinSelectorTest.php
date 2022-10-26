@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -11,24 +25,22 @@ use Mockery as m;
 /**
  * Class StickyRoundRobinSelectorTest
  *
- * @category   Tests
- * @package    Elasticsearch
  * @subpackage Tests\ConnectionPool\StickyRoundRobinSelectorTest
- * @author     Zachary Tong <zachary.tong@elasticsearch.com>
- * @license    http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link       http://elasticsearch.org
  */
 class StickyRoundRobinSelectorTest extends \PHPUnit\Framework\TestCase
 {
-    public function tearDown()
+    public function setUp(): void
+    {
+        $this->roundRobin = new Elasticsearch\ConnectionPool\Selectors\StickyRoundRobinSelector();
+    }
+
+    public function tearDown(): void
     {
         m::close();
     }
 
     public function testTenConnections()
     {
-        $roundRobin = new Elasticsearch\ConnectionPool\Selectors\StickyRoundRobinSelector();
-
         $mockConnections = [];
         $mockConnections[] = m::mock(ConnectionInterface::class)
             ->shouldReceive('isAlive')->times(16)->andReturn(true)->getMock();
@@ -38,7 +50,7 @@ class StickyRoundRobinSelectorTest extends \PHPUnit\Framework\TestCase
         }
 
         foreach (range(0, 15) as $index) {
-            $retConnection = $roundRobin->select($mockConnections);
+            $retConnection = $this->roundRobin->select($mockConnections);
 
             $this->assertSame($mockConnections[0], $retConnection);
         }
@@ -46,8 +58,6 @@ class StickyRoundRobinSelectorTest extends \PHPUnit\Framework\TestCase
 
     public function testTenConnectionsFirstDies()
     {
-        $roundRobin = new Elasticsearch\ConnectionPool\Selectors\StickyRoundRobinSelector();
-
         $mockConnections = [];
         $mockConnections[] = m::mock(ConnectionInterface::class)
             ->shouldReceive('isAlive')->once()->andReturn(false)->getMock();
@@ -60,7 +70,7 @@ class StickyRoundRobinSelectorTest extends \PHPUnit\Framework\TestCase
         }
 
         foreach (range(0, 15) as $index) {
-            $retConnection = $roundRobin->select($mockConnections);
+            $retConnection = $this->roundRobin->select($mockConnections);
 
             $this->assertSame($mockConnections[1], $retConnection);
         }

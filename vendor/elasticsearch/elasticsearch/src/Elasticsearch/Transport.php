@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -11,15 +25,6 @@ use Elasticsearch\Connections\ConnectionInterface;
 use GuzzleHttp\Ring\Future\FutureArrayInterface;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Transport
- *
- * @category Elasticsearch
- * @package  Elasticsearch
- * @author   Zachary Tong <zach@elastic.co>
- * @license  http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link     http://elastic.co
- */
 class Transport
 {
     /**
@@ -88,7 +93,7 @@ class Transport
      *
      * @throws Common\Exceptions\NoNodesAvailableException|\Exception
      */
-    public function performRequest(string $method, string $uri, array $params = null, $body = null, array $options = []): FutureArrayInterface
+    public function performRequest(string $method, string $uri, array $params = [], $body = null, array $options = []): FutureArrayInterface
     {
         try {
             $connection  = $this->getConnection();
@@ -109,7 +114,7 @@ class Transport
             $options,
             $this
         );
-
+        
         $future->promise()->then(
             //onSuccess
             function ($response) {
@@ -118,8 +123,9 @@ class Transport
             },
             //onFailure
             function ($response) {
+                $code = $response->getCode();
                 // Ignore 400 level errors, as that means the server responded just fine
-                if (!(isset($response['code']) && $response['code'] >=400 && $response['code'] < 500)) {
+                if ($code < 400 || $code >= 500) {
                     // Otherwise schedule a check
                     $this->connectionPool->scheduleCheck();
                 }
@@ -143,11 +149,8 @@ class Transport
             do {
                 $result = $result->wait();
             } while ($result instanceof FutureArrayInterface);
-
-            return $result;
-        } elseif ($async === true || $async === 'lazy') {
-            return $result;
         }
+        return $result;
     }
 
     public function shouldRetry(array $request): bool

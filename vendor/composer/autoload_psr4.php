@@ -6,11 +6,13 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Symfony\\Polyfill\\Php73\\' => array($vendorDir . '/symfony/polyfill-php73'),
     'React\\Promise\\' => array($vendorDir . '/react/promise/src'),
-    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
+    'Nyholm\\Dsn\\' => array($vendorDir . '/nyholm/dsn/src'),
     'LanguageDetection\\' => array($vendorDir . '/patrickschur/language-detection/src/LanguageDetection'),
-    'GuzzleHttp\\Stream\\' => array($vendorDir . '/guzzlehttp/streams/src'),
-    'GuzzleHttp\\Ring\\' => array($vendorDir . '/guzzlehttp/ringphp/src'),
+    'GuzzleHttp\\Stream\\' => array($vendorDir . '/ezimuel/guzzlestreams/src'),
+    'GuzzleHttp\\Ring\\' => array($vendorDir . '/ezimuel/ringphp/src'),
     'Elasticsearch\\' => array($vendorDir . '/elasticsearch/elasticsearch/src/Elasticsearch'),
-    'Elastica\\' => array($vendorDir . '/ruflin/elastica/lib/Elastica'),
+    'Elastica\\' => array($vendorDir . '/ruflin/elastica/src'),
 );

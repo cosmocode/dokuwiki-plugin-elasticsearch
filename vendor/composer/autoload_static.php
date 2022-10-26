@@ -8,9 +8,16 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
 {
     public static $files = array (
         'ad155f8f1cf0d418fe49e248db8c661b' => __DIR__ . '/..' . '/react/promise/src/functions_include.php',
+        '0d59ee240a4cd96ddbb4ff164fccea4d' => __DIR__ . '/..' . '/symfony/polyfill-php73/bootstrap.php',
+        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
+        '8592c7b0947d8a0965a9e8c3d16f9c24' => __DIR__ . '/..' . '/elasticsearch/elasticsearch/src/autoload.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Symfony\\Polyfill\\Php73\\' => 23,
+        ),
         'R' => 
         array (
             'React\\Promise\\' => 14,
@@ -18,6 +25,10 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         'P' => 
         array (
             'Psr\\Log\\' => 8,
+        ),
+        'N' => 
+        array (
+            'Nyholm\\Dsn\\' => 11,
         ),
         'L' => 
         array (
@@ -36,13 +47,21 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
     );
 
     public static $prefixDirsPsr4 = array (
+        'Symfony\\Polyfill\\Php73\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php73',
+        ),
         'React\\Promise\\' => 
         array (
             0 => __DIR__ . '/..' . '/react/promise/src',
         ),
         'Psr\\Log\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+            0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
+        'Nyholm\\Dsn\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nyholm/dsn/src',
         ),
         'LanguageDetection\\' => 
         array (
@@ -50,11 +69,11 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         ),
         'GuzzleHttp\\Stream\\' => 
         array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/streams/src',
+            0 => __DIR__ . '/..' . '/ezimuel/guzzlestreams/src',
         ),
         'GuzzleHttp\\Ring\\' => 
         array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/ringphp/src',
+            0 => __DIR__ . '/..' . '/ezimuel/ringphp/src',
         ),
         'Elasticsearch\\' => 
         array (
@@ -62,8 +81,13 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         ),
         'Elastica\\' => 
         array (
-            0 => __DIR__ . '/..' . '/ruflin/elastica/lib/Elastica',
+            0 => __DIR__ . '/..' . '/ruflin/elastica/src',
         ),
+    );
+
+    public static $classMap = array (
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'JsonException' => __DIR__ . '/..' . '/symfony/polyfill-php73/Resources/stubs/JsonException.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -71,6 +95,7 @@ class ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit44d7d77793ab8d263cb8479c0fe13087::$classMap;
 
         }, null, ClassLoader::class);
     }

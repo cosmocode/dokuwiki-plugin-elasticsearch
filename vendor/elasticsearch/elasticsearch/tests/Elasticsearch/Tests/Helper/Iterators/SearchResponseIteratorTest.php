@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -11,15 +25,11 @@ use Mockery as m;
 /**
  * Class SearchResponseIteratorTest
  *
- * @package Elasticsearch\Tests\Helper\Iterators
- * @author  Arturo Mejia <arturo.mejia@kreatetechnology.com>
- * @license http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link    http://Elasticsearch.org
  */
 class SearchResponseIteratorTest extends \PHPUnit\Framework\TestCase
 {
 
-    public function tearDown()
+    public function tearDown(): void
     {
         m::close();
     }
@@ -90,8 +100,10 @@ class SearchResponseIteratorTest extends \PHPUnit\Framework\TestCase
             ->ordered()
             ->with(
                 [
-                    'scroll_id'  => 'scroll_id_01',
-                    'scroll' => '5m'
+                    'body' => [
+                        'scroll_id'  => 'scroll_id_01',
+                        'scroll' => '5m'
+                    ]
                 ]
             )
             ->andReturn(
@@ -112,8 +124,10 @@ class SearchResponseIteratorTest extends \PHPUnit\Framework\TestCase
             ->ordered()
             ->with(
                 [
-                    'scroll_id'  => 'scroll_id_02',
-                    'scroll' => '5m'
+                    'body' => [
+                        'scroll_id' => 'scroll_id_02',
+                        'scroll' => '5m'
+                    ]
                 ]
             )
             ->andReturn(
@@ -134,8 +148,10 @@ class SearchResponseIteratorTest extends \PHPUnit\Framework\TestCase
             ->ordered()
             ->with(
                 [
-                    'scroll_id'  => 'scroll_id_03',
-                    'scroll' => '5m'
+                    'body' => [
+                        'scroll_id' => 'scroll_id_03',
+                        'scroll' => '5m'
+                    ]
                 ]
             )
             ->andReturn(
@@ -151,8 +167,10 @@ class SearchResponseIteratorTest extends \PHPUnit\Framework\TestCase
             ->never()
             ->with(
                 [
-                    'scroll_id'  => 'scroll_id_04',
-                    'scroll' => '5m'
+                    'body' => [
+                        'scroll_id'  => 'scroll_id_04',
+                        'scroll' => '5m'
+                    ]
                 ]
             );
 

@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -15,16 +29,11 @@ use Mockery as m;
 /**
  * Class ClientTest
  *
- * @category   Tests
- * @package    Elasticsearch
  * @subpackage Tests
- * @author     Zachary Tong <zachary.tong@elasticsearch.com>
- * @license    http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link       http://elasticsearch.org
  */
 class ClientTest extends \PHPUnit\Framework\TestCase
 {
-    public function tearDown()
+    public function tearDown(): void
     {
         m::close();
     }
@@ -85,8 +94,8 @@ class ClientTest extends \PHPUnit\Framework\TestCase
     {
         $client = ClientBuilder::create()->build();
 
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('index cannot be null.');
+        $this->expectException(Elasticsearch\Common\Exceptions\RuntimeException::class);
+        $this->expectExceptionMessage('index is required for delete');
 
         $client->delete(
             [
@@ -97,112 +106,17 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testTypeCanBeNullForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\Missing404Exception::class);
-
-        $client->delete(
-            [
-            'index' => 'test',
-            'type' => null,
-            'id' => 'test'
-            ]
-        );
-    }
-
     public function testIdCannotBeNullForDelete()
     {
         $client = ClientBuilder::create()->build();
 
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('id cannot be null.');
+        $this->expectException(Elasticsearch\Common\Exceptions\RuntimeException::class);
+        $this->expectExceptionMessage('id is required for delete');
 
         $client->delete(
             [
             'index' => 'test',
-            'type' => 'test',
             'id' => null
-            ]
-        );
-    }
-
-    public function testIndexCannotBeEmptyStringForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('index cannot be an empty string');
-
-        $client->delete(
-            [
-            'index' => '',
-            'type' => 'test',
-            'id' => 'test'
-            ]
-        );
-    }
-
-    public function testTypeCannotBeEmptyStringForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\BadRequest400Exception::class);
-
-        $client->delete(
-            [
-            'index' => 'test',
-            'type' => '',
-            'id' => 'test'
-            ]
-        );
-    }
-
-    public function testIdCannotBeEmptyStringForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('id cannot be an empty string');
-
-        $client->delete(
-            [
-            'index' => 'test',
-            'type' => 'test',
-            'id' => ''
-            ]
-        );
-    }
-
-    public function testIndexCannotBeArrayOfEmptyStringsForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('index cannot be an array of empty strings');
-
-        $client->delete(
-            [
-            'index' => ['', '', ''],
-            'type' => 'test',
-            'id' => 'test'
-            ]
-        );
-    }
-
-    public function testIndexCannotBeArrayOfNullsForDelete()
-    {
-        $client = ClientBuilder::create()->build();
-
-        $this->expectException(Elasticsearch\Common\Exceptions\InvalidArgumentException::class);
-        $this->expectExceptionMessage('index cannot be an array of empty strings');
-
-        $client->delete(
-            [
-            'index' => [null, null, null],
-            'type' => 'test',
-            'id' => 'test'
             ]
         );
     }
@@ -312,6 +226,17 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(9200, $host->getPort());
         $this->assertSame("https", $host->getTransportSchema());
         $this->assertSame("user:pass", $host->getUserPass());
+
+        $client = Elasticsearch\ClientBuilder::create()->setHosts(
+            [
+            'https://user:pass@the_foo.com:9200'
+            ]
+        )->build();
+        $host = $client->transport->getConnection();
+        $this->assertSame("the_foo.com", $host->getHost());
+        $this->assertSame(9200, $host->getPort());
+        $this->assertSame("https", $host->getTransportSchema());
+        $this->assertSame("user:pass", $host->getUserPass());
     }
 
     public function testExtendedHosts()
@@ -417,7 +342,7 @@ class ClientTest extends \PHPUnit\Framework\TestCase
             // good
         }
 
-        // Underscore host, questionably legal, but inline method would break
+        // Underscore host, questionably legal
         $client = Elasticsearch\ClientBuilder::create()->setHosts(
             [
             [
@@ -470,5 +395,17 @@ class ClientTest extends \PHPUnit\Framework\TestCase
         ];
         $result = $client->info($params);
         $this->assertInstanceOf(FutureArray::class, $result);
+    }
+
+    public function testExtractArgumentIterable()
+    {
+        $client = Elasticsearch\ClientBuilder::create()->build();
+        // array iterator can be casted to array back, so make more real with IteratorIterator
+        $body = new \IteratorIterator(new \ArrayIterator([1, 2, 3]));
+        $params = ['body' => $body];
+        $argument = $client->extractArgument($params, 'body');
+        $this->assertEquals($body, $argument);
+        $this->assertCount(0, $params);
+        $this->assertInstanceOf(\IteratorIterator::class, $argument);
     }
 }

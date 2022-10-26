@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -11,20 +25,20 @@ use Mockery;
 /**
  * Class SearchResponseIteratorTest
  *
- * @package Elasticsearch\Tests\Helper\Iterators
- * @author  Enrico Zimuel <enrico.zimuel@elastic.co>
- * @license http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link    http://Elasticsearch.org
  */
 class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @var SearchResponseIterator
+     */
+    private $searchResponse;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->searchResponse = Mockery::mock(SearchResponseIterator::class);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         Mockery::close();
     }
@@ -50,7 +64,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar1' ],
                         [ 'foo' => 'bar2' ]
                     ],
-                    'total' => 3
+                    'total' => [
+                        'value' => 3,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ],
                 [
@@ -60,7 +77,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar1' ],
                         [ 'foo' => 'bar2' ]
                     ],
-                    'total' => 3
+                    'total' => [
+                        'value' => 3,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ],
                 [
@@ -70,7 +90,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar1' ],
                         [ 'foo' => 'bar2' ]
                     ],
-                    'total' => 3
+                    'total' => [
+                        'value' => 3,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ],
                 [
@@ -80,7 +103,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar1' ],
                         [ 'foo' => 'bar2' ]
                     ],
-                    'total' => 3
+                    'total' => [
+                        'value' => 3,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ],
                 [
@@ -89,7 +115,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar3' ],
                         [ 'foo' => 'bar4' ]
                     ],
-                    'total' => 2
+                    'total' => [
+                        'value' => 2,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ],
                 [
@@ -98,7 +127,10 @@ class SearchHitIteratorTest extends \PHPUnit\Framework\TestCase
                         [ 'foo' => 'bar3' ],
                         [ 'foo' => 'bar4' ]
                     ],
-                    'total' => 2
+                    'total' => [
+                        'value' => 2,
+                        'relation' => 'eq'
+                    ]
                 ]
                 ]
             );

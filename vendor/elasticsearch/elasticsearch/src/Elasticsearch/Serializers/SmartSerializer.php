@@ -1,4 +1,18 @@
 <?php
+/**
+ * Elasticsearch PHP client
+ *
+ * @link      https://github.com/elastic/elasticsearch-php/
+ * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
+ * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
+ * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
+ *
+ * Licensed to Elasticsearch B.V under one or more agreements.
+ * Elasticsearch B.V licenses this file to you under the Apache 2.0 License or
+ * the GNU Lesser General Public License, Version 2.1, at your option.
+ * See the LICENSE file in the project root for more information.
+ */
+
 
 declare(strict_types = 1);
 
@@ -6,21 +20,13 @@ namespace Elasticsearch\Serializers;
 
 use Elasticsearch\Common\Exceptions;
 use Elasticsearch\Common\Exceptions\Serializer\JsonErrorException;
+use JsonException;
 
 if (!defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
     //PHP < 7.2 Define it as 0 so it does nothing
     define('JSON_INVALID_UTF8_SUBSTITUTE', 0);
 }
 
-/**
- * Class SmartSerializer
- *
- * @category Elasticsearch
- * @package  Elasticsearch\Serializers\JSONSerializer
- * @author   Zachary Tong <zach@elastic.co>
- * @license  http://www.apache.org/licenses/LICENSE-2.0 Apache2
- * @link     http://elastic.co
- */
 class SmartSerializer implements SerializerInterface
 {
     /**
@@ -33,7 +39,7 @@ class SmartSerializer implements SerializerInterface
         } else {
             $data = json_encode($data, JSON_PRESERVE_ZERO_FRACTION + JSON_INVALID_UTF8_SUBSTITUTE);
             if ($data === false) {
-                throw new Exceptions\RuntimeException("Failed to JSON encode: ".json_last_error());
+                throw new Exceptions\RuntimeException("Failed to JSON encode: ".json_last_error_msg());
             }
             if ($data === '[]') {
                 return '{}';
@@ -79,9 +85,18 @@ class SmartSerializer implements SerializerInterface
             try {
                 $result = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
                 return $result;
-            } catch (\JsonException $e) {
-                $result = $result ?? [];
-                throw new JsonErrorException($e->getMessage(), $data, $result);
+            } catch (JsonException $e) {
+                switch ($e->getCode()) {
+                    case JSON_ERROR_UTF16:
+                        try {
+                            $data = str_replace('\\', '\\\\', $data);
+                            $result = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+                            return $result;
+                        } catch (JsonException $e) {
+                            throw new JsonErrorException($e->getCode(), $data, $result ?? []);
+                        }
+                }
+                throw new JsonErrorException($e->getCode(), $data, $result ?? []);
             }
         }
 
