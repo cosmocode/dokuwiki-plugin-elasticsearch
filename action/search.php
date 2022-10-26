@@ -262,7 +262,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     {
         if (empty($langFilter)) return;
 
-        $langSubquery = new \Elastica\Query\Match();
+        $langSubquery = new \Elastica\Query\MatchQuery();
         $langSubquery->setField('language', implode(',', $langFilter));
         $subqueries->addMust($langSubquery);
     }
