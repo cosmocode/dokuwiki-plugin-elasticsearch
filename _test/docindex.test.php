@@ -16,11 +16,11 @@ class docindex_elasticsearch_test extends DokuWikiTest
      */
     protected $docparser;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
+        io_saveFile(DOKU_CONF . 'elasticsearch.conf', file_get_contents(__DIR__ . '/../conf/elasticsearch.conf.example'));
         $this->docparser = new \helper_plugin_elasticsearch_docparser();
-
     }
 
     /**
@@ -40,7 +40,8 @@ class docindex_elasticsearch_test extends DokuWikiTest
 Test file in .docx format',
                     'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                     'ext' => 'docx',
-                    'lang' => 'en',
+                    'language' => 'en',
+                    'created' => '2020-01-27T12:40:04Z'
                 ]
             ],
         ];
@@ -57,5 +58,4 @@ Test file in .docx format',
     {
         $this->assertEquals($expected, $this->docparser->parse($file));
     }
-
 }
