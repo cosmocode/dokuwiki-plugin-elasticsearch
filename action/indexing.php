@@ -131,22 +131,20 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'elasticsearch_client');
 
         $indexName    = $this->getConf('indexname');
-        $documentType = $this->getConf('documenttype');
         $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
-        $type         = $index->getType($documentType);
         $documentId   = $data['doctype'] . '_' . $data['uri'];
 
         // check if the document still exists to update it or add it as a new one
         try {
-            $client->updateDocument($documentId, ['doc' => $data], $index->getName(), $type->getName());
+            $client->updateDocument($documentId, ['doc' => $data], $index->getName());
         } catch (\Elastica\Exception\NotFoundException $e) {
             $document = new \Elastica\Document($documentId, $data);
-            $type->addDocument($document);
+            $index->addDocument($document);
         } catch (\Elastica\Exception\ResponseException $e) {
             if ($e->getResponse()->getStatus() == 404) {
                 $document = new \Elastica\Document($documentId, $data);
-                $type->addDocument($document);
+                $index->addDocument($document);
             } else {
                 throw $e;
             }
@@ -186,14 +184,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp          = plugin_load('helper', 'elasticsearch_client');
         $indexName    = $this->getConf('indexname');
-        $documentType = $this->getConf('documenttype');
         $client       = $hlp->connect();
         $index        = $client->getIndex($indexName);
-        $type         = $index->getType($documentType);
         $documentId   = $doctype . '_' . $id;
 
         try {
-            $type->deleteById($documentId);
+            $index->deleteById($documentId);
             $index->refresh();
             $this->log($documentId.' deleted ');
         } catch(Exception $e) {
