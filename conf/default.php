@@ -7,7 +7,6 @@
 
 $conf['servers']      = 'localhost:9200';
 $conf['indexname']    = 'wiki';
-$conf['documenttype'] = 'wikipage';
 $conf['snippets']     = 'content';
 $conf['searchSyntax'] = 1;
 $conf['perpage']      = 20;

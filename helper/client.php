@@ -132,9 +132,6 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      */
     protected function createMappings(\Elastica\Index $index): \Elastica\Response
     {
-
-        $type = $index->getType($this->getConf('documenttype'));
-
         $langProps = $this->getLangProps();
 
         // document permissions
@@ -183,10 +180,9 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             $props = array_merge($props, $fields);
         }
 
-        $mapping = new \Elastica\Type\Mapping();
-        $mapping->setType($type);
+        $mapping = new \Elastica\Mapping();
         $mapping->setProperties($props);
-        return $mapping->send();
+        return $mapping->send($index);
     }
 
     /**
