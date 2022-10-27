@@ -99,7 +99,7 @@ class Connection implements ConnectionInterface
     /**
      * @var bool
      */
-    protected $isAlive = true;
+    protected $isAlive = false;
 
     /**
      * @var float

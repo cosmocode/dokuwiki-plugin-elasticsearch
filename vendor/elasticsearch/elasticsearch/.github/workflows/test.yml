@@ -9,9 +9,9 @@ jobs:
 
     strategy:
       matrix:
-        php-version: [7.3, 7.4, 8.0, 8.1]
+        php-version: [7.3, 7.4, 8.0]
         os: [ubuntu-latest]
-        es-version: [7.17-SNAPSHOT]
+        es-version: [7.x-SNAPSHOT]
 
     steps:
     - name: Checkout

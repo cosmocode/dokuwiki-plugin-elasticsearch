@@ -1,128 +1,127 @@
-<?php return array (
-  'root' => 
-  array (
-    'pretty_version' => 'dev-master',
-    'version' => 'dev-master',
-    'aliases' => 
-    array (
+<?php return array(
+    'root' => array(
+        'name' => '__root__',
+        'pretty_version' => 'dev-master',
+        'version' => 'dev-master',
+        'reference' => '0c1bd8502e1e6cf52ba304c93e5283f6e54f9d44',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
     ),
-    'reference' => '69c690fec8b5fa919bc4fc4fa0288bea5046d0ed',
-    'name' => '__root__',
-  ),
-  'versions' => 
-  array (
-    '__root__' => 
-    array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '69c690fec8b5fa919bc4fc4fa0288bea5046d0ed',
+    'versions' => array(
+        '__root__' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '0c1bd8502e1e6cf52ba304c93e5283f6e54f9d44',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'elasticsearch/elasticsearch' => array(
+            'pretty_version' => '7.x-dev',
+            'version' => '7.9999999.9999999.9999999-dev',
+            'reference' => '76c090601691373fb0aa48903c2a1faa6598eed8',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../elasticsearch/elasticsearch',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'ezimuel/guzzlestreams' => array(
+            'pretty_version' => '3.1.0',
+            'version' => '3.1.0.0',
+            'reference' => 'b4b5a025dfee70d6cd34c780e07330eb93d5b997',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ezimuel/guzzlestreams',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'ezimuel/ringphp' => array(
+            'pretty_version' => '1.2.1',
+            'version' => '1.2.1.0',
+            'reference' => '8d00384f9e5c04713ef8448adf47824265791b50',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ezimuel/ringphp',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'guzzlehttp/ringphp' => array(
+            'dev_requirement' => false,
+            'replaced' => array(
+                0 => '1.2.1',
+            ),
+        ),
+        'nyholm/dsn' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '9445621b426bac8c0ca161db8cd700da00a4e618',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../nyholm/dsn',
+            'aliases' => array(
+                0 => '2.0.x-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'patrickschur/language-detection' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '4849c2e8618cce09dbe15d5b534b51137bd6d477',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../patrickschur/language-detection',
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'psr/log' => array(
+            'pretty_version' => '1.1.4',
+            'version' => '1.1.4.0',
+            'reference' => 'd49695b909c3b7628b6289db5479a1c204601f11',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../psr/log',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'react/promise' => array(
+            'pretty_version' => '2.x-dev',
+            'version' => '2.9999999.9999999.9999999-dev',
+            'reference' => 'f23788b1a9e7b1ae98576343a2dc59354b6c7f6d',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../react/promise',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'ruflin/elastica' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '5fc25a4966b48ae9a631e345b167c867250a43c7',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ruflin/elastica',
+            'aliases' => array(
+                0 => '7.0.x-dev',
+            ),
+            'dev_requirement' => false,
+        ),
+        'symfony/deprecation-contracts' => array(
+            'pretty_version' => '2.5.x-dev',
+            'version' => '2.5.9999999.9999999-dev',
+            'reference' => 'e8b495ea28c1d97b5e0c121748d6f9b53d075c66',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/deprecation-contracts',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'symfony/polyfill-php73' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'e440d35fa0286f77fb45b79a03fedbeda9307e85',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/polyfill-php73',
+            'aliases' => array(
+                0 => '1.26.x-dev',
+            ),
+            'dev_requirement' => false,
+        ),
     ),
-    'elasticsearch/elasticsearch' => 
-    array (
-      'pretty_version' => '7.17.x-dev',
-      'version' => '7.17.9999999.9999999-dev',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '85e86965864e4777cd726ac90faa96bf52fe35c4',
-    ),
-    'ezimuel/guzzlestreams' => 
-    array (
-      'pretty_version' => '3.1.0',
-      'version' => '3.1.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'b4b5a025dfee70d6cd34c780e07330eb93d5b997',
-    ),
-    'ezimuel/ringphp' => 
-    array (
-      'pretty_version' => '1.2.1',
-      'version' => '1.2.1.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '8d00384f9e5c04713ef8448adf47824265791b50',
-    ),
-    'guzzlehttp/ringphp' => 
-    array (
-      'replaced' => 
-      array (
-        0 => '1.2.1',
-      ),
-    ),
-    'nyholm/dsn' => 
-    array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
-      'aliases' => 
-      array (
-        0 => '2.0.x-dev',
-      ),
-      'reference' => '9445621b426bac8c0ca161db8cd700da00a4e618',
-    ),
-    'patrickschur/language-detection' => 
-    array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
-      'aliases' => 
-      array (
-        0 => '9999999-dev',
-      ),
-      'reference' => '4849c2e8618cce09dbe15d5b534b51137bd6d477',
-    ),
-    'psr/log' => 
-    array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
-      'aliases' => 
-      array (
-        0 => '3.x-dev',
-      ),
-      'reference' => 'fe5ea303b0887d5caefd3d431c3e61ad47037001',
-    ),
-    'react/promise' => 
-    array (
-      'pretty_version' => '2.x-dev',
-      'version' => '2.9999999.9999999.9999999-dev',
-      'aliases' => 
-      array (
-        0 => '9999999-dev',
-      ),
-      'reference' => 'f23788b1a9e7b1ae98576343a2dc59354b6c7f6d',
-    ),
-    'ruflin/elastica' => 
-    array (
-      'pretty_version' => 'dev-master',
-      'version' => 'dev-master',
-      'aliases' => 
-      array (
-        0 => '7.0.x-dev',
-      ),
-      'reference' => '5fc25a4966b48ae9a631e345b167c867250a43c7',
-    ),
-    'symfony/deprecation-contracts' => 
-    array (
-      'pretty_version' => 'dev-main',
-      'version' => 'dev-main',
-      'aliases' => 
-      array (
-        0 => '3.2.x-dev',
-      ),
-      'reference' => '4912000e79dc2d6df029d35d8755be1ed79b6691',
-    ),
-    'symfony/polyfill-php73' => 
-    array (
-      'pretty_version' => 'dev-main',
-      'version' => 'dev-main',
-      'aliases' => 
-      array (
-        0 => '1.26.x-dev',
-      ),
-      'reference' => 'e440d35fa0286f77fb45b79a03fedbeda9307e85',
-    ),
-  ),
 );

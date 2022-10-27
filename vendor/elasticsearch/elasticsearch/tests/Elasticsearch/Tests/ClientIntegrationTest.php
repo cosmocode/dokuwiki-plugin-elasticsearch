@@ -59,10 +59,7 @@ class ClientIntegrationTest extends \PHPUnit\Framework\TestCase
             ->setHosts([$this->host])
             ->setLogger($this->logger);
 
-        $testSuite = $_SERVER['TEST_SUITE'] 
-            ?? $_ENV['TEST_SUITE']
-            ?? getenv('TEST_SUITE');
-        if ($testSuite === 'platinum') {
+        if (getenv('TEST_SUITE') === 'platinum') {
             $client->setSSLVerification(false);
         }
         return $client->build();

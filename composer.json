@@ -3,5 +3,10 @@
     "require": {
         "ruflin/elastica": "dev-master",
         "patrickschur/language-detection": "dev-master"
+    },
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
     }
 }

@@ -42,8 +42,6 @@ use ReflectionClass;
 
 class ClientBuilder
 {
-    const ALLOWED_METHODS_FROM_CONFIG = ['includePortInHostHeader'];
-
     /**
      * @var Transport
      */
@@ -199,7 +197,7 @@ class ClientBuilder
     {
         $builder = new static;
         foreach ($config as $key => $value) {
-            $method = in_array($key, self::ALLOWED_METHODS_FROM_CONFIG) ? $key : "set$key";
+            $method = "set$key";
             $reflection = new ReflectionClass($builder);
             if ($reflection->hasMethod($method)) {
                 $func = $reflection->getMethod($method);
@@ -637,9 +635,7 @@ class ClientBuilder
             if (! isset($this->connectionParams['client']['headers'])) {
                 $this->connectionParams['client']['headers'] = [];
             }
-            $apiVersioning = $_SERVER['ELASTIC_CLIENT_APIVERSIONING']
-                ?? $_ENV['ELASTIC_CLIENT_APIVERSIONING']
-                ?? getenv('ELASTIC_CLIENT_APIVERSIONING');
+            $apiVersioning = getenv('ELASTIC_CLIENT_APIVERSIONING');
             if (! isset($this->connectionParams['client']['headers']['Content-Type'])) {
                 if ($apiVersioning === 'true' || $apiVersioning === '1') {
                     $this->connectionParams['client']['headers']['Content-Type'] = ['application/vnd.elasticsearch+json;compatible-with=7'];
