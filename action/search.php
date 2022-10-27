@@ -307,12 +307,12 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     protected function addACLSubqueries($subqueries)
     {
         global $USERINFO;
-        global $conf;
+        global $INFO;
 
         $groups = array_merge(['ALL'], $USERINFO['grps'] ?: []);
 
         // no ACL filters for superusers
-        if (in_array(ltrim($conf['superuser'], '@'), $groups)) return;
+        if ($INFO['isadmin']) return;
 
         // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
         $includeSubquery = new \Elastica\Query\BoolQuery();
