@@ -146,7 +146,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         // add namespace filter
         if($INPUT->has('ns')) {
             $nsSubquery = new \Elastica\Query\BoolQuery();
-            foreach($INPUT->arr('ns') as $ns) {
+            foreach ($INPUT->arr('ns') as $ns) {
                 $term = new \Elastica\Query\Term();
                 $term->setTerm('namespace', $ns);
                 $nsSubquery->addShould($term);
@@ -154,7 +154,6 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $equery->setPostFilter($nsSubquery);
         }
 
-        $equery->setQuery($subqueries);
 
         // add aggregations for namespaces
         $agg = new \Elastica\Aggregation\Terms('namespace');
@@ -163,7 +162,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $equery->addAggregation($agg);
 
         // add search configurations from other plugins
-        $this->addPluginConfigurations($equery);
+        $this->addPluginConfigurations($equery, $subqueries);
+
+        $equery->setQuery($subqueries);
 
         try {
             $result = $index->search($equery);
@@ -207,8 +208,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
      * Add search configurations supplied by other plugins
      *
      * @param \Elastica\Query $equery
+     * @param \Elastica\Query\BoolQuery
      */
-    protected function addPluginConfigurations($equery)
+    protected function addPluginConfigurations($equery, $subqueries)
     {
         global $INPUT;
 
@@ -222,8 +224,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                         $eterm->setTerm($param, $item);
                         $pluginSubquery->addShould($eterm);
                     }
-                    $equery->setPostFilter($pluginSubquery);
+                    $subqueries->addMust($pluginSubquery);
                 }
+
                 // build aggregation for use as filter in advanced search
                 $agg = new \Elastica\Aggregation\Terms($param);
                 $agg->setField($config['fieldPath']);
