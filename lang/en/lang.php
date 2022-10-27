@@ -9,6 +9,6 @@ $lang['ns']     = 'Namespace:';
 $lang['nsp']    = 'Namespaces:';
 $lang['lastmod'] = 'Last modified:';
 $lang['lang']   = 'Language:';
-$lang['author'] = 'Author:';
+$lang['author'] = 'by:';
 $lang['totalfound'] = 'Results found: %s';
 $lang['confmanager title'] = 'Elasticsearch';

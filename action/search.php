@@ -440,12 +440,12 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             if (!empty($doc['namespace'])) {
                 echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($doc['namespace']) . '</span>';
             }
-            if ($doc['user']) {
-                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
-            }
             if ($doc['modified']) {
                 $lastmod = strtotime($doc['modified']);
                 echo ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
+            }
+            if (!empty($doc['user'])) {
+                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
             }
             echo '</dd>';
 

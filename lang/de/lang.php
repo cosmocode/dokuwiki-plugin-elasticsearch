@@ -9,5 +9,5 @@ $lang['ns']     = 'Namensraum:';
 $lang['nsp']    = 'Namensräume:';
 $lang['lastmod'] = 'Zuletzt geändert:';
 $lang['lang'] = 'Sprache:';
-$lang['author'] = 'Autor:';
+$lang['author'] = 'von:';
 $lang['totalfound'] = 'Ergebnisse gefunden: %s';
