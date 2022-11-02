@@ -422,7 +422,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             );
             if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
 
-            $isPage = $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;
+            // assume page if no doctype is set, because old index won't have doctypes
+            $isPage = empty($doc['doctype']) || $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;
             $href = $isPage ? wl($page) : ml($page);
 
             echo '<dt>';
