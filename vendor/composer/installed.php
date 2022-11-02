@@ -3,7 +3,7 @@
         'name' => '__root__',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '0c1bd8502e1e6cf52ba304c93e5283f6e54f9d44',
+        'reference' => 'dce7f6da7865138b9efac4b20862e211669e68f8',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         '__root__' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '0c1bd8502e1e6cf52ba304c93e5283f6e54f9d44',
+            'reference' => 'dce7f6da7865138b9efac4b20862e211669e68f8',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -86,7 +86,7 @@
         'react/promise' => array(
             'pretty_version' => '2.x-dev',
             'version' => '2.9999999.9999999.9999999-dev',
-            'reference' => 'f23788b1a9e7b1ae98576343a2dc59354b6c7f6d',
+            'reference' => 'd47bd60659fa7ce58f4a7ec3ea959c05326ef7fa',
             'type' => 'library',
             'install_path' => __DIR__ . '/../react/promise',
             'aliases' => array(),
