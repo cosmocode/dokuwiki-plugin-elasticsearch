@@ -223,7 +223,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $data['created']  = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
         $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
         $data['user']     = $meta['user'];
-        $data['title']    = $meta['title'];
+        $data['title']    = $meta['title'] ?? $id;
         $data['abstract'] = $meta['description']['abstract'];
         $data['syntax']   = rawWiki($id);
         $data['mime']     = self::MIME_DOKUWIKI;
