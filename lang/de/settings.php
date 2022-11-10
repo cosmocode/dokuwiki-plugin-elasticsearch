@@ -11,5 +11,4 @@ $lang['snippets']     = 'Text, der in den Suchergebnissen als Vorschau angezeigt
 $lang['searchSyntax'] = 'Wiki-Syntax zusätzlich zum Seiteninhalt durchsuchen';
 $lang['perpage']      = 'Anzahl der Treffer pro Seite';
 $lang['detectTranslation'] = 'Translation Plugin Integration: Zunächst im aktuellen Übersetzungnamensraum suchen';
-$lang['debug']        = 'Debugging messages nach data/cache/debug.log schreiben - benötigt eingeschaltete allowdebug Option';
 $lang['disableQuicksearch'] = 'Schnellsuche deaktivieren (Vorschläge von passenden Seiten IDs)';

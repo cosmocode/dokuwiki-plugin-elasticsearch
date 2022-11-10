@@ -11,5 +11,4 @@ $conf['snippets']     = 'content';
 $conf['searchSyntax'] = 1;
 $conf['perpage']      = 20;
 $conf['detectTranslation'] = 0;
-$conf['debug']        = 0;
 $conf['disableQuicksearch'] = 0;

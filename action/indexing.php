@@ -37,14 +37,15 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      */
     public function handle_tpl_content_display(Doku_Event $event) {
         global $ID, $INFO;
-        $logs   = [];
-        $logs[] = 'BEGIN content display';
-        $logs[] = metaFN($ID, '.elasticsearch_indexed');
-        $logs[] = wikiFN($ID);
-        $logs[] = wikiFN($INFO['id']);
-        $logs[] = $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed';
-        $logs[] = 'END content display';
-        $this->log($logs);
+        $this->log(
+            'content display',
+            [
+                metaFN($ID, '.elasticsearch_indexed'),
+                wikiFN($ID),
+                wikiFN($INFO['id']),
+                $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed',
+            ]
+        );
         if ($this->needs_indexing($ID)) {
             $this->index_page($ID);
         }
@@ -323,16 +324,11 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * Log something to the debug log
      *
-     * @param string|string[] $txt
+     * @param string $txt
+     * @param mixed $info
      */
-    protected function log($txt) {
-        if (!$this->getConf('debug')) {
-            return;
-        }
-        $logs = (array)$txt;
-
-        foreach ($logs as $entry) {
-            dbglog($entry);
-        }
+    protected function log($txt, $info=null) {
+        $txt = 'ElasticSearch: '.$txt;
+        \dokuwiki\Logger::debug($txt, $info);
     }
 }

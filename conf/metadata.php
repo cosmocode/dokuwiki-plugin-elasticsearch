@@ -11,5 +11,4 @@ $meta['snippets']     = array('multichoice', '_choices' => array('content','abst
 $meta['searchSyntax'] = array('onoff');
 $meta['perpage']      = array('numeric', '_min' => 1);
 $meta['detectTranslation'] = array('onoff');
-$meta['debug']        = array('onoff');
 $meta['disableQuicksearch'] = array('onoff');

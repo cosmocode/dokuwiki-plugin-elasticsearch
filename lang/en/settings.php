@@ -11,5 +11,4 @@ $lang['snippets']     = 'Text to show in search result snippets';
 $lang['searchSyntax'] = 'Search in wiki syntax in addition to page content';
 $lang['perpage']      = 'How many hits to show per page';
 $lang['detectTranslation'] = 'Translation plugin support: search in current language namespace by default';
-$lang['debug']        = 'Log messages to data/cache/debug.log - needs allowdebug enabled';
 $lang['disableQuicksearch'] = 'Disable quick search (page id suggestions)';
