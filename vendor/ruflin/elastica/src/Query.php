@@ -20,11 +20,26 @@ use Elastica\Suggest\AbstractSuggest;
  * @author Nicolas Ruflin <spam@ruflin.com>
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html
- * @phpstan-type TCreateQueryArgs = TCreateQueryArgsMatching|AbstractSuggest|Collapse|Suggest
- * @phpstan-type TCreateQueryArgsMatching = AbstractQuery|TRawQuery|self|string|null
+ * @todo: improve THighlightArgs https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
+ * @phpstan-type THighlightArgs = array<mixed>
+ * @phpstan-type TStoredFields = list<string>
+ * @todo: improve TDocValueFields https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html#request-body-search-docvalue-fields
+ * @phpstan-type TDocValueFields = array<mixed>
+ * @phpstan-type TRescoreArgs = QueryRescore|list<QueryRescore>
+ * @phpstan-type TSourceArgs = non-empty-string|list<non-empty-string>|array{includes?: list<non-empty-string>, excludes?: list<non-empty-string>}|false
+ * @phpstan-type TSortArrayArg = array<string, string>|array<string, array{
+ *     order?: non-empty-string,
+ *     mode?: non-empty-string,
+ *     numeric_type?: non-empty-string,
+ *     nested?: array{path: non-empty-string, filter?: array<mixed>, max_children?: int, nested?: array<mixed>},
+ *     missing?: non-empty-string,
+ *     unmapped_type?: non-empty-string,
+ * }>|array{_geo_distance: array<string, mixed>}
+ * @phpstan-type TSortArg = non-empty-string|TSortArrayArg
+ * @phpstan-type TSortArgs = list<TSortArg>|TSortArrayArg
  * @phpstan-type TRawQuery = array{
  *     _source?: TSourceArgs,
- *     aggs?: list<AbstractAggregation>,
+ *     aggs?: list<AbstractAggregation>|array<string, array<string, array<string, mixed>>>,
  *     collapse?: Collapse,
  *     docvalue_fields?: TDocValueFields,
  *     explain?: bool,
@@ -33,7 +48,6 @@ use Elastica\Suggest\AbstractSuggest;
  *     indices_boost?: array<string, float>,
  *     min_score?: float,
  *     pit?: PointInTime,
- *     post_filter?: AbstractQuery,
  *     post_filter?: AbstractQuery,
  *     query?: AbstractQuery|array<string, array<string, mixed>>,
  *     rescore?: TRescoreArgs,
@@ -46,21 +60,8 @@ use Elastica\Suggest\AbstractSuggest;
  *     track_total_hits?: bool|int,
  *     version?: bool,
  * }
- * @phpstan-type TSortArgs = list<non-empty-string|array<string, string>|array<string, array{
- *     order?: non-empty-string,
- *     mode?: non-empty-string,
- *     numeric_type?: non-empty-string,
- *     nested?: array{path: non-empty-string, filter?: array<mixed>, max_children?: int, nested?: array<mixed>},
- *     missing?: non-empty-string,
- *     unmapped_type?: non-empty-string,
- * }>|array{_geo_distance: array<string, mixed>}>
- * @todo: improve THighlightArgs https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
- * @phpstan-type THighlightArgs = array<mixed>
- * @phpstan-type TStoredFields = list<string>
- * @todo: improve TDocValueFields https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html#request-body-search-docvalue-fields
- * @phpstan-type TDocValueFields = array<mixed>
- * @phpstan-type TRescoreArgs = QueryRescore|list<QueryRescore>
- * @phpstan-type TSourceArgs = non-empty-string|list<non-empty-string>|array{includes?: list<non-empty-string>, excludes?: list<non-empty-string>}|false
+ * @phpstan-type TCreateQueryArgsMatching = AbstractQuery|TRawQuery|self|string|null
+ * @phpstan-type TCreateQueryArgs = TCreateQueryArgsMatching|AbstractSuggest|Collapse|Suggest
  */
 class Query extends Param
 {
@@ -177,6 +178,7 @@ class Query extends Param
      * Adds a sort param to the query.
      *
      * @param mixed $sort Sort parameter
+     * @phpstan-param TSortArg $sort
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html
      */

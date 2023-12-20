@@ -7,12 +7,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:elastic/elasticsearch-php.git",
-                "reference": "76c090601691373fb0aa48903c2a1faa6598eed8"
+                "reference": "c078ccb082f4cdfb3ef81971a8ca6afb9844d6ce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/76c090601691373fb0aa48903c2a1faa6598eed8",
-                "reference": "76c090601691373fb0aa48903c2a1faa6598eed8",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/c078ccb082f4cdfb3ef81971a8ca6afb9844d6ce",
+                "reference": "c078ccb082f4cdfb3ef81971a8ca6afb9844d6ce",
                 "shasum": ""
             },
             "require": {
@@ -34,7 +34,7 @@
                 "ext-curl": "*",
                 "monolog/monolog": "Allows for client-level logging and tracing"
             },
-            "time": "2022-10-06T13:27:43+00:00",
+            "time": "2023-02-13T08:11:52+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -123,17 +123,17 @@
         },
         {
             "name": "ezimuel/ringphp",
-            "version": "1.2.1",
-            "version_normalized": "1.2.1.0",
+            "version": "1.2.2",
+            "version_normalized": "1.2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ezimuel/ringphp.git",
-                "reference": "8d00384f9e5c04713ef8448adf47824265791b50"
+                "reference": "7887fc8488013065f72f977dcb281994f5fde9f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ezimuel/ringphp/zipball/8d00384f9e5c04713ef8448adf47824265791b50",
-                "reference": "8d00384f9e5c04713ef8448adf47824265791b50",
+                "url": "https://api.github.com/repos/ezimuel/ringphp/zipball/7887fc8488013065f72f977dcb281994f5fde9f4",
+                "reference": "7887fc8488013065f72f977dcb281994f5fde9f4",
                 "shasum": ""
             },
             "require": {
@@ -151,7 +151,7 @@
             "suggest": {
                 "ext-curl": "Guzzle will use specific adapters if cURL is present"
             },
-            "time": "2022-10-25T12:54:22+00:00",
+            "time": "2022-12-07T11:28:53+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -177,7 +177,7 @@
             ],
             "description": "Fork of guzzle/RingPHP (abandoned) to be used with elasticsearch-php",
             "support": {
-                "source": "https://github.com/ezimuel/ringphp/tree/1.2.1"
+                "source": "https://github.com/ezimuel/ringphp/tree/1.2.2"
             },
             "install-path": "../ezimuel/ringphp"
         },
@@ -253,12 +253,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/patrickschur/language-detection.git",
-                "reference": "4849c2e8618cce09dbe15d5b534b51137bd6d477"
+                "reference": "b8da335336c09fa6814fe0ca0d6d506c357cd7b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/patrickschur/language-detection/zipball/4849c2e8618cce09dbe15d5b534b51137bd6d477",
-                "reference": "4849c2e8618cce09dbe15d5b534b51137bd6d477",
+                "url": "https://api.github.com/repos/patrickschur/language-detection/zipball/b8da335336c09fa6814fe0ca0d6d506c357cd7b9",
+                "reference": "b8da335336c09fa6814fe0ca0d6d506c357cd7b9",
                 "shasum": ""
             },
             "require": {
@@ -269,7 +269,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^9.5.0"
             },
-            "time": "2022-03-01T22:22:41+00:00",
+            "time": "2023-08-18T22:46:39+00:00",
             "default-branch": true,
             "type": "library",
             "installation-source": "dist",
@@ -297,7 +297,7 @@
             ],
             "support": {
                 "issues": "https://github.com/patrickschur/language-detection/issues",
-                "source": "https://github.com/patrickschur/language-detection/tree/v5.2.0"
+                "source": "https://github.com/patrickschur/language-detection/tree/v5.3.0"
             },
             "install-path": "../patrickschur/language-detection"
         },
@@ -361,21 +361,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "d47bd60659fa7ce58f4a7ec3ea959c05326ef7fa"
+                "reference": "1a8460931ea36dc5c76838fec5734d55c88c6831"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/d47bd60659fa7ce58f4a7ec3ea959c05326ef7fa",
-                "reference": "d47bd60659fa7ce58f4a7ec3ea959c05326ef7fa",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/1a8460931ea36dc5c76838fec5734d55c88c6831",
+                "reference": "1a8460931ea36dc5c76838fec5734d55c88c6831",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.5 || ^5.7 || ^4.8.36"
+                "phpunit/phpunit": "^9.6 || ^5.7 || ^4.8.36"
             },
-            "time": "2022-10-31T09:13:55+00:00",
+            "time": "2023-11-16T16:16:50+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -419,33 +419,29 @@
             ],
             "support": {
                 "issues": "https://github.com/reactphp/promise/issues",
-                "source": "https://github.com/reactphp/promise/tree/2.x"
+                "source": "https://github.com/reactphp/promise/tree/v2.11.0"
             },
             "funding": [
                 {
-                    "url": "https://github.com/WyriHaximus",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/clue",
-                    "type": "github"
+                    "url": "https://opencollective.com/reactphp",
+                    "type": "open_collective"
                 }
             ],
             "install-path": "../react/promise"
         },
         {
             "name": "ruflin/elastica",
-            "version": "dev-master",
-            "version_normalized": "dev-master",
+            "version": "7.x-dev",
+            "version_normalized": "7.9999999.9999999.9999999-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ruflin/Elastica.git",
-                "reference": "5fc25a4966b48ae9a631e345b167c867250a43c7"
+                "reference": "df80484afae2bfa14126eb06172278726c8bd6be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ruflin/Elastica/zipball/5fc25a4966b48ae9a631e345b167c867250a43c7",
-                "reference": "5fc25a4966b48ae9a631e345b167c867250a43c7",
+                "url": "https://api.github.com/repos/ruflin/Elastica/zipball/df80484afae2bfa14126eb06172278726c8bd6be",
+                "reference": "df80484afae2bfa14126eb06172278726c8bd6be",
                 "shasum": ""
             },
             "require": {
@@ -470,8 +466,7 @@
                 "guzzlehttp/guzzle": "Allow using guzzle as transport",
                 "monolog/monolog": "Logging request"
             },
-            "time": "2022-10-11T06:53:58+00:00",
-            "default-branch": true,
+            "time": "2023-06-18T06:14:45+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -502,7 +497,7 @@
             ],
             "support": {
                 "issues": "https://github.com/ruflin/Elastica/issues",
-                "source": "https://github.com/ruflin/Elastica/tree/master"
+                "source": "https://github.com/ruflin/Elastica/tree/7.x"
             },
             "install-path": "../ruflin/elastica"
         },
@@ -513,18 +508,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "e8b495ea28c1d97b5e0c121748d6f9b53d075c66"
+                "reference": "80d075412b557d41002320b96a096ca65aa2c98d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/e8b495ea28c1d97b5e0c121748d6f9b53d075c66",
-                "reference": "e8b495ea28c1d97b5e0c121748d6f9b53d075c66",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/80d075412b557d41002320b96a096ca65aa2c98d",
+                "reference": "80d075412b557d41002320b96a096ca65aa2c98d",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1"
             },
-            "time": "2022-01-02T09:53:40+00:00",
+            "time": "2023-01-24T14:02:46+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -578,28 +573,28 @@
         },
         {
             "name": "symfony/polyfill-php73",
-            "version": "dev-main",
-            "version_normalized": "dev-main",
+            "version": "1.x-dev",
+            "version_normalized": "1.9999999.9999999.9999999-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php73.git",
-                "reference": "e440d35fa0286f77fb45b79a03fedbeda9307e85"
+                "reference": "fe2f306d1d9d346a7fee353d0d5012e401e984b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/e440d35fa0286f77fb45b79a03fedbeda9307e85",
-                "reference": "e440d35fa0286f77fb45b79a03fedbeda9307e85",
+                "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/fe2f306d1d9d346a7fee353d0d5012e401e984b5",
+                "reference": "fe2f306d1d9d346a7fee353d0d5012e401e984b5",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1"
             },
-            "time": "2022-05-24T11:49:31+00:00",
+            "time": "2023-01-26T09:26:14+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.26-dev"
+                    "dev-main": "1.28-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -641,7 +636,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php73/tree/v1.26.0"
+                "source": "https://github.com/symfony/polyfill-php73/tree/v1.28.0"
             },
             "funding": [
                 {
