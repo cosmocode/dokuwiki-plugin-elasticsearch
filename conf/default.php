@@ -6,6 +6,8 @@
  */
 
 $conf['servers']      = 'localhost:9200';
+$conf['username']    = '';
+$conf['password']    = '';
 $conf['indexname']    = 'wiki';
 $conf['snippets']     = 'content';
 $conf['searchSyntax'] = 1;

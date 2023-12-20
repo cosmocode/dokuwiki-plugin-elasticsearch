@@ -6,6 +6,8 @@
  */
 
 $meta['servers']      = array();
+$meta['username']    = array('string');
+$meta['password']    = array('password');
 $meta['indexname']    = array('string');
 $meta['snippets']     = array('multichoice', '_choices' => array('content','abstract'));
 $meta['searchSyntax'] = array('onoff');

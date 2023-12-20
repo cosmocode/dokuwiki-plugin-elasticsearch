@@ -61,7 +61,9 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      */
     public function connect() {
         if (!is_null($this->elasticaClient)) return $this->elasticaClient;
-
+        // security settings
+        $username = $this->getConf('username');
+        $password = $this->getConf('password');
         // parse servers config into DSN array
         $dsn = ['servers' => []];
         $servers = $this->getConf('servers');
@@ -74,7 +76,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             if (!$port) $port = 80;
             $proxy = trim($proxy);
             if (!$host) continue;
-            $dsn['servers'][] = compact('host', 'port', 'proxy');
+            $dsn['servers'][] = compact('host', 'port', 'proxy', 'username', 'password');
         }
 
         $this->elasticaClient = new \Elastica\Client($dsn);
