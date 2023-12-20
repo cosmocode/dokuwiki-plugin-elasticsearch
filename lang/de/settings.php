@@ -6,6 +6,8 @@
  */
 
 $lang['servers']      = 'ElasticSearch server: einer pro Zeile, Port-Nummer durch Doppelpunkt getrennt, optionaler Proxy nach einem Komma';
+$lang['username']     = 'Elastic Benutzer ist erforderlich bei aktivierter Sicherheit in Elastic (Standard ab Version 8)';
+$lang['password']     = 'Elastic Passwort ist erforderlich bei aktivierter Sicherheit in Elastic (Standard ab Version 8)';
 $lang['indexname']    = 'Zu benutzender Index-Name. Muss existieren oder kann mit dem cli.php tool erzeugt werden.';
 $lang['snippets']     = 'Text, der in den Suchergebnissen als Vorschau angezeigt wird';
 $lang['searchSyntax'] = 'Wiki-Syntax zusätzlich zum Seiteninhalt durchsuchen';
