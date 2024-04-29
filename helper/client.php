@@ -97,6 +97,10 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
             throw new \splitbrain\phpcli\Exception("Failed to create index!");
         }
 
+        if ($index->setSettings(['index.highlight.max_analyzed_offset' => $this->getConf('maxAnalyzedOffset')])->hasError()) {
+            throw new \splitbrain\phpcli\Exception("Could not set highlighting config on index!");
+        }
+
         if ($this->createMappings($index)->hasError()) {
             throw new \splitbrain\phpcli\Exception("Failed to create field mappings!");
         }

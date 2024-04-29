@@ -14,3 +14,4 @@ $meta['searchSyntax'] = array('onoff');
 $meta['perpage']      = array('numeric', '_min' => 1);
 $meta['detectTranslation'] = array('onoff');
 $meta['disableQuicksearch'] = array('onoff');
+$meta['maxAnalyzedOffset'] = array('numeric', '_min' => 0, '_caution' => 'warning');

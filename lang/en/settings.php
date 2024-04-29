@@ -14,3 +14,4 @@ $lang['searchSyntax'] = 'Search in wiki syntax in addition to page content';
 $lang['perpage']      = 'How many hits to show per page';
 $lang['detectTranslation'] = 'Translation plugin support: search in current language namespace by default';
 $lang['disableQuicksearch'] = 'Disable quick search (page id suggestions)';
+$lang['maxAnalyzedOffset'] = 'Maximum amount of data per page/media file considered for search result highlighting. You have to recreate your index if you change this value.';

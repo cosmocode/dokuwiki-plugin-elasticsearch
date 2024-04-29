@@ -122,6 +122,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             [
                 "pre_tags"  => ['ELASTICSEARCH_MARKER_IN'],
                 "post_tags" => ['ELASTICSEARCH_MARKER_OUT'],
+                "max_analyzed_offset" => $this->getConf('maxAnalyzedOffset'),
                 "fields"    => [
                     $this->getConf('snippets') => new \stdClass(),
                     'title' => new \stdClass()]
