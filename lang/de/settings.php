@@ -14,3 +14,4 @@ $lang['searchSyntax'] = 'Wiki-Syntax zusätzlich zum Seiteninhalt durchsuchen';
 $lang['perpage']      = 'Anzahl der Treffer pro Seite';
 $lang['detectTranslation'] = 'Translation Plugin Integration: Zunächst im aktuellen Übersetzungnamensraum suchen';
 $lang['disableQuicksearch'] = 'Schnellsuche deaktivieren (Vorschläge von passenden Seiten IDs)';
+$lang['maxAnalyzedOffset'] = 'Maximale Datenmenge pro Seite/Datei zur Hervorhebung von Suchtreffern. Nach Änderung dieses Wertes muss der Suchindex neu aufgebaut werden.';

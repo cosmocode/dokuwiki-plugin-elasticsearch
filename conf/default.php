@@ -14,3 +14,4 @@ $conf['searchSyntax'] = 1;
 $conf['perpage']      = 20;
 $conf['detectTranslation'] = 0;
 $conf['disableQuicksearch'] = 0;
+$conf['maxAnalyzedOffset'] = 1000000;
