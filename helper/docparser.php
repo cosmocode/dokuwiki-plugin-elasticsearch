@@ -6,6 +6,8 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
+use dokuwiki\HTTP\DokuHTTPClient;
+
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 /**
