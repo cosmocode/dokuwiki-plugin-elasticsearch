@@ -1,22 +1,24 @@
-version: '3'
+# this config is for development only, do not use in production!
+
 services:
     elasticsearch:
-        image: elasticsearch:7.5.2
+        image: elasticsearch:8.16.2
         ports:
             - "9200:9200"
             - "9300:9300"
         environment:
             - 'discovery.type=single-node'
+            - 'xpack.security.enabled=false'
         networks:
             - elastic
     kibana:
-        image: kibana:7.5.2
+        image: kibana:8.16.2
         ports:
             - "5601:5601"
         networks:
             - elastic
     tika:
-        image: mattfullerton/tika-tesseract-docker
+        image: apache/tika:latest-full
         ports:
             - "9998:9998"
 networks:
