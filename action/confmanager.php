@@ -1,14 +1,18 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Extension\Event;
+
 /**
  * Originally written for docsearch
  *
  * @author Dominik Eckelmann
  */
-class action_plugin_elasticsearch_confmanager extends DokuWiki_Action_Plugin
+class action_plugin_elasticsearch_confmanager extends ActionPlugin
 {
     /** @inheritDoc */
-    public function register(Doku_Event_Handler $controller)
+    public function register(EventHandler $controller)
     {
         $controller->register_hook(
             'CONFMANAGER_CONFIGFILES_REGISTER',
@@ -20,7 +24,7 @@ class action_plugin_elasticsearch_confmanager extends DokuWiki_Action_Plugin
     }
 
     /** @inheritDoc */
-    public function addConfigFile(Doku_Event $event, $params)
+    public function addConfigFile(Event $event, $params)
     {
         if (!class_exists('ConfigManagerTwoLine')) return;
 

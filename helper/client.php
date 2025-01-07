@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DokuWiki Plugin elasticsearch (Helper Component)
  *
@@ -6,17 +7,23 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
+use dokuwiki\Extension\Plugin;
+use Elastica\Client;
+use splitbrain\phpcli\Exception;
+use Elastica\Index;
+use Elastica\Response;
+use Elastica\Mapping;
 use dokuwiki\Extension\Event;
 
-require_once dirname(__FILE__) . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 /**
  * Access to the Elastica client
  */
-class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
-
+class helper_plugin_elasticsearch_client extends Plugin
+{
     /** @var array Map of ISO codes to Elasticsearch analyzer names */
-    const ANALYZERS = [
+    protected const ANALYZERS = [
         'ar' => 'arabic',
         'bg' => 'bulgarian',
         'bn' => 'bengali',
@@ -50,16 +57,17 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         'tr' => 'turkish',
         ];
     /**
-     * @var \Elastica\Client $elasticaClient
+     * @var Client $elasticaClient
      */
-    protected $elasticaClient = null;
+    protected $elasticaClient;
 
     /**
      * Connects to the elastica servers and returns the client object
      *
-     * @return \Elastica\Client
+     * @return Client
      */
-    public function connect() {
+    public function connect()
+    {
         if (!is_null($this->elasticaClient)) return $this->elasticaClient;
         // security settings
         $username = $this->getConf('username');
@@ -69,17 +77,23 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         $servers = $this->getConf('servers');
         $lines   = explode("\n", $servers);
         foreach ($lines as $line) {
-            list($host, $proxy) = array_pad(explode(',', $line, 2),2, null);
-            list($host, $port) = explode(':', $host, 2);
+            [$host, $proxy] = array_pad(explode(',', $line, 2), 2, null);
+            [$host, $port] = explode(':', $host, 2);
             $host = trim($host);
             $port = (int) trim($port);
             if (!$port) $port = 80;
             $proxy = trim($proxy);
             if (!$host) continue;
-            $dsn['servers'][] = compact('host', 'port', 'proxy', 'username', 'password');
+            $dsn['servers'][] = [
+                'host' => $host,
+                'port' => $port,
+                'proxy' => $proxy,
+                'username' => $username,
+                'password' => $password
+            ];
         }
 
-        $this->elasticaClient = new \Elastica\Client($dsn);
+        $this->elasticaClient = new Client($dsn);
         return $this->elasticaClient;
     }
 
@@ -87,18 +101,19 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      * Create the index
      *
      * @param bool $clear rebuild index
-     * @throws \splitbrain\phpcli\Exception
+     * @throws Exception
      */
-    public function createIndex($clear = false) {
+    public function createIndex($clear = false)
+    {
         $client = $this->connect();
         $index = $client->getIndex($this->getConf('indexname'));
 
         if ($index->create([], $clear)->hasError()) {
-            throw new \splitbrain\phpcli\Exception("Failed to create index!");
+            throw new Exception("Failed to create index!");
         }
 
         if ($this->createMappings($index)->hasError()) {
-            throw new \splitbrain\phpcli\Exception("Failed to create field mappings!");
+            throw new Exception("Failed to create field mappings!");
         }
     }
 
@@ -112,8 +127,7 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      */
     protected function getLanguageAnalyzer($lang)
     {
-        if (isset(self::ANALYZERS[$lang])) return self::ANALYZERS[$lang];
-        return 'standard';
+        return self::ANALYZERS[$lang] ?? 'standard';
     }
 
     /**
@@ -129,10 +143,10 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
      *
      * Plugins may provide their own fields via PLUGIN_ELASTICSEARCH_CREATEMAPPING event.
      *
-     * @param \Elastica\Index $index
-     * @return \Elastica\Response
+     * @param Index $index
+     * @return Response
      */
-    protected function createMappings(\Elastica\Index $index): \Elastica\Response
+    protected function createMappings(Index $index): Response
     {
         $langProps = $this->getLangProps();
 
@@ -178,11 +192,11 @@ class helper_plugin_elasticsearch_client extends DokuWiki_Plugin {
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginProps);
 
         $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps);
-        foreach ($pluginProps as $plugin => $fields) {
+        foreach ($pluginProps as $fields) {
             $props = array_merge($props, $fields);
         }
 
-        $mapping = new \Elastica\Mapping();
+        $mapping = new Mapping();
         $mapping->setProperties($props);
         return $mapping->send($index);
     }

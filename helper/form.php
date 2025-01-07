@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DokuWiki Plugin elasticsearch (Form Helper Component)
  *
@@ -7,12 +8,13 @@
  * @author  Anna Dabrowska <dabrowska@cosmocode.de>
  */
 
+use dokuwiki\Extension\Plugin;
 use dokuwiki\Form\Form;
 
 /**
  * Search form helper
  */
-class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
+class helper_plugin_elasticsearch_form extends Plugin
 {
     /**
      * Replacement for the standard search form
@@ -70,9 +72,11 @@ class helper_plugin_elasticsearch_form extends DokuWiki_Plugin
      */
     protected function addCheckboxSelector(Form $searchForm, array $aggregations, $param)
     {
-        if (!empty($aggregations)) {
+        if ($aggregations !== []) {
             $pluginSearchConfigs = \action_plugin_elasticsearch_search::getRawPluginSearchConfigs();
-            $selectorId = !empty($pluginSearchConfigs[$param]['id']) ? $pluginSearchConfigs[$param]['id'] : 'plugin__elasticsearch-' . $param;
+            $selectorId = empty($pluginSearchConfigs[$param]['id'])
+                ? 'plugin__elasticsearch-' . $param
+                : $pluginSearchConfigs[$param]['id'];
 
             $searchForm->addTagOpen('div')
                 ->addClass('toggle')

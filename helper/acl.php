@@ -1,19 +1,17 @@
 <?php
+
+use dokuwiki\Extension\Plugin;
+
 /**
  * DokuWiki Plugin elasticsearch (Helper Component)
+ *
+ * User-independent ACL methods
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  * @author  Anna Dabrowska <dabrowska@cosmocode.de>
  */
-
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
-
-/**
- * User-independent ACL methods
- */
-class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
+class helper_plugin_elasticsearch_acl extends Plugin
 {
     /**
      * Returns a full list of (read) permissions for users and groups whose access to a given page
@@ -23,13 +21,14 @@ class helper_plugin_elasticsearch_acl extends DokuWiki_Plugin
      * @param string $id Page id
      * @return array
      */
-    public function getPageACL($id) {
+    public function getPageACL($id)
+    {
         $id    = cleanID($id);
         $rules = [];
 
         /** @var admin_plugin_acl $hlpACL */
         $hlpACL = plugin_load('admin', 'acl');
-        if(method_exists($hlpACL, 'initAclConfig')) {
+        if (method_exists($hlpACL, 'initAclConfig')) {
             $hlpACL->initAclConfig();
         } else {
             /** @deprecated Call for current stable release */

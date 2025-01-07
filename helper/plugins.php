@@ -1,4 +1,7 @@
 <?php
+
+use dokuwiki\Extension\Plugin;
+
 /**
  * DokuWiki Plugin elasticsearch (Plugins Helper Component)
  *
@@ -6,8 +9,7 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  * @author  Anna Dabrowska <dabrowska@cosmocode.de>
  */
-
-class helper_plugin_elasticsearch_plugins extends DokuWiki_Plugin
+class helper_plugin_elasticsearch_plugins extends Plugin
 {
     /**
      * Update state of any changes for a page,
@@ -16,7 +18,8 @@ class helper_plugin_elasticsearch_plugins extends DokuWiki_Plugin
      * @param string $id
      * @return bool
      */
-    public function updateRefreshState($id) {
+    public function updateRefreshState($id)
+    {
         $refreshStateFile = metaFN($id, '.elasticsearch_refresh');
         return io_saveFile($refreshStateFile, '');
     }

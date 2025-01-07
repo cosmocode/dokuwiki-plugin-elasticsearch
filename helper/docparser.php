@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DokuWiki Plugin elasticsearch (DocParser Helper Component)
  *
@@ -6,16 +7,18 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
+use dokuwiki\Extension\Plugin;
+use LanguageDetection\Language;
 use dokuwiki\HTTP\DokuHTTPClient;
 
-require_once dirname(__FILE__) . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 /**
  * Convert a file to text and metainfos
  */
-class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
+class helper_plugin_elasticsearch_docparser extends Plugin
 {
-    const CONFFILE = DOKU_CONF . 'elasticsearch.conf';
+    public const CONFFILE = DOKU_CONF . 'elasticsearch.conf';
 
     /**
      * @var array maps extensions to parsers. A parser may be a local cli tool (file is passed as argument)
@@ -27,7 +30,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
      * Maps fields returned by Tika or other JSON returning parsers to our own field names.
      * Order does matter. Last non-empty field wins.
      */
-    const FILEDMAP = [
+    protected const FIELDMAP = [
         'title' => 'title',
         'dc:title' => 'title',
         'content' => 'content',
@@ -78,7 +81,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
         if (!file_exists($file)) {
             throw new RuntimeException('File ' . $file . 'does not exist');
         }
-        list($ext, $mime) = mimetype($file);
+        [$ext, $mime] = mimetype($file);
         if (!$ext) {
             throw new RuntimeException('Cannot parse file with unidentified extension');
         }
@@ -134,7 +137,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
             $ok = 0;
             exec(str_replace('%in%', escapeshellarg($file), $parser), $output, $ok);
             if ($ok === 0) {
-                return join(' ', $output);
+                return implode(' ', $output);
             }
             return false;
         }
@@ -168,7 +171,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
         }
 
         $data = [];
-        foreach (self::FILEDMAP as $from => $to) {
+        foreach (self::FIELDMAP as $from => $to) {
             if (!blank($decoded[$from])) $data[$to] = trim($decoded[$from]);
         }
         return $data;
@@ -192,7 +195,7 @@ class helper_plugin_elasticsearch_docparser extends DokuWiki_Plugin
         $trans = plugin_load('helper', 'translation');
         if ($trans === null) return $conf['lang'];
 
-        $ld = new \LanguageDetection\Language();
+        $ld = new Language();
 
         $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
         return array_shift($langs);

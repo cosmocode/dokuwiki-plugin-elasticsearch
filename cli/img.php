@@ -1,27 +1,23 @@
 <?php
+
+use dokuwiki\Extension\CLIPlugin;
+use splitbrain\phpcli\Exception;
+use splitbrain\phpcli\Options;
+
 /**
  * DokuWiki Plugin elasticsearch (CLI Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-
-if (!defined('DOKU_INC')) die();
-
-use splitbrain\phpcli\Options;
-
-/**
- * CLI tools for managing the index
- */
-class cli_plugin_elasticsearch_img extends DokuWiki_CLI_Plugin
+class cli_plugin_elasticsearch_img extends CLIPlugin
 {
-
     /**
      * Register options and arguments on the given $options object
      *
      * @param Options $options
      * @return void
-     * @throws \splitbrain\phpcli\Exception
+     * @throws Exception
      */
     protected function setup(Options $options)
     {
@@ -39,7 +35,7 @@ class cli_plugin_elasticsearch_img extends DokuWiki_CLI_Plugin
 
         $data = [
             'title' => $meta->getTitle(0),
-            'content' => join("\n", [
+            'content' => implode("\n", [
                 $meta->getField([
                     'Iptc.Caption',
                     'Exif.UserComment',
@@ -68,5 +64,4 @@ class cli_plugin_elasticsearch_img extends DokuWiki_CLI_Plugin
 
         echo json_encode($data, JSON_PRETTY_PRINT);
     }
-
 }

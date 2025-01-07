@@ -1,27 +1,24 @@
 <?php
+
+use dokuwiki\Extension\CLIPlugin;
+use splitbrain\phpcli\Options;
+
 /**
  * DokuWiki Plugin elasticsearch (CLI Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-
-if (!defined('DOKU_INC')) die();
-
-use splitbrain\phpcli\Options;
-
-/**
- * CLI tools for managing the index
- */
-class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
-
+class cli_plugin_elasticsearch extends CLIPlugin
+{
     /** @var helper_plugin_elasticsearch_client */
     protected $hlp;
 
     /**
      * Initialize helper plugin
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->hlp = plugin_load('helper', 'elasticsearch_client');
     }
@@ -33,7 +30,8 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
      * @return void
      * @throws \splitbrain\phpcli\Exception
      */
-    protected function setup(Options $options) {
+    protected function setup(Options $options)
+    {
         $options->setHelp('Manage the elastic search index');
 
         $options->registerCommand('index', 'Index all pages and/or media in the wiki');
@@ -47,7 +45,7 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
 
         $options->registerCommand(
             'createindex',
-            'Create index named "'.$this->hlp->getConf('indexname').'" and all required field mappings.'
+            'Create index named "' . $this->hlp->getConf('indexname') . '" and all required field mappings.'
         );
         $options->registerOption('clear', 'Remove existing index if any', 'c', false, 'createindex');
     }
@@ -60,7 +58,8 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
      * @param Options $options
      * @return void
      */
-    protected function main(Options $options) {
+    protected function main(Options $options)
+    {
         // manually initialize auth system
         // see https://github.com/splitbrain/dokuwiki/issues/2823
         global $AUTH_ACL;
@@ -88,35 +87,36 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
                 $this->error('No command provided');
                 exit(1);
         }
-
     }
 
     /**
      * Index all the pages
      */
-    protected function indexAllPages() {
+    protected function indexAllPages()
+    {
         global $conf;
         global $ID;
 
         /** @var action_plugin_elasticsearch_indexing $act */
         $act = plugin_load('action', 'elasticsearch_indexing');
 
-        $data = array();
-        search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
+        $data = [];
+        search($data, $conf['datadir'], 'search_allpages', ['skipacl' => true]);
         $pages = count($data);
         $n     = 0;
         foreach ($data as $val) {
             $ID = $val['id'];
             $n++;
             $this->info(sprintf("Indexing page %s (%d of %d)\n", $ID, $n, $pages));
-            $act->index_page($ID);
+            $act->indexPage($ID);
         }
     }
 
     /**
      * Index all media
      */
-    protected function indexAllMedia() {
+    protected function indexAllMedia()
+    {
         global $conf;
 
         /** @var action_plugin_elasticsearch_indexing $act */
@@ -131,7 +131,7 @@ class cli_plugin_elasticsearch extends DokuWiki_CLI_Plugin {
             $n++;
             $this->info(sprintf("Indexing media %s (%d of %d)\n", $id, $n, $media));
 
-            $act->index_file($id);
+            $act->indexFile($id);
         }
     }
 }

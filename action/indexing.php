@@ -1,5 +1,11 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\EventHandler;
+use Elastica\Exception\NotFoundException;
+use Elastica\Document;
+use Elastica\Exception\ResponseException;
+use dokuwiki\Logger;
 use dokuwiki\Extension\Event;
 
 /**
@@ -10,32 +16,34 @@ use dokuwiki\Extension\Event;
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
-class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
-
-    const MIME_DOKUWIKI = 'text/dokuwiki';
-    const DOCTYPE_PAGE = 'page';
-    const DOCTYPE_MEDIA = 'media';
+class action_plugin_elasticsearch_indexing extends ActionPlugin
+{
+    public const MIME_DOKUWIKI = 'text/dokuwiki';
+    public const DOCTYPE_PAGE = 'page';
+    public const DOCTYPE_MEDIA = 'media';
 
     /**
      * Registers a callback function for a given event
      *
-     * @param Doku_Event_Handler $controller DokuWiki's event controller object
+     * @param EventHandler $controller DokuWiki's event controller object
      * @return void
      */
-    public function register(Doku_Event_Handler $controller) {
-        $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handle_tpl_content_display');
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'handle_delete');
-        $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
-        $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_delete');
+    public function register(EventHandler $controller)
+    {
+        $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'handleTplContentDisplay');
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'handleDelete');
+        $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handleMediaUpload');
+        $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handleMediaDelete');
     }
 
     /**
      * Add pages to index
      *
-     * @param Doku_Event $event event object by reference
+     * @param Event $event event object by reference
      * @return void
      */
-    public function handle_tpl_content_display(Doku_Event $event) {
+    public function handleTplContentDisplay(Event $event)
+    {
         global $ID, $INFO;
         $this->log(
             'content display',
@@ -43,47 +51,48 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
                 metaFN($ID, '.elasticsearch_indexed'),
                 wikiFN($ID),
                 wikiFN($INFO['id']),
-                $this->needs_indexing($ID) ? 'needs indexing' : 'no indexing needed',
+                $this->needsIndexing($ID) ? 'needs indexing' : 'no indexing needed',
             ]
         );
-        if ($this->needs_indexing($ID)) {
-            $this->index_page($ID);
+        if ($this->needsIndexing($ID)) {
+            $this->indexPage($ID);
         }
     }
 
     /**
      * Update index on media upload
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @throws Exception
      */
-    public function handle_media_upload(Doku_Event $event)
+    public function handleMediaUpload(Event $event)
     {
-        $this->index_file($event->data[2]);
+        $this->indexFile($event->data[2]);
     }
 
     /**
      * Remove pages from index
      *
-     * @param Doku_Event $event event object by reference
+     * @param Event $event event object by reference
      * @return void
      */
-    public function handle_delete(Doku_Event $event) {
+    public function handleDelete(Event $event)
+    {
         if ($event->data[3]) return; // is old revision stuff
         if (!empty($event->data[0][1])) return; // page still exists
         // still here? delete from index
-        $this->delete_entry($event->data[2], self::DOCTYPE_PAGE);
+        $this->deleteEntry($event->data[2], self::DOCTYPE_PAGE);
     }
 
     /**
      * Remove deleted media from index
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function handle_media_delete(Doku_Event $event, $param)
+    public function handleMediaDelete(Event $event, $param)
     {
-        if ($event->data['unl']) $this->delete_entry($event->data['id'], self::DOCTYPE_MEDIA);
+        if ($event->data['unl']) $this->deleteEntry($event->data['id'], self::DOCTYPE_MEDIA);
     }
 
     /**
@@ -92,7 +101,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param string $id
      * @return boolean
      */
-    protected function needs_indexing($id) {
+    protected function needsIndexing($id)
+    {
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         $refreshStateFile = metaFN($id, '.elasticsearch_refresh');
         $dataFile = wikiFN($id);
@@ -101,13 +111,13 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         if (!file_exists($dataFile) || isHiddenPage($id)) {
             // page should not be indexed but has a state file, try to remove from index
             if (file_exists($indexStateFile)) {
-                $this->delete_entry($id, self::DOCTYPE_PAGE);
+                $this->deleteEntry($id, self::DOCTYPE_PAGE);
             }
             return false;
         }
 
         // force indexing if we're called via cli (e.g. cron)
-        if (php_sapi_name() == 'cli') {
+        if (PHP_SAPI == 'cli') {
             return true;
         }
         // check if latest indexing attempt is done after page update
@@ -126,7 +136,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
     /**
      * @param array $data
      */
-    protected function write_index($data)
+    protected function writeIndex($data)
     {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -139,12 +149,12 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         // check if the document still exists to update it or add it as a new one
         try {
             $client->updateDocument($documentId, ['doc' => $data], $index->getName());
-        } catch (\Elastica\Exception\NotFoundException $e) {
-            $document = new \Elastica\Document($documentId, $data);
+        } catch (NotFoundException $e) {
+            $document = new Document($documentId, $data);
             $index->addDocument($document);
-        } catch (\Elastica\Exception\ResponseException $e) {
+        } catch (ResponseException $e) {
             if ($e->getResponse()->getStatus() == 404) {
-                $document = new \Elastica\Document($documentId, $data);
+                $document = new Document($documentId, $data);
                 $index->addDocument($document);
             } else {
                 throw $e;
@@ -158,7 +168,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             return;
         }
         $index->refresh();
-        $this->update_indexstate($data['uri']);
+        $this->updateIndexstate($data['uri']);
     }
 
     /**
@@ -168,7 +178,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param string $doctype
      * @return bool
      */
-    protected function update_indexstate($id, $doctype = self::DOCTYPE_PAGE) {
+    protected function updateIndexstate($id, $doctype = self::DOCTYPE_PAGE)
+    {
         $indexStateFile = ($doctype === self::DOCTYPE_MEDIA) ?
             mediaMetaFN($id, '.elasticsearch_indexed') :
             metaFN($id, '.elasticsearch_indexed');
@@ -181,7 +192,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param $id
      * @param $doctype
      */
-    public function delete_entry($id, $doctype) {
+    public function deleteEntry($id, $doctype)
+    {
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp          = plugin_load('helper', 'elasticsearch_client');
         $indexName    = $this->getConf('indexname');
@@ -192,10 +204,10 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         try {
             $index->deleteById($documentId);
             $index->refresh();
-            $this->log($documentId.' deleted ');
-        } catch(Exception $e) {
+            $this->log($documentId . ' deleted ');
+        } catch (Exception $e) {
             // we ignore this
-            $this->log($documentId.' not deleted '.$e->getMessage());
+            $this->log($documentId . ' not deleted ' . $e->getMessage());
         }
 
         // delete state file
@@ -211,7 +223,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param $id
      * @return void
      */
-    public function index_page($id) {
+    public function indexPage($id)
+    {
         global $conf;
 
         $this->log('Indexing page ' . $id);
@@ -219,7 +232,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', METADATA_RENDER_UNLIMITED);
 
-        $data             = array();
+        $data             = [];
         $data['uri']      = $id;
         $data['created']  = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
         $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
@@ -234,14 +247,14 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         /** @var \renderer_plugin_text $textRenderer */
         $textRenderer = plugin_load('renderer', 'text');
         if ($textRenderer) {
-            $data['content'] = p_cached_output(wikiFN($id),'text');
+            $data['content'] = p_cached_output(wikiFN($id), 'text');
         } else {
             $data['content']  = $data['syntax'];
         }
 
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
-        if($trans) {
+        if ($trans) {
             // translation plugin available
             $lc               = $trans->getLangPart($id);
             $data['language'] = $trans->realLC($lc);
@@ -251,7 +264,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         }
 
         $data['namespace'] = getNS($id);
-        if(trim($data['namespace']) == '') {
+        if (trim($data['namespace']) == '') {
             unset($data['namespace']);
         }
 
@@ -266,7 +279,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
         $pluginData = $this->getPluginData($data['uri']);
         $data = array_merge($data, $pluginData);
 
-        $this->write_index($data);
+        $this->writeIndex($data);
     }
 
     /**
@@ -276,7 +289,8 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @return void
      * @throws Exception
      */
-    public function index_file($fileId) {
+    public function indexFile($fileId)
+    {
         $this->log('Indexing file ' . $fileId);
 
         $docparser = new \helper_plugin_elasticsearch_docparser();
@@ -300,7 +314,7 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
             $queryACL = $hlpAcl->splitRules($fullACL);
             $data = array_merge($data, $queryACL);
 
-            $this->write_index($data);
+            $this->writeIndex($data);
         } catch (RuntimeException $e) {
             $this->log('Skipping ' . $fileId . ': ' . $e->getMessage());
         }
@@ -327,8 +341,9 @@ class action_plugin_elasticsearch_indexing extends DokuWiki_Action_Plugin {
      * @param string $txt
      * @param mixed $info
      */
-    protected function log($txt, $info=null) {
-        $txt = 'ElasticSearch: '.$txt;
-        \dokuwiki\Logger::debug($txt, $info);
+    protected function log($txt, $info = null)
+    {
+        $txt = 'ElasticSearch: ' . $txt;
+        Logger::debug($txt, $info);
     }
 }

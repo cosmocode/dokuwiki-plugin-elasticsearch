@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DokuWiki Plugin elasticsearch (Action Component)
  *
@@ -6,13 +7,24 @@
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
 
+use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Form\Form;
+use Elastica\Aggregation\Terms;
+use Elastica\Query;
+use Elastica\Query\BoolQuery;
+use Elastica\Query\MatchQuery;
+use Elastica\Query\Range;
+use Elastica\Query\SimpleQueryString;
+use Elastica\Query\Term;
+use Elastica\ResultSet;
 
 /**
  * Main search helper
  */
-class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
-
+class action_plugin_elasticsearch_search extends ActionPlugin
+{
     /**
      * Example array element for search field 'tagging':
      * 'tagging' => [                       // also used as search query parameter
@@ -40,23 +52,25 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Registers a callback function for a given event
      *
-     * @param Doku_Event_Handler $controller DokuWiki's event controller object
+     * @param EventHandler $controller DokuWiki's event controller object
      * @return void
      */
-    public function register(Doku_Event_Handler $controller) {
+    public function register(EventHandler $controller)
+    {
 
-        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'handle_preprocess');
-        $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'handle_action');
-        $controller->register_hook('FORM_QUICKSEARCH_OUTPUT', 'BEFORE', $this, 'quicksearch');
+        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'handleActPreprocess');
+        $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'handleActUnknown');
+        $controller->register_hook('FORM_QUICKSEARCH_OUTPUT', 'BEFORE', $this, 'handleQuicksearchOutput');
     }
 
     /**
      * allow our custom do command
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function handle_preprocess(Doku_Event $event, $param) {
+    public function handleActPreprocess(Event $event, $param)
+    {
         if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
@@ -65,10 +79,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * do the actual search
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function handle_action(Doku_Event $event, $param) {
+    public function handleActUnknown(Event $event, $param)
+    {
         if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
@@ -86,7 +101,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'elasticsearch_client');
 
         $client = $hlp->connect();
-        $index  = $client->getIndex($this->getConf('indexname'));
+        $index = $client->getIndex($this->getConf('indexname'));
 
         // store copy of the original query string
         $q = $QUERY;
@@ -101,11 +116,11 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_SEARCHFIELDS', $fields);
 
         if ($this->getConf('searchSyntax')) {
-            array_push($this->searchFields, 'syntax*');
+            $this->searchFields[] = 'syntax*';
         }
 
         // finally define the elastic query
-        $qstring = new \Elastica\Query\SimpleQueryString($QUERY, array_merge($this->searchFields, $fields));
+        $qstring = new SimpleQueryString($QUERY, array_merge($this->searchFields, $fields));
         // restore the original query
         $QUERY = $q;
         // append additions provided by plugins
@@ -114,15 +129,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         }
 
         // create the actual search object
-        $equery = new \Elastica\Query();
-        $subqueries = new \Elastica\Query\BoolQuery();
+        $equery = new Query();
+        $subqueries = new BoolQuery();
         $subqueries->addMust($qstring);
 
         $equery->setHighlight(
             [
-                "pre_tags"  => ['ELASTICSEARCH_MARKER_IN'],
+                "pre_tags" => ['ELASTICSEARCH_MARKER_IN'],
                 "post_tags" => ['ELASTICSEARCH_MARKER_OUT'],
-                "fields"    => [
+                "fields" => [
                     $this->getConf('snippets') => new \stdClass(),
                     'title' => new \stdClass()]
             ]
@@ -144,10 +159,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         }
 
         // add namespace filter
-        if($INPUT->has('ns')) {
-            $nsSubquery = new \Elastica\Query\BoolQuery();
+        if ($INPUT->has('ns')) {
+            $nsSubquery = new BoolQuery();
             foreach ($INPUT->arr('ns') as $ns) {
-                $term = new \Elastica\Query\Term();
+                $term = new Term();
                 $term->setTerm('namespace', $ns);
                 $nsSubquery->addShould($term);
             }
@@ -156,9 +171,10 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
 
         // add aggregations for namespaces
-        $agg = new \Elastica\Aggregation\Terms('namespace');
+        $agg = new Terms('namespace');
         $agg->setField('namespace.keyword');
         $agg->setSize(25);
+
         $equery->addAggregation($agg);
 
         // add search configurations from other plugins
@@ -170,26 +186,29 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $result = $index->search($equery);
             $aggs = $result->getAggregations();
 
-            $this->print_intro();
+            $this->printIntro();
             /** @var helper_plugin_elasticsearch_form $hlpform */
             $hlpform = plugin_load('helper', 'elasticsearch_form');
             $hlpform->tpl($aggs);
-            $this->print_results($result) && $this->print_pagination($result);
-        } catch(Exception $e) {
-            msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' . hsc($e->getMessage()) . '</pre>', -1);
+            if ($this->printResults($result)) {
+                $this->printPagination($result);
+            }
+        } catch (Exception $e) {
+            msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' .
+                hsc($e->getMessage()) . '</pre>', -1);
         }
     }
 
     /**
      * Optionally disable "quick search"
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function quicksearch(Doku_Event $event)
+    public function handleQuicksearchOutput(Event $event)
     {
         if (!$this->getConf('disableQuicksearch')) return;
 
-        /** @var \dokuwiki\Form\Form $form */
+        /** @var Form $form */
         $form = $event->data;
         $pos = $form->findPositionByAttribute('id', 'qsearch__out');
         $form->removeElement($pos);
@@ -207,7 +226,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Add search configurations supplied by other plugins
      *
-     * @param \Elastica\Query $equery
+     * @param Query $equery
      * @param \Elastica\Query\BoolQuery
      */
     protected function addPluginConfigurations($equery, $subqueries)
@@ -218,9 +237,9 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             foreach (self::$pluginSearchConfigs as $param => $config) {
                 // handle search parameter
                 if ($INPUT->has($param)) {
-                    $pluginSubquery = new \Elastica\Query\BoolQuery();
-                    foreach($INPUT->arr($param) as $item) {
-                        $eterm = new \Elastica\Query\Term();
+                    $pluginSubquery = new BoolQuery();
+                    foreach ($INPUT->arr($param) as $item) {
+                        $eterm = new Term();
                         $eterm->setTerm($param, $item);
                         $pluginSubquery->addShould($eterm);
                     }
@@ -228,7 +247,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 }
 
                 // build aggregation for use as filter in advanced search
-                $agg = new \Elastica\Aggregation\Terms($param);
+                $agg = new Terms($param);
                 $agg->setField($config['fieldPath']);
                 if (isset($config['limit'])) {
                     $agg->setSize($config['limit']);
@@ -241,14 +260,14 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Adds date subquery
      *
-     * @param Elastica\Query\BoolQuery $subqueries
+     * @param BoolQuery $subqueries
      * @param string $min Modified at the latest one {year|month|week} ago
      */
     protected function addDateSubquery($subqueries, $min)
     {
         if (!in_array($min, ['year', 'month', 'week'])) return;
 
-        $dateSubquery = new \Elastica\Query\Range(
+        $dateSubquery = new Range(
             'modified',
             ['gte' => date('Y-m-d', strtotime('1 ' . $min . ' ago'))]
         );
@@ -258,15 +277,16 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Adds language subquery
      *
-     * @param Elastica\Query\BoolQuery $subqueries
+     * @param BoolQuery $subqueries
      * @param array $langFilter
      */
     protected function addLanguageSubquery($subqueries, $langFilter)
     {
         if (empty($langFilter)) return;
 
-        $langSubquery = new \Elastica\Query\MatchQuery();
+        $langSubquery = new MatchQuery();
         $langSubquery->setField('language', implode(',', $langFilter));
+
         $subqueries->addMust($langSubquery);
     }
 
@@ -294,7 +314,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
                 $langFilter = [$topNs];
                 $INPUT->set('lang', $langFilter);
             }
-        } else if (empty($langFilter) && $transplugin) {
+        } elseif (empty($langFilter) && $transplugin) {
             // select all available translations
             $INPUT->set('lang', $transplugin->translations);
         }
@@ -305,7 +325,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Inserts subqueries based on current user's ACLs, none for superusers
      *
-     * @param \Elastica\Query\BoolQuery $subqueries
+     * @param BoolQuery $subqueries
      */
     protected function addACLSubqueries($subqueries)
     {
@@ -318,15 +338,15 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if ($INFO['isadmin']) return;
 
         // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
-        $includeSubquery = new \Elastica\Query\BoolQuery();
-        foreach($groups as $group) {
-            $term = new \Elastica\Query\Term();
+        $includeSubquery = new BoolQuery();
+        foreach ($groups as $group) {
+            $term = new Term();
             $term->setTerm('groups_include', $group);
             $includeSubquery->addShould($term);
         }
         if (isset($_SERVER['REMOTE_USER'])) {
-            $userIncludeSubquery = new \Elastica\Query\BoolQuery();
-            $term = new \Elastica\Query\Term();
+            $userIncludeSubquery = new BoolQuery();
+            $term = new Term();
             $term->setTerm('users_include', $_SERVER['REMOTE_USER']);
             $userIncludeSubquery->addMust($term);
             $includeSubquery->addShould($userIncludeSubquery);
@@ -334,19 +354,20 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         $subqueries->addMust($includeSubquery);
 
         // groups exclusion SHOULD be respected, not MUST, since that would not allow for exceptions
-        $groupExcludeSubquery = new \Elastica\Query\BoolQuery();
-        foreach($groups as $group) {
-            $term = new \Elastica\Query\Term();
+        $groupExcludeSubquery = new BoolQuery();
+        foreach ($groups as $group) {
+            $term = new Term();
             $term->setTerm('groups_exclude', $group);
             $groupExcludeSubquery->addShould($term);
         }
-        $excludeSubquery = new \Elastica\Query\BoolQuery();
+        $excludeSubquery = new BoolQuery();
         $excludeSubquery->addMustNot($groupExcludeSubquery);
+
         $subqueries->addShould($excludeSubquery);
 
         // user specific excludes must always be respected
         if (isset($_SERVER['REMOTE_USER'])) {
-            $term = new \Elastica\Query\Term();
+            $term = new Term();
             $term->setTerm('users_exclude', $_SERVER['REMOTE_USER']);
             $subqueries->addMustNot($term);
         }
@@ -355,7 +376,8 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Prints the introduction text
      */
-    protected function print_intro() {
+    protected function printIntro()
+    {
         global $QUERY;
         global $ID;
         global $lang;
@@ -367,7 +389,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
         if (auth_quickaclcheck($ID) >= AUTH_CREATE) {
             $pagecreateinfo = sprintf($lang['searchcreatepage'], $QUERY);
         }
-        $intro          = str_replace(
+        $intro = str_replace(
             ['@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'],
             [hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo],
             $intro
@@ -379,16 +401,17 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
     /**
      * Output the search results
      *
-     * @param \Elastica\ResultSet $results
+     * @param ResultSet $results
      * @return bool true when results where shown
      */
-    protected function print_results($results) {
+    protected function printResults($results)
+    {
         global $lang;
 
         // output results
         $found = $results->getTotalHits();
 
-        if(!$found) {
+        if (!$found) {
             echo '<h2>' . $lang['nothingfound'] . '</h2>';
             return (bool)$found;
         }
@@ -400,14 +423,20 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             /** @var Elastica\Result $row */
             $doc = $row->getSource();
             $page = $doc['uri'];
-            if (!(page_exists($page) || is_file(mediaFN($page))) || isHiddenPage($page) || auth_quickaclcheck($page) < AUTH_READ) continue;
+            if (
+                (!page_exists($page) && !is_file(mediaFN($page))) ||
+                isHiddenPage($page) ||
+                auth_quickaclcheck($page) < AUTH_READ
+            ) {
+                continue;
+            }
 
             // get highlighted title
             $highlightsTitle = $row->getHighlights()['title'] ?? '';
             $title = str_replace(
                 ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
                 ['<strong class="search_hit">', '</strong>'],
-                hsc(join(' … ', (array) $highlightsTitle))
+                hsc(implode(' … ', (array)$highlightsTitle))
             );
             if (!$title) $title = hsc($doc['title']);
             if (!$title) $title = hsc(p_get_first_heading($page));
@@ -418,7 +447,7 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $snippet = str_replace(
                 ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
                 ['<strong class="search_hit">', '</strong>'],
-                hsc(join(' … ', $highlightedSnippets))
+                hsc(implode(' … ', $highlightedSnippets))
             );
             if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
 
@@ -427,14 +456,14 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             $href = $isPage ? wl($page) : ml($page);
 
             echo '<dt>';
-            if (!$isPage && is_file(DOKU_INC . 'lib/images/fileicons/'. $doc['ext'] .'.png')) {
+            if (!$isPage && is_file(DOKU_INC . 'lib/images/fileicons/' . $doc['ext'] . '.png')) {
                 echo sprintf(
                     '<img src="%s" alt="%s" /> ',
-                    DOKU_BASE . 'lib/images/fileicons/'. $doc['ext'] .'.png',
+                    DOKU_BASE . 'lib/images/fileicons/' . $doc['ext'] . '.png',
                     $doc['ext']
                 );
             }
-            echo '<a href="' . $href . '" class="wikilink1" title="'.hsc($page).'">';
+            echo '<a href="' . $href . '" class="wikilink1" title="' . hsc($page) . '">';
             echo $title;
             echo '</a>';
             echo '</dt>';
@@ -457,75 +486,96 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
             echo '<dd class="snippet">';
             echo $snippet;
             echo '</dd>';
-
         }
         echo '</dl>';
 
-        return (bool) $found;
+        return (bool)$found;
     }
 
     /**
-     * @param \Elastica\ResultSet $result
+     * @param ResultSet $result
      */
-    protected function print_pagination($result) {
+    protected function printPagination($result)
+    {
         global $INPUT;
         global $QUERY;
 
-        $all   = $result->getTotalHits();
+        $all = $result->getTotalHits();
         $pages = ceil($all / $this->getConf('perpage'));
-        $cur   = $INPUT->int('p', 1, true);
+        $cur = $INPUT->int('p', 1, true);
 
-        if($pages < 2) return;
+        if ($pages < 2) return;
 
         // which pages to show
         $toshow = [1, 2, $cur, $pages, $pages - 1];
-        if($cur - 1 > 1) $toshow[] = $cur - 1;
-        if($cur + 1 < $pages) $toshow[] = $cur + 1;
+        if ($cur - 1 > 1) $toshow[] = $cur - 1;
+        if ($cur + 1 < $pages) $toshow[] = $cur + 1;
         $toshow = array_unique($toshow);
         // fill up to seven, if possible
-        if(count($toshow) < 7) {
-            if($cur < 4) {
-                if($cur + 2 < $pages && count($toshow) < 7) $toshow[] = $cur + 2;
-                if($cur + 3 < $pages && count($toshow) < 7) $toshow[] = $cur + 3;
-                if($cur + 4 < $pages && count($toshow) < 7) $toshow[] = $cur + 4;
+        if (count($toshow) < 7) {
+            if ($cur < 4) {
+                if ($cur + 2 < $pages && count($toshow) < 7) $toshow[] = $cur + 2;
+                if ($cur + 3 < $pages && count($toshow) < 7) $toshow[] = $cur + 3;
+                if ($cur + 4 < $pages && count($toshow) < 7) $toshow[] = $cur + 4;
             } else {
-                if($cur - 2 > 1 && count($toshow) < 7) $toshow[] = $cur - 2;
-                if($cur - 3 > 1 && count($toshow) < 7) $toshow[] = $cur - 3;
-                if($cur - 4 > 1 && count($toshow) < 7) $toshow[] = $cur - 4;
+                if ($cur - 2 > 1 && count($toshow) < 7) $toshow[] = $cur - 2;
+                if ($cur - 3 > 1 && count($toshow) < 7) $toshow[] = $cur - 3;
+                if ($cur - 4 > 1 && count($toshow) < 7) $toshow[] = $cur - 4;
             }
         }
         sort($toshow);
         $showlen = count($toshow);
 
         echo '<ul class="elastic_pagination">';
-        if($cur > 1) {
+        if ($cur > 1) {
+            $p = [
+                'q' => $QUERY,
+                'do' => 'search',
+                'ns' => $INPUT->arr('ns'),
+                'min' => $INPUT->arr('min'),
+                'p' => ($cur - 1)
+            ];
             echo '<li class="prev">';
-            echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur-1)])) . '">';
+            echo '<a href="' . wl('', $p) . '">';
             echo '«';
             echo '</a>';
             echo '</li>';
         }
 
-        for($i = 0; $i < $showlen; $i++) {
-            if($toshow[$i] == $cur) {
+        for ($i = 0; $i < $showlen; $i++) {
+            if ($toshow[$i] == $cur) {
                 echo '<li class="cur">' . $toshow[$i] . '</li>';
             } else {
+                $p = [
+                    'q' => $QUERY,
+                    'do' => 'search',
+                    'ns' => $INPUT->arr('ns'),
+                    'min' => $INPUT->arr('min'),
+                    'p' => $toshow[$i]
+                ];
                 echo '<li>';
-                echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => $toshow[$i]])) . '">';
+                echo '<a href="' . wl('', $p) . '">';
                 echo $toshow[$i];
                 echo '</a>';
                 echo '</li>';
             }
 
             // show seperator when a jump follows
-            if(isset($toshow[$i + 1]) && $toshow[$i + 1] - $toshow[$i] > 1) {
+            if (isset($toshow[$i + 1]) && $toshow[$i + 1] - $toshow[$i] > 1) {
                 echo '<li class="sep">…</li>';
             }
         }
 
-        if($cur < $pages) {
+        if ($cur < $pages) {
+            $p = [
+                'q' => $QUERY,
+                'do' => 'search',
+                'ns' => $INPUT->arr('ns'),
+                'min' => $INPUT->arr('min'),
+                'p' => ($cur + 1)
+            ];
             echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query(['q' => $QUERY, 'do' => 'search', 'ns' => $INPUT->arr('ns'), 'min' => $INPUT->arr('min'), 'p' => ($cur+1)])) . '">';
+            echo '<a href="' . wl('', $p) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
@@ -533,5 +583,4 @@ class action_plugin_elasticsearch_search extends DokuWiki_Action_Plugin {
 
         echo '</ul>';
     }
-
 }
