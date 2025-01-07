@@ -81,6 +81,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      *
      * @param Event $event
      * @param $param
+     * @todo refactor this to make use of the new Query class
      */
     public function handleActUnknown(Event $event, $param)
     {
@@ -181,6 +182,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         $this->addPluginConfigurations($equery, $subqueries);
 
         $equery->setQuery($subqueries);
+
+        $x = $equery->toArray();
 
         try {
             $result = $index->search($equery);
