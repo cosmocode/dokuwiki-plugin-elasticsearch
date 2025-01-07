@@ -1,12 +1,9 @@
 <?php
 
 use dokuwiki\Extension\ActionPlugin;
-use dokuwiki\Extension\EventHandler;
-use Elastica\Exception\NotFoundException;
-use Elastica\Document;
-use Elastica\Exception\ResponseException;
-use dokuwiki\Logger;
 use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Logger;
 
 /**
  * DokuWiki Plugin elasticsearch (Action Component)
@@ -15,7 +12,6 @@ use dokuwiki\Extension\Event;
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-
 class action_plugin_elasticsearch_indexing extends ActionPlugin
 {
     public const MIME_DOKUWIKI = 'text/dokuwiki';
@@ -134,41 +130,23 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
     }
 
     /**
-     * @param array $data
+     * @param array $doc
      */
-    protected function writeIndex($data)
+    protected function writeIndex($doc)
     {
+        $documentId = $doc['doctype'] . '_' . $doc['uri'];
+        $data = [
+            'detect_noop' => true,
+            'doc' => $doc,
+            'doc_as_upsert' => true,
+        ];
+
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
+        $client = $hlp->client();
+        $client->call('_update/' . $documentId, $data); // FIXME we may need to add ?refresh=true
 
-        $indexName    = $this->getConf('indexname');
-        $client       = $hlp->connect();
-        $index        = $client->getIndex($indexName);
-        $documentId   = $data['doctype'] . '_' . $data['uri'];
-
-        // check if the document still exists to update it or add it as a new one
-        try {
-            $client->updateDocument($documentId, ['doc' => $data], $index->getName());
-        } catch (NotFoundException $e) {
-            $document = new Document($documentId, $data);
-            $index->addDocument($document);
-        } catch (ResponseException $e) {
-            if ($e->getResponse()->getStatus() == 404) {
-                $document = new Document($documentId, $data);
-                $index->addDocument($document);
-            } else {
-                throw $e;
-            }
-        } catch (Exception $e) {
-            msg(
-                'Something went wrong on indexing please try again later or ask an admin for help.<br /><pre>' .
-                hsc(get_class($e) . ' ' . $e->getMessage()) . '</pre>',
-                -1
-            );
-            return;
-        }
-        $index->refresh();
-        $this->updateIndexstate($data['uri']);
+        $this->updateIndexstate($doc['uri']);
     }
 
     /**
@@ -194,17 +172,13 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
      */
     public function deleteEntry($id, $doctype)
     {
-        /** @var helper_plugin_elasticsearch_client $hlp */
-        $hlp          = plugin_load('helper', 'elasticsearch_client');
-        $indexName    = $this->getConf('indexname');
-        $client       = $hlp->connect();
-        $index        = $client->getIndex($indexName);
-        $documentId   = $doctype . '_' . $id;
+        $documentId = $doctype . '_' . $id;
 
+        /** @var helper_plugin_elasticsearch_client $hlp */
+        $hlp = plugin_load('helper', 'elasticsearch_client');
         try {
-            $index->deleteById($documentId);
-            $index->refresh();
-            $this->log($documentId . ' deleted ');
+            $client = $hlp->client();
+            $client->call('_doc/' . $documentId . '?refresh=true', null, 'DELETE');
         } catch (Exception $e) {
             // we ignore this
             $this->log($documentId . ' not deleted ' . $e->getMessage());
@@ -232,16 +206,16 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
         // collect the date which should be indexed
         $meta = p_get_metadata($id, '', METADATA_RENDER_UNLIMITED);
 
-        $data             = [];
-        $data['uri']      = $id;
-        $data['created']  = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
+        $data = [];
+        $data['uri'] = $id;
+        $data['created'] = date('Y-m-d\TH:i:s\Z', $meta['date']['created']);
         $data['modified'] = date('Y-m-d\TH:i:s\Z', $meta['date']['modified']);
-        $data['user']     = $meta['user'];
-        $data['title']    = $meta['title'] ?? $id;
+        $data['user'] = $meta['user'];
+        $data['title'] = $meta['title'] ?? $id;
         $data['abstract'] = $meta['description']['abstract'];
-        $data['syntax']   = rawWiki($id);
-        $data['mime']     = self::MIME_DOKUWIKI;
-        $data['doctype']  = self::DOCTYPE_PAGE;
+        $data['syntax'] = rawWiki($id);
+        $data['mime'] = self::MIME_DOKUWIKI;
+        $data['doctype'] = self::DOCTYPE_PAGE;
 
         // prefer rendered plaintext over raw syntax output
         /** @var \renderer_plugin_text $textRenderer */
@@ -249,14 +223,14 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
         if ($textRenderer) {
             $data['content'] = p_cached_output(wikiFN($id), 'text');
         } else {
-            $data['content']  = $data['syntax'];
+            $data['content'] = $data['syntax'];
         }
 
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
         if ($trans) {
             // translation plugin available
-            $lc               = $trans->getLangPart($id);
+            $lc = $trans->getLangPart($id);
             $data['language'] = $trans->realLC($lc);
         } else {
             // no translation plugin

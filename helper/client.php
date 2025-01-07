@@ -61,10 +61,32 @@ class helper_plugin_elasticsearch_client extends Plugin
      */
     protected $elasticaClient;
 
+    protected ?\dokuwiki\plugin\elasticsearch\Client $client = null;
+
+    /**
+     * Connect to the ElasticSearch server
+     *
+     * @return \dokuwiki\plugin\elasticsearch\Client
+     * @throws \dokuwiki\plugin\elasticsearch\Exception
+     */
+    public function client(): \dokuwiki\plugin\elasticsearch\Client
+    {
+        if($this->client === null) {
+            $this->client = new \dokuwiki\plugin\elasticsearch\Client(
+                $this->getConf('servers'),
+                $this->getConf('indexname'),
+                $this->getConf('username'),
+                $this->getConf('password')
+            );
+        }
+        return $this->client;
+    }
+
     /**
      * Connects to the elastica servers and returns the client object
      *
      * @return Client
+     * @deprecated Use client() instead
      */
     public function connect()
     {
