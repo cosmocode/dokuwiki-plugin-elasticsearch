@@ -1,27 +1,37 @@
 # this config is for development only, do not use in production!
+#
+# Browse data on http://localhost:1358/?appname=wiki&url=http%3A%2F%2Flocalhost%3A9200&mode=view
 
 services:
-    elasticsearch:
-        image: elasticsearch:8.16.2
-        ports:
-            - "9200:9200"
-            - "9300:9300"
-        environment:
-            - 'discovery.type=single-node'
-            - 'xpack.security.enabled=false'
-        networks:
-            - elastic
-    kibana:
-        image: kibana:8.16.2
-        ports:
-            - "5601:5601"
-        networks:
-            - elastic
-    tika:
-        image: apache/tika:latest-full
-        ports:
-            - "9998:9998"
-networks:
-    elastic:
-        driver: bridge
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.2
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+      http.cors.allow-origin: http://localhost:1358
+      http.cors.enabled: true
+      http.cors.allow-headers: X-Requested-With, X-Auth-Token, X-Search-Query, X-Search-State, Content-Type, Content-Length, Authorization
+      http.cors.allow-credentials: true
+      indices.id_field_data.enabled: true
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+  dejavu:
+    image: appbaseio/dejavu:3.8.3
+    ports:
+      - "1358:1358"
+
+  tika:
+    image: apache/tika:latest-full
+    ports:
+      - "9998:9998"
+
+volumes:
+  elastic_data:
+
 
