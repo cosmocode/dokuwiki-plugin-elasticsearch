@@ -7,13 +7,9 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-use dokuwiki\Extension\Plugin;
-use Elastica\Client;
-use splitbrain\phpcli\Exception;
-use Elastica\Index;
-use Elastica\Response;
-use Elastica\Mapping;
 use dokuwiki\Extension\Event;
+use dokuwiki\Extension\Plugin;
+use splitbrain\phpcli\Exception;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -55,11 +51,7 @@ class helper_plugin_elasticsearch_client extends Plugin
         'sv' => 'swedish',
         'th' => 'thai',
         'tr' => 'turkish',
-        ];
-    /**
-     * @var Client $elasticaClient
-     */
-    protected $elasticaClient;
+    ];
 
     protected ?\dokuwiki\plugin\elasticsearch\Client $client = null;
 
@@ -71,7 +63,7 @@ class helper_plugin_elasticsearch_client extends Plugin
      */
     public function client(): \dokuwiki\plugin\elasticsearch\Client
     {
-        if($this->client === null) {
+        if ($this->client === null) {
             $this->client = new \dokuwiki\plugin\elasticsearch\Client(
                 $this->getConf('servers'),
                 $this->getConf('indexname'),
@@ -83,43 +75,6 @@ class helper_plugin_elasticsearch_client extends Plugin
     }
 
     /**
-     * Connects to the elastica servers and returns the client object
-     *
-     * @return Client
-     * @deprecated Use client() instead
-     */
-    public function connect()
-    {
-        if (!is_null($this->elasticaClient)) return $this->elasticaClient;
-        // security settings
-        $username = $this->getConf('username');
-        $password = $this->getConf('password');
-        // parse servers config into DSN array
-        $dsn = ['servers' => []];
-        $servers = $this->getConf('servers');
-        $lines   = explode("\n", $servers);
-        foreach ($lines as $line) {
-            [$host, $proxy] = array_pad(explode(',', $line, 2), 2, null);
-            [$host, $port] = explode(':', $host, 2);
-            $host = trim($host);
-            $port = (int) trim($port);
-            if (!$port) $port = 80;
-            $proxy = trim($proxy);
-            if (!$host) continue;
-            $dsn['servers'][] = [
-                'host' => $host,
-                'port' => $port,
-                'proxy' => $proxy,
-                'username' => $username,
-                'password' => $password
-            ];
-        }
-
-        $this->elasticaClient = new Client($dsn);
-        return $this->elasticaClient;
-    }
-
-    /**
      * Create the index
      *
      * @param bool $clear rebuild index
@@ -127,16 +82,18 @@ class helper_plugin_elasticsearch_client extends Plugin
      */
     public function createIndex($clear = false)
     {
-        $client = $this->connect();
-        $index = $client->getIndex($this->getConf('indexname'));
+        $client = $this->client();
 
-        if ($index->create([], $clear)->hasError()) {
-            throw new Exception("Failed to create index!");
+        if ($clear) {
+            try {
+                $client->call('', null, 'DELETE');
+            } catch (Exception $e) {
+                // ignore if index does not exist
+            }
         }
 
-        if ($this->createMappings($index)->hasError()) {
-            throw new Exception("Failed to create field mappings!");
-        }
+        $client->call('', null, 'PUT'); // create index or throw exception
+        $client->call('_mapping', ['properties' => $this->createMappings()]);
     }
 
     /**
@@ -165,10 +122,9 @@ class helper_plugin_elasticsearch_client extends Plugin
      *
      * Plugins may provide their own fields via PLUGIN_ELASTICSEARCH_CREATEMAPPING event.
      *
-     * @param Index $index
-     * @return Response
+     * @return array The mapping properties
      */
-    protected function createMappings(Index $index): Response
+    protected function createMappings(): array
     {
         $langProps = $this->getLangProps();
 
@@ -218,9 +174,7 @@ class helper_plugin_elasticsearch_client extends Plugin
             $props = array_merge($props, $fields);
         }
 
-        $mapping = new Mapping();
-        $mapping->setProperties($props);
-        return $mapping->send($index);
+        return $props;
     }
 
     /**
@@ -235,10 +189,10 @@ class helper_plugin_elasticsearch_client extends Plugin
         // default language
         $langprops = [
             'content' => [
-                'type'  => 'text',
+                'type' => 'text',
                 'fields' => [
                     $conf['lang'] => [
-                        'type'  => 'text',
+                        'type' => 'text',
                         'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
                     ],
                 ]

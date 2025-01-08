@@ -148,9 +148,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
             $result = $client->call('_search', $queryBuilder->query);
 
-            //$result = $index->search($equery);
-            //$aggs = $result->getAggregations();
-
             $this->printIntro();
             /** @var helper_plugin_elasticsearch_form $hlpform */
             $hlpform = plugin_load('helper', 'elasticsearch_form');
