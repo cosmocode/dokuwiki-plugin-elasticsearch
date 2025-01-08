@@ -16,9 +16,7 @@ use Elastica\Query;
 use Elastica\Query\BoolQuery;
 use Elastica\Query\MatchQuery;
 use Elastica\Query\Range;
-use Elastica\Query\SimpleQueryString;
 use Elastica\Query\Term;
-use Elastica\ResultSet;
 
 /**
  * Main search helper
@@ -85,9 +83,11 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      */
     public function handleActUnknown(Event $event, $param)
     {
+
         if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
+        global $INFO;
         global $QUERY;
         global $INPUT;
         global $ID;
@@ -97,12 +97,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
         // get extended search configurations from plugins
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', self::$pluginSearchConfigs);
-
-        /** @var helper_plugin_elasticsearch_client $hlp */
-        $hlp = plugin_load('helper', 'elasticsearch_client');
-
-        $client = $hlp->connect();
-        $index = $client->getIndex($this->getConf('indexname'));
 
         // store copy of the original query string
         $q = $QUERY;
@@ -120,79 +114,48 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             $this->searchFields[] = 'syntax*';
         }
 
-        // finally define the elastic query
-        $qstring = new SimpleQueryString($QUERY, array_merge($this->searchFields, $fields));
         // restore the original query
         $QUERY = $q;
+
+        // initialize the Query
+        $queryBuilder = new \dokuwiki\plugin\elasticsearch\Query();
+        $queryBuilder->setSimpleQuery($QUERY, array_merge($this->searchFields, $fields));
+
         // append additions provided by plugins
         if (!empty($additions)) {
             $QUERY .= ' ' . implode(' ', $additions);
         }
 
-        // create the actual search object
-        $equery = new Query();
-        $subqueries = new BoolQuery();
-        $subqueries->addMust($qstring);
-
-        $equery->setHighlight(
-            [
-                "pre_tags" => ['ELASTICSEARCH_MARKER_IN'],
-                "post_tags" => ['ELASTICSEARCH_MARKER_OUT'],
-                "fields" => [
-                    $this->getConf('snippets') => new \stdClass(),
-                    'title' => new \stdClass()]
-            ]
-        );
-
-        // paginate
-        $equery->setSize($this->getConf('perpage'));
-        $equery->setFrom($this->getConf('perpage') * ($INPUT->int('p', 1, true) - 1));
-
-        // add ACL subqueries
-        $this->addACLSubqueries($subqueries);
-
-        // add language subquery
-        $this->addLanguageSubquery($subqueries, $this->getLanguageFilter());
-
-        // add date subquery
-        if ($INPUT->has('min')) {
-            $this->addDateSubquery($subqueries, $INPUT->str('min'));
+        $queryBuilder->setHighlights($this->getConf('snippets'));
+        $queryBuilder->setPagination($this->getConf('perpage'), $INPUT->int('p', 1, true));
+        $queryBuilder->setAggregations();
+        if (!$INFO['isadmin']) {
+            $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
         }
 
-        // add namespace filter
-        if ($INPUT->has('ns')) {
-            $nsSubquery = new BoolQuery();
-            foreach ($INPUT->arr('ns') as $ns) {
-                $term = new Term();
-                $term->setTerm('namespace', $ns);
-                $nsSubquery->addShould($term);
-            }
-            $equery->setPostFilter($nsSubquery);
-        }
+        $queryBuilder->addLanguageFilter($this->getLanguageFilter()); // FIXME should only be added if not empty
+        $queryBuilder->addDateFilter($INPUT->str('min'));
+        $queryBuilder->addNamespaceFilter($INPUT->arr('ns'));
 
 
-        // add aggregations for namespaces
-        $agg = new Terms('namespace');
-        $agg->setField('namespace.keyword');
-        $agg->setSize(25);
+        // add search configurations from other plugins FIXME
+        // $this->addPluginConfigurations($equery, $subqueries);
 
-        $equery->addAggregation($agg);
-
-        // add search configurations from other plugins
-        $this->addPluginConfigurations($equery, $subqueries);
-
-        $equery->setQuery($subqueries);
-
-        $x = $equery->toArray();
 
         try {
-            $result = $index->search($equery);
-            $aggs = $result->getAggregations();
+            /** @var helper_plugin_elasticsearch_client $hlp */
+            $hlp = plugin_load('helper', 'elasticsearch_client');
+            $client = $hlp->client();
+
+            $result = $client->call('_search', $queryBuilder->query);
+
+            //$result = $index->search($equery);
+            //$aggs = $result->getAggregations();
 
             $this->printIntro();
             /** @var helper_plugin_elasticsearch_form $hlpform */
             $hlpform = plugin_load('helper', 'elasticsearch_form');
-            $hlpform->tpl($aggs);
+            $hlpform->tpl($result['aggregations']);
             if ($this->printResults($result)) {
                 $this->printPagination($result);
             }
@@ -404,7 +367,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
     /**
      * Output the search results
      *
-     * @param ResultSet $results
+     * @param array $results
      * @return bool true when results where shown
      */
     protected function printResults($results)
@@ -412,7 +375,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         global $lang;
 
         // output results
-        $found = $results->getTotalHits();
+        $found = $results['hits']['total']['value'];
 
         if (!$found) {
             echo '<h2>' . $lang['nothingfound'] . '</h2>';
@@ -421,10 +384,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
         echo '<dl class="search_results">';
         echo '<h2>' . sprintf($this->getLang('totalfound'), $found) . '</h2>';
-        foreach ($results as $row) {
-
-            /** @var Elastica\Result $row */
-            $doc = $row->getSource();
+        foreach ($results['hits']['hits'] as $row) {
+            $doc = $row['_source'];
             $page = $doc['uri'];
             if (
                 (!page_exists($page) && !is_file(mediaFN($page))) ||
@@ -435,7 +396,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             }
 
             // get highlighted title
-            $highlightsTitle = $row->getHighlights()['title'] ?? '';
+            $highlightsTitle = $row['highlight']['title'] ?? '';
             $title = str_replace(
                 ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
                 ['<strong class="search_hit">', '</strong>'],
@@ -446,7 +407,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             if (!$title) $title = hsc($page);
 
             // get highlighted snippet
-            $highlightedSnippets = $row->getHighlights()[$this->getConf('snippets')] ?? [];
+            $highlightedSnippets = $row['highlight'][$this->getConf('snippets')] ?? [];
             $snippet = str_replace(
                 ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
                 ['<strong class="search_hit">', '</strong>'],
@@ -496,14 +457,14 @@ class action_plugin_elasticsearch_search extends ActionPlugin
     }
 
     /**
-     * @param ResultSet $result
+     * @param array $result
      */
     protected function printPagination($result)
     {
         global $INPUT;
         global $QUERY;
 
-        $all = $result->getTotalHits();
+        $all = $result['hits']['total']['value'];
         $pages = ceil($all / $this->getConf('perpage'));
         $cur = $INPUT->int('p', 1, true);
 
@@ -534,8 +495,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             $p = [
                 'q' => $QUERY,
                 'do' => 'search',
-                'ns' => $INPUT->arr('ns'),
-                'min' => $INPUT->arr('min'),
+                'ns' => $INPUT->arr('ns'), # FIXME: this is not working
+                'min' => $INPUT->arr('min'), # FIXME: this should not be an array
                 'p' => ($cur - 1)
             ];
             echo '<li class="prev">';
