@@ -12,7 +12,7 @@ namespace dokuwiki\plugin\elasticsearch;
  *
  * @todo add the plugin configuration mechanism
  */
-class Query implements \JsonSerializable
+class Query
 {
     /** @var array The query representation */
     public $query = [];
@@ -92,7 +92,7 @@ class Query implements \JsonSerializable
 
         // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
         $includes = $this->termList('groups_include', $groups);
-        if($user !== '') {
+        if ($user !== '') {
             $this->arraySet($includes, '/bool/must', $this->termList('users_include', [$user]));
         }
         $this->querySet('query/bool/must//bool/should', $includes);
@@ -102,9 +102,41 @@ class Query implements \JsonSerializable
         $this->querySet('query/bool/should//bool/must_not//bool/should', $this->termList('groups_exclude', $groups));
 
         // user specific excludes must always be respected
-        if($user !== '') {
+        if ($user !== '') {
             $this->querySet('query/bool/must_not', $this->termList('users_exclude', [$user]));
         }
+    }
+
+    /**
+     * Search for plugin terms
+     *
+     * @param string $field
+     * @param string[] $terms
+     * @return void
+     */
+    public function setPluginQuery(string $field, array $terms)
+    {
+        if ($terms === []) return;
+        $this->querySet('query/bool/must//bool/should', $this->termList($field, $terms));
+    }
+
+    /**
+     * Add a plugin aggregation
+     *
+     * @param string $name The name of the aggregation
+     * @param string $field The field to aggregate on (without the .keyword suffix)
+     * @param int $size
+     * @return void
+     */
+    public function setPluginAggregation(string $name, string $field, int $size = 25)
+    {
+        $this->querySet(
+            'aggs/' . $name . '/terms',
+            [
+                'field' => $field . '.keyword',
+                'size' => $size,
+            ]
+        );
     }
 
     // endregion
@@ -227,8 +259,4 @@ class Query implements \JsonSerializable
 
     // endregion
 
-    public function jsonSerialize()
-    {
-        return $this->query;
-    }
 }

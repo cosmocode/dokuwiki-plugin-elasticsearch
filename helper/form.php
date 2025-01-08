@@ -20,8 +20,9 @@ class helper_plugin_elasticsearch_form extends Plugin
      * Replacement for the standard search form
      *
      * @param array $aggregations
+     * @param array $pluginConfigs
      */
-    public function tpl($aggregations)
+    public function tpl($aggregations, $pluginConfigs = [])
     {
         global $lang;
         global $QUERY;
@@ -33,7 +34,7 @@ class helper_plugin_elasticsearch_form extends Plugin
         $searchForm->addTextInput('q')->val($QUERY)->useInput(false);
         $searchForm->addButton('', $lang['btn_search'])->attr('type', 'submit');
 
-        $this->addAdvancedSearch($searchForm, $aggregations);
+        $this->addAdvancedSearch($searchForm, $aggregations, $pluginConfigs);
 
         $searchForm->addFieldsetClose();
 
@@ -45,8 +46,9 @@ class helper_plugin_elasticsearch_form extends Plugin
      *
      * @param Form $searchForm
      * @param array $aggregations
+     * @param array $pluginConfigs
      */
-    protected function addAdvancedSearch(Form $searchForm, array $aggregations)
+    protected function addAdvancedSearch(Form $searchForm, array $aggregations, $pluginConfigs = [])
     {
         $searchForm->addTagOpen('div')
             ->addClass('advancedOptions')
@@ -56,7 +58,7 @@ class helper_plugin_elasticsearch_form extends Plugin
         foreach ($aggregations as $term => $aggregation) {
             // keep canonical 'ns' search parameter for namespaces
             $param = $term === 'namespace' ? 'ns' : $term;
-            $this->addCheckboxSelector($searchForm, $aggregation['buckets'], $param);
+            $this->addCheckboxSelector($searchForm, $aggregation['buckets'], $param, $pluginConfigs);
         }
         $this->addDateSelector($searchForm);
         $this->addLanguageSelector($searchForm);
@@ -69,11 +71,11 @@ class helper_plugin_elasticsearch_form extends Plugin
      * @param Form $searchForm
      * @param array $aggregations Namespace aggregations
      * @param string $param Prefix to use in input names
+     * @param array $pluginSearchConfigs
      */
-    protected function addCheckboxSelector(Form $searchForm, array $aggregations, $param)
+    protected function addCheckboxSelector(Form $searchForm, array $aggregations, $param, $pluginSearchConfigs = [])
     {
         if ($aggregations !== []) {
-            $pluginSearchConfigs = \action_plugin_elasticsearch_search::getRawPluginSearchConfigs();
             $selectorId = empty($pluginSearchConfigs[$param]['id'])
                 ? 'plugin__elasticsearch-' . $param
                 : $pluginSearchConfigs[$param]['id'];

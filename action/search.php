@@ -11,12 +11,6 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Form\Form;
-use Elastica\Aggregation\Terms;
-use Elastica\Query;
-use Elastica\Query\BoolQuery;
-use Elastica\Query\MatchQuery;
-use Elastica\Query\Range;
-use Elastica\Query\Term;
 
 /**
  * Main search helper
@@ -33,7 +27,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      *
      * @var Array
      */
-    protected static $pluginSearchConfigs;
+    protected $pluginSearchConfigs = [];
 
     /**
      * Search will be performed on those fields only.
@@ -96,7 +90,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         if (empty($QUERY)) $QUERY = $ID;
 
         // get extended search configurations from plugins
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', self::$pluginSearchConfigs);
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->pluginSearchConfigs);
 
         // store copy of the original query string
         $q = $QUERY;
@@ -137,9 +131,14 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         $queryBuilder->addDateFilter($INPUT->str('min'));
         $queryBuilder->addNamespaceFilter($INPUT->arr('ns'));
 
+        // add search configurations from other plugins
+        foreach ($this->pluginSearchConfigs as $param => $config) {
+            // handle search parameter
+            $queryBuilder->setPluginQuery($config['fieldPath'], $INPUT->arr($param));
 
-        // add search configurations from other plugins FIXME
-        // $this->addPluginConfigurations($equery, $subqueries);
+            // build aggregation for use as filter in advanced search
+            $queryBuilder->setPluginAggregation($param, $config['fieldPath'], $config['limit'] ?? 25);
+        }
 
 
         try {
@@ -155,7 +154,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             $this->printIntro();
             /** @var helper_plugin_elasticsearch_form $hlpform */
             $hlpform = plugin_load('helper', 'elasticsearch_form');
-            $hlpform->tpl($result['aggregations']);
+            $hlpform->tpl($result['aggregations'], $this->pluginSearchConfigs);
             if ($this->printResults($result)) {
                 $this->printPagination($result);
             }
@@ -181,80 +180,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         $form->removeElement($pos + 1); // div closing tag
     }
 
-    /**
-     * @return array
-     */
-    public static function getRawPluginSearchConfigs()
-    {
-        return self::$pluginSearchConfigs;
-    }
-
-    /**
-     * Add search configurations supplied by other plugins
-     *
-     * @param Query $equery
-     * @param \Elastica\Query\BoolQuery
-     */
-    protected function addPluginConfigurations($equery, $subqueries)
-    {
-        global $INPUT;
-
-        if (!empty(self::$pluginSearchConfigs)) {
-            foreach (self::$pluginSearchConfigs as $param => $config) {
-                // handle search parameter
-                if ($INPUT->has($param)) {
-                    $pluginSubquery = new BoolQuery();
-                    foreach ($INPUT->arr($param) as $item) {
-                        $eterm = new Term();
-                        $eterm->setTerm($param, $item);
-                        $pluginSubquery->addShould($eterm);
-                    }
-                    $subqueries->addMust($pluginSubquery);
-                }
-
-                // build aggregation for use as filter in advanced search
-                $agg = new Terms($param);
-                $agg->setField($config['fieldPath']);
-                if (isset($config['limit'])) {
-                    $agg->setSize($config['limit']);
-                }
-                $equery->addAggregation($agg);
-            }
-        }
-    }
-
-    /**
-     * Adds date subquery
-     *
-     * @param BoolQuery $subqueries
-     * @param string $min Modified at the latest one {year|month|week} ago
-     */
-    protected function addDateSubquery($subqueries, $min)
-    {
-        if (!in_array($min, ['year', 'month', 'week'])) return;
-
-        $dateSubquery = new Range(
-            'modified',
-            ['gte' => date('Y-m-d', strtotime('1 ' . $min . ' ago'))]
-        );
-        $subqueries->addMust($dateSubquery);
-    }
-
-    /**
-     * Adds language subquery
-     *
-     * @param BoolQuery $subqueries
-     * @param array $langFilter
-     */
-    protected function addLanguageSubquery($subqueries, $langFilter)
-    {
-        if (empty($langFilter)) return;
-
-        $langSubquery = new MatchQuery();
-        $langSubquery->setField('language', implode(',', $langFilter));
-
-        $subqueries->addMust($langSubquery);
-    }
 
     /**
      * Languages to be used in the current search, determined by:
@@ -286,57 +211,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         }
 
         return $langFilter;
-    }
-
-    /**
-     * Inserts subqueries based on current user's ACLs, none for superusers
-     *
-     * @param BoolQuery $subqueries
-     */
-    protected function addACLSubqueries($subqueries)
-    {
-        global $USERINFO;
-        global $INFO;
-
-        $groups = array_merge(['ALL'], $USERINFO['grps'] ?: []);
-
-        // no ACL filters for superusers
-        if ($INFO['isadmin']) return;
-
-        // include if group OR user have read permissions, allows for ACLs such as "block @group except user"
-        $includeSubquery = new BoolQuery();
-        foreach ($groups as $group) {
-            $term = new Term();
-            $term->setTerm('groups_include', $group);
-            $includeSubquery->addShould($term);
-        }
-        if (isset($_SERVER['REMOTE_USER'])) {
-            $userIncludeSubquery = new BoolQuery();
-            $term = new Term();
-            $term->setTerm('users_include', $_SERVER['REMOTE_USER']);
-            $userIncludeSubquery->addMust($term);
-            $includeSubquery->addShould($userIncludeSubquery);
-        }
-        $subqueries->addMust($includeSubquery);
-
-        // groups exclusion SHOULD be respected, not MUST, since that would not allow for exceptions
-        $groupExcludeSubquery = new BoolQuery();
-        foreach ($groups as $group) {
-            $term = new Term();
-            $term->setTerm('groups_exclude', $group);
-            $groupExcludeSubquery->addShould($term);
-        }
-        $excludeSubquery = new BoolQuery();
-        $excludeSubquery->addMustNot($groupExcludeSubquery);
-
-        $subqueries->addShould($excludeSubquery);
-
-        // user specific excludes must always be respected
-        if (isset($_SERVER['REMOTE_USER'])) {
-            $term = new Term();
-            $term->setTerm('users_exclude', $_SERVER['REMOTE_USER']);
-            $subqueries->addMustNot($term);
-        }
     }
 
     /**

@@ -228,6 +228,64 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
+    public function testSetPluginQuery()
+    {
+        $expect = [
+            'query' => [
+                'bool' => [
+                    'must' => [
+                        0 => [
+                            'bool' => [
+                                'should' => [
+                                    0 => [
+                                        'term' => [
+                                            'tagging' => [
+                                                'value' => 'tag1',
+                                                'boost' => 1.0,
+                                            ],
+                                        ],
+                                    ],
+                                    1 => [
+                                        'term' => [
+                                            'tagging' => [
+                                                'value' => 'tag2',
+                                                'boost' => 1.0,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]
+                ],
+            ],
+        ];
+
+        $query = new Query();
+        $query->setPluginQuery('tagging', ['tag1', 'tag2']);
+
+        $this->assertEquals($expect, $query->query);
+    }
+
+    public function testSetPluginAggregation()
+    {
+        $expected = [
+            'aggs' => [
+                'tagging' => [
+                    'terms' => [
+                        'field' => 'tagging.keyword',
+                        'size' => 30,
+                    ],
+                ],
+            ],
+        ];
+
+        $query = new Query();
+        $query->setPluginAggregation('tagging', 30);
+
+        $this->assertEquals($expected, $query->query);
+    }
+
     public function testAddLanguageFilter()
     {
         $expected = [
