@@ -139,7 +139,7 @@ class Query implements \JsonSerializable
     public function addLanguageFilter(array $lang)
     {
         if ($lang === []) return;
-        $this->querySet('query/bool/must//language/term', implode(',', $lang));
+        $this->querySet('query/bool/must//match/language', implode(',', $lang));
     }
 
     /**

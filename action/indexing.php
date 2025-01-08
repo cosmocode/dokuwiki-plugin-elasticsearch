@@ -144,7 +144,7 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
         /** @var helper_plugin_elasticsearch_client $hlp */
         $hlp = plugin_load('helper', 'elasticsearch_client');
         $client = $hlp->client();
-        $client->call('_update/' . $documentId, $data); // FIXME we may need to add ?refresh=true
+        $client->call('_update/' . $documentId . '?refresh=true', $data);
 
         $this->updateIndexstate($doc['uri']);
     }
