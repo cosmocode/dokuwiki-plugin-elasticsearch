@@ -198,13 +198,14 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         // optional translation detection: use current top namespace if it matches translation config
         if (empty($langFilter) && $transplugin && $this->getConf('detectTranslation') && $ns) {
             $topNs = strtok($ns, ':');
-            if (in_array($topNs, $transplugin->translations)) {
+            if ($topNs && in_array($topNs, $transplugin->translations)) {
                 $langFilter = [$topNs];
                 $INPUT->set('lang', $langFilter);
+            } elseif ( $transplugin->defaultlang === '' ) {
+                // for empty default language, use the real language code
+                $langFilter = $transplugin->realLC('');
+                $INPUT->set('lang', $langFilter);
             }
-        } elseif (empty($langFilter) && $transplugin) {
-            // select all available translations
-            $INPUT->set('lang', $transplugin->translations);
         }
 
         return $langFilter;

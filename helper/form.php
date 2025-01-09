@@ -175,9 +175,10 @@ class helper_plugin_elasticsearch_form extends Plugin
         $i = 0;
         $searchForm->addTagOpen('ul')->attr('aria-expanded', 'false');
         foreach ($translations as $lang) {
+            $lang = $transplugin->realLC($lang);
             $searchForm->addTagOpen('li');
             $searchForm->addCheckbox('lang[]')->val($lang)->id("__lang-" . $i);
-            $searchForm->addLabel($lang, "__lang-" . $i)
+            $searchForm->addLabel($transplugin->getLocalName($lang), "__lang-" . $i)
                 ->attr('title', $lang);
             $searchForm->addTagClose('li');
             $i++;
