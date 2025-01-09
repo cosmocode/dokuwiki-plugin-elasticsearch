@@ -361,17 +361,20 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         sort($toshow);
         $showlen = count($toshow);
 
+        $p = [
+            'q' => $QUERY,
+            'do' => 'search',
+            'ns' => $INPUT->arr('ns'),
+            'min' => $INPUT->str('min', null),
+        ];
+
+        // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
+
         echo '<ul class="elastic_pagination">';
         if ($cur > 1) {
-            $p = [
-                'q' => $QUERY,
-                'do' => 'search',
-                'ns' => $INPUT->arr('ns'), # FIXME: this is not working
-                'min' => $INPUT->arr('min'), # FIXME: this should not be an array
-                'p' => ($cur - 1)
-            ];
+            $p['p'] = ($cur - 1);
             echo '<li class="prev">';
-            echo '<a href="' . wl('', $p) . '">';
+            echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
             echo '«';
             echo '</a>';
             echo '</li>';
@@ -381,15 +384,9 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             if ($toshow[$i] == $cur) {
                 echo '<li class="cur">' . $toshow[$i] . '</li>';
             } else {
-                $p = [
-                    'q' => $QUERY,
-                    'do' => 'search',
-                    'ns' => $INPUT->arr('ns'),
-                    'min' => $INPUT->arr('min'),
-                    'p' => $toshow[$i]
-                ];
+                $p['p'] = $toshow[$i];
                 echo '<li>';
-                echo '<a href="' . wl('', $p) . '">';
+                echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
                 echo $toshow[$i];
                 echo '</a>';
                 echo '</li>';
@@ -402,15 +399,9 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         }
 
         if ($cur < $pages) {
-            $p = [
-                'q' => $QUERY,
-                'do' => 'search',
-                'ns' => $INPUT->arr('ns'),
-                'min' => $INPUT->arr('min'),
-                'p' => ($cur + 1)
-            ];
+            $p['p'] = ($cur + 1);
             echo '<li class="next">';
-            echo '<a href="' . wl('', $p) . '">';
+            echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
             echo '»';
             echo '</a>';
             echo '</li>';
@@ -418,4 +409,5 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
         echo '</ul>';
     }
+
 }
