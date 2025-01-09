@@ -273,7 +273,7 @@ class QueryTest extends DokuWikiTest
             'aggs' => [
                 'tagging' => [
                     'terms' => [
-                        'field' => 'tagging.keyword',
+                        'field' => 'fieldname.keyword',
                         'size' => 30,
                     ],
                 ],
@@ -281,7 +281,7 @@ class QueryTest extends DokuWikiTest
         ];
 
         $query = new Query();
-        $query->setPluginAggregation('tagging', 30);
+        $query->setPluginAggregation('tagging', 'fieldname', 30);
 
         $this->assertEquals($expected, $query->query);
     }

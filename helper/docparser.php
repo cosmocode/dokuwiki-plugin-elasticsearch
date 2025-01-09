@@ -93,6 +93,9 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         if ($result === false) {
             throw new RuntimeException('No response from parser');
         }
+        if ($result === '') {
+            throw new RuntimeException('Empty response from parser');
+        }
 
         // defaults
         $data = [
