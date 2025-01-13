@@ -73,7 +73,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      *
      * @param Event $event
      * @param $param
-     * @todo refactor this to make use of the new Query class
      */
     public function handleActUnknown(Event $event, $param)
     {
@@ -91,6 +90,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
         // get extended search configurations from plugins
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->pluginSearchConfigs);
+
+        // TODO: use QueryParser to parse the query and extract filter values
 
         // store copy of the original query string
         $q = $QUERY;
