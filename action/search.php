@@ -11,6 +11,8 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Form\Form;
+use dokuwiki\plugin\elasticsearch\Query;
+use dokuwiki\plugin\elasticsearch\QueryParser;
 
 /**
  * Main search helper
@@ -85,60 +87,42 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         global $INPUT;
         global $ID;
 
-        if (empty($QUERY)) $QUERY = $INPUT->str('q');
-        if (empty($QUERY)) $QUERY = $ID;
 
         // get extended search configurations from plugins
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->pluginSearchConfigs);
+        // add namespace filter
+        $this->pluginSearchConfigs['namespace'] = [
+            'label' => 'Namespace', // FIXME localize
+            'queryParam' => 'ns',
+        ];
 
-        // TODO: use QueryParser to parse the query and extract filter values
-
-        // store copy of the original query string
-        $q = $QUERY;
-        // let plugins manipulate the query
-        $additions = [];
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_QUERY', $additions);
-        // if query is empty, return all results
-        if (empty(trim($QUERY))) $QUERY = '*';
+        // parse the query
+        if (empty($QUERY)) $QUERY = $INPUT->str('q');
+        if (empty($QUERY)) $QUERY = $ID;
+        $queryParser = new QueryParser($QUERY, $this->pluginSearchConfigs);
+        $QUERY = $queryParser->getQuery();
 
         // get fields to use in query
         $fields = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_SEARCHFIELDS', $fields);
-
         if ($this->getConf('searchSyntax')) {
             $this->searchFields[] = 'syntax*';
         }
 
-        // restore the original query
-        $QUERY = $q;
-
         // initialize the Query
-        $queryBuilder = new \dokuwiki\plugin\elasticsearch\Query();
+        $queryBuilder = new Query();
         $queryBuilder->setSimpleQuery($QUERY, array_merge($this->searchFields, $fields));
-
-        // append additions provided by plugins
-        if (!empty($additions)) {
-            $QUERY .= ' ' . implode(' ', $additions);
-        }
-
         $queryBuilder->setHighlights($this->getConf('snippets'));
         $queryBuilder->setPagination($this->getConf('perpage'), $INPUT->int('p', 1, true));
-        $queryBuilder->setAggregations();
         if (!$INFO['isadmin']) {
             $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
         }
-
         $queryBuilder->addLanguageFilter($this->getLanguageFilter()); // FIXME should only be added if not empty
         $queryBuilder->addDateFilter($INPUT->str('min'));
-        $queryBuilder->addNamespaceFilter($INPUT->arr('ns'));
 
-        // add search configurations from other plugins
-        foreach ($this->pluginSearchConfigs as $param => $config) {
-            // handle search parameter
-            $queryBuilder->setPluginQuery($config['fieldPath'], $INPUT->arr($param));
-
-            // build aggregation for use as filter in advanced search
-            $queryBuilder->setPluginAggregation($param, $config['fieldPath'], $config['limit'] ?? 25);
+        // add filters
+        foreach ($queryParser->getFilters() as $filter) {
+            $queryBuilder->addFilter($filter);
         }
 
 

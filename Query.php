@@ -31,22 +31,6 @@ class Query
     }
 
     /**
-     * Set clustering on namespaces
-     *
-     * @return void
-     */
-    public function setAggregations()
-    {
-        $this->querySet(
-            'aggs/namespace/terms',
-            [
-                'field' => 'namespace.keyword',
-                'size' => 25,
-            ]
-        );
-    }
-
-    /**
      * Setup up search snippet highlighting
      *
      * @param string $field The field to use in snippets
@@ -107,41 +91,37 @@ class Query
         }
     }
 
-    /**
-     * Search for plugin terms
-     *
-     * @param string $field
-     * @param string[] $terms
-     * @return void
-     */
-    public function setPluginQuery(string $field, array $terms)
-    {
-        if ($terms === []) return;
-        $this->querySet('query/bool/must//bool/should', $this->termList($field, $terms));
-    }
-
-    /**
-     * Add a plugin aggregation
-     *
-     * @param string $name The name of the aggregation
-     * @param string $field The field to aggregate on (without the .keyword suffix)
-     * @param int $size
-     * @return void
-     */
-    public function setPluginAggregation(string $name, string $field, int $size = 25)
-    {
-        $this->querySet(
-            'aggs/' . $name . '/terms',
-            [
-                'field' => $field . '.keyword',
-                'size' => $size,
-            ]
-        );
-    }
-
     // endregion
 
     // region filters
+
+    /**
+     * Add terms and aggregation for a filter
+     *
+     * @param Filter $filter
+     * @return void
+     */
+    public function addFilter(Filter $filter)
+    {
+        // add aggregation
+        $this->querySet(
+            'aggs/' . $filter->getName() . '/terms',
+            [
+                'field' => $filter->getFieldPath() . '.keyword',
+                'size' => $filter->getLimit(),
+            ]
+        );
+
+        // add filter terms
+        $terms = $filter->getValues();
+        if ($terms === []) return;
+        $termlist = $this->termList($filter->getFieldPath(), $terms);
+        if ($filter->isAndQuery()) {
+            $this->querySet('query/bool/must//bool/should', $termlist);
+        } else {
+            $this->querySet('post_filter/bool/should', $termlist);
+        }
+    }
 
     /**
      * Add a date filter
@@ -172,20 +152,6 @@ class Query
     {
         if ($lang === []) return;
         $this->querySet('query/bool/must//match/language', implode(',', $lang));
-    }
-
-    /**
-     * Add a namespace filter
-     *
-     * Results should be in one of the given namespaces
-     *
-     * @param string[] $namespaces
-     * @return void
-     */
-    public function addNamespaceFilter(array $namespaces)
-    {
-        if ($namespaces === []) return;
-        $this->query['post_filter']['bool']['should'] = $this->termList('namespace', $namespaces);
     }
 
     // endregion

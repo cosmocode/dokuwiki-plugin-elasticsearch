@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\elasticsearch;
 
+use RuntimeException;
+
 class QueryParser
 {
     /**
@@ -10,42 +12,29 @@ class QueryParser
     protected $querystring = '';
 
     /**
-     * @var array The filters configuration
-     *
-     *  filter => [
-     *     'prefix' => string,    // The prefix to look for in the query string, defaults to the filter name
-     *     'queryParam' => string,// The query parameter to use for this filter, defaults to the filter name
-     *     'label' => string,     // The label to display for this filter (in current language)
-     *     'fieldPath' => string, // The field name to use in the ElasticSearch query, defaults to the filter name
-     *     'limit' => int,        // The maximum number of values to aggregate, defaults to 25
-     *     'options' => string[], // value => label pairs for the filter options, empty for aggregation only
-     *     'values' => string[],  // The values set for this filter (will be auto-set from query string and parameters)
-     *  ]
+     * @var Filter[] The filters configuration
      */
     protected $filters = [];
 
     /**
      * @param string $querystring The query string to parse
-     * @param array $config The filters configuration (see above)
+     * @param array $filterconfig The filters configuration
      */
-    public function __construct(string $querystring, array $config)
+    public function __construct(string $querystring, array $filterconfig)
     {
         global $INPUT;
 
         $this->querystring = $querystring;
-        $this->filters = $config;
 
-        foreach ($this->filters as $filter => &$config) {
+        foreach ($filterconfig as $name => $config) {
             if (isset($config['values'])) {
-                throw new \RuntimeException("Filter $filter should not have a values key set on initialization");
+                throw new RuntimeException("Filter $name should not have a values key set on initialization");
             }
 
-            $this->applyFilterDefaults($filter, $config);
-
-            $config['values'] = array_merge(
-                $this->parseParams($this->querystring, $config['prefix']),
-                $INPUT->arr($config['queryParam'], [])
-            );
+            $filter = new Filter($name, $config);
+            $filter->addValues($this->parseParams($this->querystring, $filter->getPrefix()));
+            $filter->addValues($INPUT->arr($filter->getQueryParam(), []));
+            $this->filters[$name] = $filter;
         }
     }
 
@@ -56,6 +45,9 @@ class QueryParser
      */
     public function getQuery(): string
     {
+        if ($this->querystring === '') {
+            return '*'; // search everything, when no query is given
+        }
         return $this->querystring;
     }
 
@@ -70,100 +62,28 @@ class QueryParser
     }
 
     /**
-     * Get a filter configuration by name
+     * Get all filter configurations
+     *
+     * @return Filter[] [filter => Filter]
+     */
+    public function getFilters(): array
+    {
+        return $this->filters;
+    }
+
+    /**
+     * Get a filter by name
      *
      * @param string $name
-     * @return array
+     * @return Filter
      */
-    public function getFilter($name): array
+    public function getFilter($name): Filter
     {
         if (!isset($this->filters[$name])) {
-            throw new \RuntimeException("Filter $name not found");
+            throw new RuntimeException("Filter $name not found");
         }
 
         return $this->filters[$name];
-    }
-
-    /**
-     * Remove a set filter value
-     */
-    public function removeFilterValue(string $filter, string $value): void
-    {
-        if (!isset($this->filters[$filter])) {
-            throw new \RuntimeException("Filter $filter not found");
-        }
-        $key = array_search($value, $this->filters[$filter]['values']);
-        if ($key !== false) {
-            unset($this->filters[$filter]['values'][$key]);
-            $this->filters[$filter]['values'] = array_values($this->filters[$filter]['values']); // reindex
-        }
-    }
-
-    /**
-     * Add a filter value
-     */
-    public function addFilterValue(string $filter, string $value): void
-    {
-        if (!isset($this->filters[$filter])) {
-            throw new \RuntimeException("Filter $filter not found");
-        }
-        if ($value === '') return;
-
-        $this->filters[$filter]['values'][] = $value;
-        $this->filters[$filter]['values'] = array_unique($this->filters[$filter]['values']);
-    }
-
-    /**
-     * Get the options for a given filter
-     *
-     * This will not only return the options that might have been configured in advance, but also
-     * all currently set values as options.
-     *
-     * @param string $filter
-     * @return string[] [value => label]
-     */
-    public function getOptions(string $filter)
-    {
-        $options = $this->getFilter($filter)['options'];
-        foreach ($this->getFilter($filter)['values'] as $value) {
-            if (!isset($options[$value])) {
-                $options[$value] = $value;
-            }
-        }
-        asort($options); // FIXME use our natural sort
-
-        return $options;
-    }
-
-    /**
-     * Get the values for a given filter
-     *
-     * These are the actually set values, not the options
-     *
-     * @param string $filter
-     * @return string[] [value, value, ...]
-     */
-    public function getValues(string $filter): array
-    {
-        return $this->getFilter($filter)['values'];
-    }
-
-    /**
-     * Ensure a filter has all defaults set
-     *
-     * @param string $name
-     * @param string[] $filter
-     */
-    protected function applyFilterDefaults(string $name, array &$filter): void
-    {
-        // ensure defaults are set
-        $filter['prefix'] ??= $name . ':';
-        $filter['queryParam'] ??= $name;
-        $filter['label'] ??= $name;
-        $filter['fieldPath'] ??= $name;
-        $filter['limit'] ??= 25;
-        $filter['values'] ??= [];
-        $filter['options'] ??= [];
     }
 
     /**

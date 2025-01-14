@@ -37,22 +37,6 @@ class QueryParserTest extends DokuWikiTest
         $this->assertEquals($keywords, $result);
     }
 
-    public function testGetFilterDefaults()
-    {
-        $config = [
-            'filter1' => [] // No initial values provided
-        ];
-        $parser = new QueryParser('foo bar', $config);
-        $filter = $parser->getFilter('filter1');
-
-        $this->assertEquals('filter1:', $filter['prefix']);
-        $this->assertEquals('filter1', $filter['queryParam']);
-        $this->assertEquals('filter1', $filter['label']);
-        $this->assertEquals('filter1', $filter['fieldPath']);
-        $this->assertEquals(25, $filter['limit']);
-        $this->assertEquals([], $filter['values']);
-        $this->assertEquals([], $filter['options']);
-    }
 
     public function testInitializationFromQueryAndRequest()
     {
@@ -67,8 +51,8 @@ class QueryParserTest extends DokuWikiTest
         ];
         $parser = new QueryParser('foo f1:value1 filter2:value2', $config);
 
-        $this->assertEquals(['value1', 'value3'], $parser->getValues('filter1'));
-        $this->assertEquals(['value2', 'value4'], $parser->getValues('filter2'));
+        $this->assertEquals(['value1', 'value3'], $parser->getFilter('filter1')->getValues());
+        $this->assertEquals(['value2', 'value4'], $parser->getFilter('filter2')->getValues());
     }
 
     public function testRemoveFilterValue()
@@ -77,8 +61,8 @@ class QueryParserTest extends DokuWikiTest
             'filter1' => []
         ];
         $parser = new QueryParser('foo bar filter1:value1 filter1:value2', $config);
-        $parser->removeFilterValue('filter1', 'value1');
-        $this->assertEquals(['value2'], $parser->getValues('filter1'));
+        $parser->getFilter('filter1')->removeValue('value1');
+        $this->assertEquals(['value2'], $parser->getFilter('filter1')->getValues());
     }
 
     public function testAddFilterValue()
@@ -87,8 +71,8 @@ class QueryParserTest extends DokuWikiTest
             'filter1' => []
         ];
         $parser = new QueryParser('foo bar filter1:value1', $config);
-        $parser->addFilterValue('filter1', 'value2');
-        $this->assertEquals(['value1', 'value2'], $parser->getValues('filter1'));
+        $parser->getFilter('filter1')->addValue('value2');
+        $this->assertEquals(['value1', 'value2'], $parser->getFilter('filter1')->getValues());
     }
 
     public function testGetOptions()
@@ -102,7 +86,7 @@ class QueryParserTest extends DokuWikiTest
             ]
         ];
         $parser = new QueryParser('foo bar filter1:value1 filter1:opt2', $config);
-        $options = $parser->getOptions('filter1');
+        $options = $parser->getFilter('filter1')->getOptions();
         $this->assertEquals(['opt1' => 'Option 1', 'opt2' => 'Option 2', 'value1' => 'value1'], $options);
     }
 
@@ -112,7 +96,7 @@ class QueryParserTest extends DokuWikiTest
             'filter1' => []
         ];
         $parser = new QueryParser('foo bar filter1:value1 filter1:value2', $config);
-        $this->assertEquals(['value1', 'value2'], $parser->getValues('filter1'));
+        $this->assertEquals(['value1', 'value2'], $parser->getFilter('filter1')->getValues());
     }
 
     public function testGetQuery()

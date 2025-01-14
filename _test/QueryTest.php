@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\elasticsearch\test;
 
+use dokuwiki\plugin\elasticsearch\Filter;
 use dokuwiki\plugin\elasticsearch\Query;
 use DokuWikiTest;
 
@@ -36,25 +37,6 @@ class QueryTest extends DokuWikiTest
 
         $query = new Query();
         $query->setSimpleQuery('test', ['content', 'title']);
-
-        $this->assertEquals($expected, $query->query);
-    }
-
-    public function testSetAggregations()
-    {
-        $expected = [
-            'aggs' => [
-                'namespace' => [
-                    'terms' => [
-                        'field' => 'namespace.keyword',
-                        'size' => 25,
-                    ],
-                ],
-            ],
-        ];
-
-        $query = new Query();
-        $query->setAggregations();
 
         $this->assertEquals($expected, $query->query);
     }
@@ -228,7 +210,29 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
-    public function testSetPluginQuery()
+    public function testAddLanguageFilter()
+    {
+        $expected = [
+            'query' => [
+                'bool' => [
+                    'must' => [
+                        0 => [
+                            'match' => [
+                                'language' => 'de,en',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $query = new Query();
+        $query->addLanguageFilter(['de', 'en']);
+
+        $this->assertEquals($expected, $query->query);
+    }
+
+    public function testAddAndFilterTerms()
     {
         $expect = [
             'query' => [
@@ -259,56 +263,26 @@ class QueryTest extends DokuWikiTest
                     ]
                 ],
             ],
+            'aggs' => [
+                'tagging' => [
+                    'terms' => [
+                        'field' => 'tagging.keyword',
+                        'size' => 20,
+                    ],
+                ],
+            ],
         ];
 
+        $filter = new Filter('tagging', ['limit' => 20]);
+        $filter->addValues(['tag1', 'tag2']);
+
         $query = new Query();
-        $query->setPluginQuery('tagging', ['tag1', 'tag2']);
+        $query->addFilter($filter);
 
         $this->assertEquals($expect, $query->query);
     }
 
-    public function testSetPluginAggregation()
-    {
-        $expected = [
-            'aggs' => [
-                'tagging' => [
-                    'terms' => [
-                        'field' => 'fieldname.keyword',
-                        'size' => 30,
-                    ],
-                ],
-            ],
-        ];
-
-        $query = new Query();
-        $query->setPluginAggregation('tagging', 'fieldname', 30);
-
-        $this->assertEquals($expected, $query->query);
-    }
-
-    public function testAddLanguageFilter()
-    {
-        $expected = [
-            'query' => [
-                'bool' => [
-                    'must' => [
-                        0 => [
-                            'match' => [
-                                'language' => 'de,en',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $query = new Query();
-        $query->addLanguageFilter(['de', 'en']);
-
-        $this->assertEquals($expected, $query->query);
-    }
-
-    public function testAddNamespaceFilter()
+    public function testAddOrFilterTerms()
     {
         $expected = [
             'post_filter' => [
@@ -332,11 +306,22 @@ class QueryTest extends DokuWikiTest
                         ],
                     ],
                 ],
-            ]
+            ],
+            'aggs' => [
+                'namespace' => [
+                    'terms' => [
+                        'field' => 'namespace.keyword',
+                        'size' => 20,
+                    ],
+                ],
+            ],
         ];
 
+        $filter = new Filter('namespace', ['limit' => 20, 'isAndQuery' => false]);
+        $filter->addValues(['wiki', 'playground']);
+
         $query = new Query();
-        $query->addNamespaceFilter(['wiki', 'playground']);
+        $query->addFilter($filter);
 
         $this->assertEquals($expected, $query->query);
     }
