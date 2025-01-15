@@ -88,7 +88,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->filterconfigs);
         // add namespace filter
         $this->filterconfigs['namespace'] = [
-            'label' => 'Namespace', // FIXME localize
+            'label' => trim($this->getLang('ns'), ':'),
             'queryParam' => 'ns',
             'prefix' => '@',
             'isAndQuery' => false,
@@ -173,6 +173,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      * Languages to be used in the current search, determined by:
      * 1. $INPUT variables, or 2. translation plugin
      *
+     * @todo currently not used, needs to be reincorporated
      * @return array
      */
     protected function getLanguageFilter()
@@ -202,6 +203,12 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         return $langFilter;
     }
 
+    /**
+     * Create the language filter
+     *
+     * @todo this could maybe be moved to the tanslation plugin itself?
+     * @return array|null returns null if translation plugin is not available
+     */
     protected function createLanguageFilter()
     {
         /** @var helper_plugin_translation $transplugin */
@@ -216,7 +223,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         }
 
         return [
-            'label' => 'Language', // FIXME localize
+            'label' => $this->getLang('language'),
             'queryParam' => 'lang',
             'isAndQuery' => false,
             'options' => $options,

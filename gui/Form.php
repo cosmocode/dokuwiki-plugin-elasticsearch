@@ -25,7 +25,7 @@ class Form extends AbstractGui
         $this->searchForm->setHiddenField('do', 'search');
         foreach ($this->query->getFilters() as $filter) {
             foreach ($filter->getValues() as $value) {
-                $this->searchForm->setHiddenField($filter->getQueryParam().'[]', $value);
+                $this->searchForm->setHiddenField($filter->getQueryParam() . '[]', $value);
             }
         }
 
@@ -113,7 +113,7 @@ class Form extends AbstractGui
 
         $html .= '<li class="add"><div class="li">';
         $html .= '<details>';
-        $html .= '<summary>' . hsc($filter->getLabel()) . '</summary>';
+        $html .= '<summary title="'.$this->getLang('add_filter').'">' . hsc($filter->getLabel()) . '</summary>';
         $html .= '<ul>';
         foreach ($additions as $value => $info) {
             $html .= '<li>';
@@ -163,10 +163,7 @@ class Form extends AbstractGui
 
         // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
         $url = wl('', http_build_query($p, '', ','), false, '&');
-
-        // FIXME localize
-        $title = sprintf($mod . ' filter "%s" from search (%s)', $value, $opFilter->getLabel());
-
+        $title = sprintf($this->getLang('filter_' . $mod), $value, $opFilter->getLabel());
         $linkattr = [
             'href' => $url,
             'title' => $title,
