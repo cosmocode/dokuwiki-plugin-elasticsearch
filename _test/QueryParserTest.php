@@ -87,7 +87,10 @@ class QueryParserTest extends DokuWikiTest
         ];
         $parser = new QueryParser('foo bar filter1:value1 filter1:opt2', $config);
         $options = $parser->getFilter('filter1')->getOptions();
-        $this->assertEquals(['opt1' => 'Option 1', 'opt2' => 'Option 2', 'value1' => 'value1'], $options);
+        $this->assertEquals(['opt1' => 'Option 1', 'opt2' => 'Option 2'], $options);
+
+        $values = $parser->getFilter('filter1')->getValueLabels();
+        $this->assertEquals(['value1'=>'value1', 'opt2' => 'Option 2'], $values);
     }
 
     public function testGetValues()
