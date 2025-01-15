@@ -21,11 +21,11 @@ class Form extends AbstractGui
         global $INPUT;
 
 
-        $this->searchForm = (new DokuForm(['method' => 'get'], true))->addClass('search-results-form');
+        $this->searchForm = (new DokuForm(['method' => 'get'], true))->addClass('elastic-form');
         $this->searchForm->setHiddenField('do', 'search');
 
-        $this->searchForm->addFieldsetOpen()->addClass('search-form');
-        $this->searchForm->addTextInput('q')->val($this->query->getQuery())->useInput(false);
+        $this->searchForm->addTagOpen('section')->addClass('input');
+        $this->searchForm->addTextInput('q')->val($this->query->getQuery())->useInput(false)->attr('type', 'search');
         $this->searchForm->addDropdown(
             'min',
             [
@@ -37,14 +37,14 @@ class Form extends AbstractGui
         )
             ->val($INPUT->str('min', ''))
             ->attr('title', trim($this->getLang('lastmod'), ':'));
-
         $this->searchForm->addButton('', $lang['btn_search'])->attr('type', 'submit');
+        $this->searchForm->addTagClose('section');
 
+        $this->searchForm->addTagOpen('ul')->addClass('filters');
         foreach ($this->query->getFilters() as $filter) {
             $this->searchForm->addHTML($this->filterUi($filter));
         }
-
-        $this->searchForm->addFieldsetClose();
+        $this->searchForm->addTagClose('ul');
 
         return $this->searchForm->toHTML();
     }
@@ -96,20 +96,29 @@ class Form extends AbstractGui
     {
         [$removals, $additions] = $this->getFilterLabels($filter);
 
+        $html = '';
 
-        $html = '<ul class="filter">';
         foreach ($removals as $value => $info) {
             $html .= '<li>';
             $html .= $this->filterModLink(self::MOD_REMOVE, $filter, $value, $info['label'], $info['count']);
             $html .= '</li>';
         }
 
+        if (!$additions) return $html;
+
+        $html .= '<li class="add"><div class="li">';
+        $html .= '<details>';
+        $html .= '<summary>' . hsc($filter->getLabel()) . '</summary>';
+        $html .= '<ul>';
         foreach ($additions as $value => $info) {
             $html .= '<li>';
             $html .= $this->filterModLink(self::MOD_ADD, $filter, $value, $info['label'], $info['count']);
             $html .= '</li>';
         }
         $html .= '</ul>';
+        $html .= '</details>';
+        $html .= '</div></li>';
+
         return $html;
     }
 
@@ -165,8 +174,6 @@ class Form extends AbstractGui
         }
         if ($mod === self::MOD_REMOVE) {
             $label .= ' ✗';
-        } else {
-            $label .= ' +';
         }
 
         return '<a ' . buildAttributes($linkattr) . '>' . $label . '</a>';
