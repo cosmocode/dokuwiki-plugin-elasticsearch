@@ -97,11 +97,32 @@ class Results extends AbstractGui
         return $doc;
     }
 
+    /**
+     * Format a single row in the results
+     *
+     * @param array $doc
+     * @return string
+     */
     protected function formatHit(array $doc): string
     {
         global $lang;
 
         $html = '<dt>';
+
+        if (!$doc['isPage'] && str_starts_with($doc['mime'], 'image/')) {
+            $img = [
+                'src' => ml($doc['uri'], ['w' => 200, 'h' => 100, 'cache' => 1], true, '&'),
+                'width' => 100,
+                'height' => 50,
+                'alt' => '',
+                'loading' => 'lazy',
+                'class' => 'media mediaright',
+            ];
+            $html .= '<a href="' . ml($doc['uri']) . '">';
+            $html .= '<img ' . buildAttributes($img) . '>';
+            $html .= '</a>';
+        }
+
         $html .= '<a ' . buildAttributes($doc['linkAttributes']) . '>';
         $html .= $doc['title'];
         $html .= '</a>';

@@ -81,7 +81,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         global $INFO;
         global $QUERY;
         global $INPUT;
-        global $ID;
 
 
         // get extended search configurations from plugins
@@ -102,7 +101,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
         // parse the query
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
-        if (empty($QUERY)) $QUERY = $ID;
         $queryParser = new QueryParser($QUERY, $this->filterconfigs);
         $QUERY = $queryParser->getQuery();
 
@@ -235,14 +233,14 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         }
 
         return [
-            'label' => 'File Type', # localize
+            'label' => $this->getLang('filetype'),
             'isAndQuery' => false,
             'queryParam' => 'ext',
             'prefix' => 'ext:',
             'fieldPath' => 'ext',
             'options' => array_merge(
                 [
-                    'wiki' => 'Wiki Pages', #localize
+                    'wiki' => $this->getLang('wikipages'),
                 ],
                 $extensions
             )
