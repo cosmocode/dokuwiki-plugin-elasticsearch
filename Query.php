@@ -117,7 +117,7 @@ class Query
         if ($filter->isAndQuery()) {
             $this->querySet('query/bool/must//bool/should', $termlist);
         } else {
-            $this->querySet('post_filter/bool/should', $termlist);
+            $this->querySet('post_filter/bool/must//bool/should', $termlist);
         }
     }
 

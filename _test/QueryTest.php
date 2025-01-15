@@ -265,25 +265,31 @@ class QueryTest extends DokuWikiTest
         $expected = [
             'post_filter' => [
                 'bool' => [
-                    'should' => [
+                    'must' => [
                         0 => [
-                            'term' => [
-                                'namespace' => [
-                                    'value' => 'wiki',
-                                    'boost' => 1.0,
+                            'bool' => [
+                                'should' => [
+                                    0 => [
+                                        'term' => [
+                                            'namespace' => [
+                                                'value' => 'wiki',
+                                                'boost' => 1.0,
+                                            ],
+                                        ],
+                                    ],
+                                    1 => [
+                                        'term' => [
+                                            'namespace' => [
+                                                'value' => 'playground',
+                                                'boost' => 1.0,
+                                            ],
+                                        ],
+                                    ],
                                 ],
-                            ],
+                            ]
                         ],
-                        1 => [
-                            'term' => [
-                                'namespace' => [
-                                    'value' => 'playground',
-                                    'boost' => 1.0,
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
+                    ]
+                ]
             ],
             'aggs' => [
                 'namespace' => [
