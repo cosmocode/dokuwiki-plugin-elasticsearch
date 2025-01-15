@@ -15,6 +15,7 @@ use dokuwiki\Logger;
 class action_plugin_elasticsearch_indexing extends ActionPlugin
 {
     public const MIME_DOKUWIKI = 'text/dokuwiki';
+    public const EXT_DOKUWIKI = 'wiki';
     public const DOCTYPE_PAGE = 'page';
     public const DOCTYPE_MEDIA = 'media';
 
@@ -216,6 +217,7 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
         $data['syntax'] = rawWiki($id);
         $data['mime'] = self::MIME_DOKUWIKI;
         $data['doctype'] = self::DOCTYPE_PAGE;
+        $data['ext'] = self::EXT_DOKUWIKI;
 
         // prefer rendered plaintext over raw syntax output
         /** @var \renderer_plugin_text $textRenderer */

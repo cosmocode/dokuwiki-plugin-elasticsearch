@@ -8,8 +8,8 @@
  */
 
 use dokuwiki\Extension\Plugin;
-use LanguageDetection\Language;
 use dokuwiki\HTTP\DokuHTTPClient;
+use LanguageDetection\Language;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -59,6 +59,18 @@ class helper_plugin_elasticsearch_docparser extends Plugin
     }
 
     /**
+     * Get a list of all configured extensions
+     *
+     * @return array
+     */
+    public function getExtensions()
+    {
+        $extensions = array_keys($this->parsers);
+        sort($extensions);
+        return $extensions;
+    }
+
+    /**
      * Parse the given file
      *
      * Returns an array with the following keys
@@ -102,7 +114,7 @@ class helper_plugin_elasticsearch_docparser extends Plugin
             'title' => basename($file),
             'content' => '',
             'mime' => $mime,
-            'ext' => $ext,
+            'ext' => $ext === 'jpeg' ? 'jpg' : $ext,
             'language' => '',
             'created' => date('Y-m-d\TH:i:s\Z', filemtime($file)),
         ];
@@ -203,4 +215,6 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
         return array_shift($langs);
     }
+
+
 }

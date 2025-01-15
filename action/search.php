@@ -98,6 +98,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         if ($langfilter) {
             $this->filterconfigs['language'] = $langfilter;
         }
+        $this->filterconfigs['media'] = $this->createMediaFilter();
 
         // parse the query
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
@@ -127,7 +128,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             $queryBuilder->addFilter($filter);
         }
 
-
+        // execute search and output results
         try {
             /** @var helper_plugin_elasticsearch_client $hlp */
             $hlp = plugin_load('helper', 'elasticsearch_client');
@@ -137,15 +138,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             $gui = new Gui($result, $queryParser);
             echo $gui->render();
 
-            /*
-            $this->printIntro();
-
-            $hlpform = plugin_load('helper', 'elasticsearch_form');
-            $hlpform->tpl($result['aggregations'], $this->filterconfigs);
-            if ($this->printResults($result)) {
-                $this->printPagination($result);
-            }
-            */
         } catch (Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' .
                 hsc($e->getMessage()) . '</pre>', -1);
@@ -173,8 +165,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
      * Languages to be used in the current search, determined by:
      * 1. $INPUT variables, or 2. translation plugin
      *
-     * @todo currently not used, needs to be reincorporated
      * @return array
+     * @todo currently not used, needs to be reincorporated
      */
     protected function getLanguageFilter()
     {
@@ -206,8 +198,8 @@ class action_plugin_elasticsearch_search extends ActionPlugin
     /**
      * Create the language filter
      *
-     * @todo this could maybe be moved to the tanslation plugin itself?
      * @return array|null returns null if translation plugin is not available
+     * @todo this could maybe be moved to the tanslation plugin itself?
      */
     protected function createLanguageFilter()
     {
@@ -230,5 +222,31 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         ];
     }
 
+    protected function createMediaFilter()
+    {
+        /** @var helper_plugin_elasticsearch_docparser $docparser */
+        $docparser = plugin_load('helper', 'elasticsearch_docparser');
+
+
+        $extensions = array_combine($docparser->getExtensions(), $docparser->getExtensions());
+        if (isset($extensions['jpeg'])) {
+            unset($extensions['jpeg']);
+            $extensions['jpg'] = 'jpg';
+        }
+
+        return [
+            'label' => 'File Type', # localize
+            'isAndQuery' => false,
+            'queryParam' => 'ext',
+            'prefix' => 'ext:',
+            'fieldPath' => 'ext',
+            'options' => array_merge(
+                [
+                    'wiki' => 'Wiki Pages', #localize
+                ],
+                $extensions
+            )
+        ];
+    }
 
 }
