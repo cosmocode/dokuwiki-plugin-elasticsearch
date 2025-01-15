@@ -210,28 +210,6 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
-    public function testAddLanguageFilter()
-    {
-        $expected = [
-            'query' => [
-                'bool' => [
-                    'must' => [
-                        0 => [
-                            'match' => [
-                                'language' => 'de,en',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $query = new Query();
-        $query->addLanguageFilter(['de', 'en']);
-
-        $this->assertEquals($expected, $query->query);
-    }
-
     public function testAddAndFilterTerms()
     {
         $expect = [

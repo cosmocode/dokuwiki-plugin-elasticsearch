@@ -9,8 +9,6 @@ namespace dokuwiki\plugin\elasticsearch;
  * and finally the jsonSerialize method can be used to get the query representation
  *
  * Utility methods are provided to simplify the creation of the query array
- *
- * @todo add the plugin configuration mechanism
  */
 class Query
 {
@@ -138,20 +136,6 @@ class Query
 
         $date = date('Y-m-d', strtotime($amount . ' ' . $unit . ' ago'));
         $this->querySet('query/bool/must//range/modified/gte', $date);
-    }
-
-    /**
-     * Add a language filter
-     *
-     * Results must be in one of the given languages
-     *
-     * @param string[] $lang
-     * @return void
-     */
-    public function addLanguageFilter(array $lang)
-    {
-        if ($lang === []) return;
-        $this->querySet('query/bool/must//match/language', implode(',', $lang));
     }
 
     // endregion
