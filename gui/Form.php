@@ -23,6 +23,11 @@ class Form extends AbstractGui
 
         $this->searchForm = (new DokuForm(['method' => 'get'], true))->addClass('elastic-form');
         $this->searchForm->setHiddenField('do', 'search');
+        foreach ($this->query->getFilters() as $filter) {
+            foreach ($filter->getValues() as $value) {
+                $this->searchForm->setHiddenField($filter->getQueryParam().'[]', $value);
+            }
+        }
 
         $this->searchForm->addTagOpen('section')->addClass('input');
         $this->searchForm->addTextInput('q')->val($this->query->getQuery())->useInput(false)->attr('type', 'search');
