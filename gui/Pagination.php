@@ -73,24 +73,8 @@ class Pagination extends AbstractGui
      */
     protected function createLink(int $page, ?string $label = null)
     {
-        global $INPUT;
         if ($label === null) $label = $page;
-
-        $p = [
-            'q' => $this->query->getQuery(),
-            'do' => 'search',
-            'p' => $page,
-            'min' => $INPUT->str('min', null), // date filter
-        ];
-
-        // keep all filters
-        foreach ($this->query->getFilters() as $filter) {
-            $p[$filter->getQueryParam()] = $filter->getValues();
-        }
-
-        // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
-        $url = wl('', http_build_query($p, '', ','));
-
+        $url = $this->linkBuilder()->setPage($page)->getUrl();
         return '<a href="' . $url . '">' . hsc($label) . '</a>';
     }
 

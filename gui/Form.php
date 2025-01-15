@@ -139,30 +139,12 @@ class Form extends AbstractGui
      */
     protected function filterModLink(string $mod, Filter $opFilter, string $value, string $label, int $count = 0)
     {
-        global $INPUT;
-
-        // fixme this setup is somewhat duplicated in Pagination
-        $p = [
-            'q' => $this->query->getQuery(),
-            'do' => 'search',
-            'min' => $INPUT->str('min', null), // date filter
-        ];
-
-        // add the filters to the URL, but modify the given one
-        foreach ($this->query->getFilters() as $name => $filter) {
-            $values = $filter->getValues();
-            if ($name == $opFilter->getName()) {
-                if ($mod === self::MOD_ADD) {
-                    $values[] = $value;
-                } else {
-                    $values = array_diff($values, [$value]);
-                }
-            }
-            $p[$filter->getQueryParam()] = $values;
+        if($mod === self::MOD_REMOVE) {
+            $url = $this->linkBuilder()->removeFilterValue($opFilter, $value)->getUrl('&');
+        } else {
+            $url = $this->linkBuilder()->addFilterValue($opFilter, $value)->getUrl('&');
         }
 
-        // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
-        $url = wl('', http_build_query($p, '', ','), false, '&');
         $title = sprintf($this->getLang('filter_' . $mod), $value, $opFilter->getLabel());
         $linkattr = [
             'href' => $url,

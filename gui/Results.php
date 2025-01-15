@@ -6,7 +6,6 @@ class Results extends AbstractGui
 {
     /**
      * @inheritdoc
-     * @todo split into smaller methods
      */
     public function render(): string
     {
@@ -22,73 +21,127 @@ class Results extends AbstractGui
         $html = '<dl class="search_results">';
         $html .= '<h2>' . sprintf($this->getLang('totalfound'), $found) . '</h2>';
         foreach ($this->results['hits']['hits'] as $row) {
-            $doc = $row['_source'];
-            $page = $doc['uri'];
+            $doc = $this->parseHit($row);
+
             if (
-                (!page_exists($page) && !is_file(mediaFN($page))) ||
-                isHiddenPage($page) ||
-                auth_quickaclcheck($page) < AUTH_READ
+                (!page_exists($doc['uri']) && !is_file(mediaFN($doc['uri']))) ||
+                isHiddenPage($doc['uri']) ||
+                auth_quickaclcheck($doc['uri']) < AUTH_READ
             ) {
                 continue;
             }
 
-            // get highlighted title
-            $highlightsTitle = $row['highlight']['title'] ?? '';
-            $title = str_replace(
-                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
-                ['<strong class="search_hit">', '</strong>'],
-                hsc(implode(' … ', (array)$highlightsTitle))
-            );
-            if (!$title) $title = hsc($doc['title']);
-            if (!$title) $title = hsc(p_get_first_heading($page));
-            if (!$title) $title = hsc($page);
-
-            // get highlighted snippet
-            $highlightedSnippets = $row['highlight'][$this->getConf('snippets')] ?? [];
-            $snippet = str_replace(
-                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
-                ['<strong class="search_hit">', '</strong>'],
-                hsc(implode(' … ', $highlightedSnippets))
-            );
-            if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
-
-            // assume page if no doctype is set, because old index won't have doctypes
-            $isPage = empty($doc['doctype']) || $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;
-            $href = $isPage ? wl($page) : ml($page);
-
-            $html .= '<dt>';
-            if (!$isPage && is_file(DOKU_INC . 'lib/images/fileicons/' . $doc['ext'] . '.png')) {
-                $html .= sprintf(
-                    '<img src="%s" alt="%s" /> ',
-                    DOKU_BASE . 'lib/images/fileicons/' . $doc['ext'] . '.png',
-                    $doc['ext']
-                );
-            }
-            $html .= '<a href="' . $href . '" class="wikilink1" title="' . hsc($page) . '">';
-            $html .= $title;
-            $html .= '</a>';
-            $html .= '</dt>';
-
-            // meta
-            $html .= '<dd class="meta elastic-resultmeta">';
-            if (!empty($doc['namespace'])) {
-                $html .= '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($doc['namespace']) . '</span>';
-            }
-            if ($doc['modified']) {
-                $lastmod = strtotime($doc['modified']);
-                $html .= ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
-            }
-            if (!empty($doc['user'])) {
-                $html .= ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
-            }
-            $html .= '</dd>';
-
-            // snippets
-            $html .= '<dd class="snippet">';
-            $html .= $snippet;
-            $html .= '</dd>';
+            $html .= $this->formatHit($doc);
         }
         $html .= '</dl>';
+
+        return $html;
+    }
+
+    /**
+     * Parse the hit into a more usable format
+     *
+     * Resolves highlighting, adds URLs, etc.
+     *
+     * @param array $hit
+     * @return array
+     */
+    protected function parseHit(array $hit): array
+    {
+        $doc = $hit['_source'];
+        $page = $doc['uri'];
+
+        // get highlighted title
+        $highlightsTitle = $hit['highlight']['title'] ?? '';
+        $title = str_replace(
+            ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
+            ['<strong class="search_hit">', '</strong>'],
+            hsc(implode(' … ', (array)$highlightsTitle))
+        );
+        if (!$title) $title = hsc($doc['title']);
+        if (!$title) $title = hsc(p_get_first_heading($page));
+        if (!$title) $title = hsc($page);
+
+        // get highlighted snippet
+        $highlightedSnippets = $hit['highlight'][$this->getConf('snippets')] ?? [];
+        $snippet = str_replace(
+            ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
+            ['<strong class="search_hit">', '</strong>'],
+            hsc(implode(' … ', $highlightedSnippets))
+        );
+        if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
+
+        // assume page if no doctype is set, because old index won't have doctypes
+        $isPage = empty($doc['doctype']) || $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;
+        $href = $isPage ? wl($page) : ml($page);
+
+        $link = [
+            'href' => $href,
+            'title' => $title,
+        ];
+        if ($isPage) {
+            $link['class'] = 'wikilink1';
+        } else {
+            $link['class'] = 'media mediafile mf_' . $doc['ext'];
+        }
+
+        $doc['linkAttributes'] = $link;
+        $doc['title'] = $title;
+        $doc['snippet'] = $snippet;
+        $doc['isPage'] = $isPage;
+        $doc['href'] = $href;
+        $doc['namespace'] ??= '';
+        $doc['modified'] ??= '';
+        $doc['user'] ??= '';
+
+        return $doc;
+    }
+
+    protected function formatHit(array $doc): string
+    {
+        global $lang;
+
+        $html = '<dt>';
+        $html .= '<a ' . buildAttributes($doc['linkAttributes']) . '>';
+        $html .= $doc['title'];
+        $html .= '</a>';
+
+        if ($doc['namespace'] !== '') {
+            $url = $this->linkBuilder()
+                ->addFilterValue($this->query->getFilter('namespace'), $doc['namespace'])
+                ->getUrl('&');
+            $link = [
+                'href' => $url,
+                'class' => 'ns',
+                'title' => sprintf(
+                    $this->getLang('filter_add'),
+                    $doc['namespace'],
+                    $this->query->getFilter('namespace')->getLabel()
+                ),
+            ];
+
+            $html .= ' <a ' . buildAttributes($link) . '>';
+            $html .= $this->query->getFilter('namespace')->getPrefix() . hsc($doc['namespace']);
+            $html .= '</a>';
+        }
+
+        $html .= '</dt>';
+
+        // meta
+        $html .= '<dd class="meta elastic-resultmeta">';
+        if ($doc['modified']) {
+            $lastmod = strtotime($doc['modified']);
+            $html .= ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
+        }
+        if (!empty($doc['user'])) {
+            $html .= ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
+        }
+        $html .= '</dd>';
+
+        // snippets
+        $html .= '<dd class="snippet">';
+        $html .= $doc['snippet'];
+        $html .= '</dd>';
 
         return $html;
     }

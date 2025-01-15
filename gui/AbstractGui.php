@@ -34,6 +34,13 @@ abstract class AbstractGui
      */
     abstract public function render(): string;
 
+    /**
+     * @return LinkBuilder
+     */
+    public function linkBuilder(): LinkBuilder
+    {
+        return new LinkBuilder($this->query);
+    }
 
     /**
      * Get a translated string
