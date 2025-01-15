@@ -95,25 +95,56 @@ class Filter
         return $this->limit;
     }
 
-    /**
-     * Get the options for this filter
-     *
-     * This will not only return the options that might have been configured in advance, but also
-     * all currently set values as options.
-     *
-     * @return string[] [value => label]
-     */
     public function getOptions()
     {
-        $options = $this->options;
-        foreach ($this->values as $value) {
-            if (!isset($options[$value])) {
-                $options[$value] = $value;
-            }
-        }
-        asort($options); // FIXME use our natural sort
+        return $this->options;
+    }
 
-        return $options;
+    /**
+     * Tries to find the given values in the filter's options and uses that as a label
+     *
+     * @param string[] $values
+     * @param int $keepPrefix If the prefix is shorter or equal to this, it will be prefixed to the label
+     * @return array [value => label]
+     */
+    public function getOptionLabels(array $values, int $keepPrefix = 0): array
+    {
+        $result = [];
+        foreach ($values as $value) {
+            $result[$value] = $this->getOptionLabel($value, $keepPrefix);
+        }
+        asort($result); // FIXME use our natural sort
+        return $result;
+    }
+
+    /**
+     * Get the label for the given value from the options if available
+     *
+     * @param string $value The value to label
+     * @param int $keepPrefix If the prefix is shorter or equal to this, it will be prefixed to the label
+     * @return string
+     */
+    public function getOptionLabel(string $value, int $keepPrefix = 0): string
+    {
+        if (isset($this->options[$value])) {
+            $label = $this->options[$value];
+        } elseif (strlen($this->getPrefix()) <= $keepPrefix) {
+            $label = $this->getPrefix() . $value; // keep the cool prefix
+        } else {
+            $label = $value;
+        }
+        return $label;
+    }
+
+    /**
+     * Get all values with their labels (taken from the options if available)
+     *
+     * @param int $keepPrefix If the prefix is shorter or equal to this, it will be prefixed to the label
+     * @return array
+     */
+    public function getValueLabels(int $keepPrefix = 0): array
+    {
+        return $this->getOptionLabels($this->values, $keepPrefix);
     }
 
     public function isAndQuery(): bool

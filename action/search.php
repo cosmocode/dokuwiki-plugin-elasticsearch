@@ -11,6 +11,7 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Form\Form;
+use dokuwiki\plugin\elasticsearch\gui\Gui;
 use dokuwiki\plugin\elasticsearch\Query;
 use dokuwiki\plugin\elasticsearch\QueryParser;
 
@@ -20,16 +21,11 @@ use dokuwiki\plugin\elasticsearch\QueryParser;
 class action_plugin_elasticsearch_search extends ActionPlugin
 {
     /**
-     * Example array element for search field 'tagging':
-     * 'tagging' => [                       // also used as search query parameter
-     *   'label' => 'Tag',
-     *   'fieldPath' => 'tagging',          // dot notation in more complex mappings
-     *   'limit' => '50',
-     * ]
+     * See Filter for information on the structure of the filterconfigs
      *
      * @var Array
      */
-    protected $pluginSearchConfigs = [];
+    protected $filterconfigs = [];
 
     /**
      * Search will be performed on those fields only.
@@ -89,17 +85,24 @@ class action_plugin_elasticsearch_search extends ActionPlugin
 
 
         // get extended search configurations from plugins
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->pluginSearchConfigs);
+        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->filterconfigs);
         // add namespace filter
-        $this->pluginSearchConfigs['namespace'] = [
+        $this->filterconfigs['namespace'] = [
             'label' => 'Namespace', // FIXME localize
             'queryParam' => 'ns',
+            'prefix' => '@',
+            'isAndQuery' => false,
         ];
+        // add language filter
+        $langfilter = $this->createLanguageFilter();
+        if ($langfilter) {
+            $this->filterconfigs['language'] = $langfilter;
+        }
 
         // parse the query
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
         if (empty($QUERY)) $QUERY = $ID;
-        $queryParser = new QueryParser($QUERY, $this->pluginSearchConfigs);
+        $queryParser = new QueryParser($QUERY, $this->filterconfigs);
         $QUERY = $queryParser->getQuery();
 
         // get fields to use in query
@@ -117,7 +120,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         if (!$INFO['isadmin']) {
             $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
         }
-        $queryBuilder->addLanguageFilter($this->getLanguageFilter()); // FIXME should only be added if not empty
         $queryBuilder->addDateFilter($INPUT->str('min'));
 
         // add filters
@@ -130,16 +132,20 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             /** @var helper_plugin_elasticsearch_client $hlp */
             $hlp = plugin_load('helper', 'elasticsearch_client');
             $client = $hlp->client();
-
             $result = $client->call('_search', $queryBuilder->query);
 
+            $gui = new Gui($result, $queryParser);
+            echo $gui->render();
+
+            /*
             $this->printIntro();
-            /** @var helper_plugin_elasticsearch_form $hlpform */
+
             $hlpform = plugin_load('helper', 'elasticsearch_form');
-            $hlpform->tpl($result['aggregations'], $this->pluginSearchConfigs);
+            $hlpform->tpl($result['aggregations'], $this->filterconfigs);
             if ($this->printResults($result)) {
                 $this->printPagination($result);
             }
+            */
         } catch (Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' .
                 hsc($e->getMessage()) . '</pre>', -1);
@@ -186,7 +192,7 @@ class action_plugin_elasticsearch_search extends ActionPlugin
             if ($topNs && in_array($topNs, $transplugin->translations)) {
                 $langFilter = [$topNs];
                 $INPUT->set('lang', $langFilter);
-            } elseif ( $transplugin->defaultlang === '' ) {
+            } elseif ($transplugin->defaultlang === '') {
                 // for empty default language, use the real language code
                 $langFilter = $transplugin->realLC('');
                 $INPUT->set('lang', $langFilter);
@@ -196,204 +202,26 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         return $langFilter;
     }
 
-    /**
-     * Prints the introduction text
-     */
-    protected function printIntro()
+    protected function createLanguageFilter()
     {
-        global $QUERY;
-        global $ID;
-        global $lang;
+        /** @var helper_plugin_translation $transplugin */
+        $transplugin = plugin_load('helper', 'translation');
+        if ($transplugin === null) return null;
 
-        // just reuse the standard search page intro:
-        $intro = p_locale_xhtml('searchpage');
-        // allow use of placeholder in search intro
-        $pagecreateinfo = '';
-        if (auth_quickaclcheck($ID) >= AUTH_CREATE) {
-            $pagecreateinfo = sprintf($lang['searchcreatepage'], $QUERY);
-        }
-        $intro = str_replace(
-            ['@QUERY@', '@SEARCH@', '@CREATEPAGEINFO@'],
-            [hsc(rawurlencode($QUERY)), hsc($QUERY), $pagecreateinfo],
-            $intro
-        );
-        echo $intro;
-        flush();
-    }
-
-    /**
-     * Output the search results
-     *
-     * @param array $results
-     * @return bool true when results where shown
-     */
-    protected function printResults($results)
-    {
-        global $lang;
-
-        // output results
-        $found = $results['hits']['total']['value'];
-
-        if (!$found) {
-            echo '<h2>' . $lang['nothingfound'] . '</h2>';
-            return (bool)$found;
+        $options = [];
+        foreach ($transplugin->translations as $lang) {
+            $lang = $transplugin->realLC($lang);
+            $label = $transplugin->getLocalName($lang);
+            $options[$lang] = $label;
         }
 
-        echo '<dl class="search_results">';
-        echo '<h2>' . sprintf($this->getLang('totalfound'), $found) . '</h2>';
-        foreach ($results['hits']['hits'] as $row) {
-            $doc = $row['_source'];
-            $page = $doc['uri'];
-            if (
-                (!page_exists($page) && !is_file(mediaFN($page))) ||
-                isHiddenPage($page) ||
-                auth_quickaclcheck($page) < AUTH_READ
-            ) {
-                continue;
-            }
-
-            // get highlighted title
-            $highlightsTitle = $row['highlight']['title'] ?? '';
-            $title = str_replace(
-                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
-                ['<strong class="search_hit">', '</strong>'],
-                hsc(implode(' … ', (array)$highlightsTitle))
-            );
-            if (!$title) $title = hsc($doc['title']);
-            if (!$title) $title = hsc(p_get_first_heading($page));
-            if (!$title) $title = hsc($page);
-
-            // get highlighted snippet
-            $highlightedSnippets = $row['highlight'][$this->getConf('snippets')] ?? [];
-            $snippet = str_replace(
-                ['ELASTICSEARCH_MARKER_IN', 'ELASTICSEARCH_MARKER_OUT'],
-                ['<strong class="search_hit">', '</strong>'],
-                hsc(implode(' … ', $highlightedSnippets))
-            );
-            if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
-
-            // assume page if no doctype is set, because old index won't have doctypes
-            $isPage = empty($doc['doctype']) || $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;
-            $href = $isPage ? wl($page) : ml($page);
-
-            echo '<dt>';
-            if (!$isPage && is_file(DOKU_INC . 'lib/images/fileicons/' . $doc['ext'] . '.png')) {
-                echo sprintf(
-                    '<img src="%s" alt="%s" /> ',
-                    DOKU_BASE . 'lib/images/fileicons/' . $doc['ext'] . '.png',
-                    $doc['ext']
-                );
-            }
-            echo '<a href="' . $href . '" class="wikilink1" title="' . hsc($page) . '">';
-            echo $title;
-            echo '</a>';
-            echo '</dt>';
-
-            // meta
-            echo '<dd class="meta elastic-resultmeta">';
-            if (!empty($doc['namespace'])) {
-                echo '<span class="ns">' . $this->getLang('ns') . ' ' . hsc($doc['namespace']) . '</span>';
-            }
-            if ($doc['modified']) {
-                $lastmod = strtotime($doc['modified']);
-                echo ' <span class="">' . $lang['lastmod'] . ' ' . dformat($lastmod) . '</span>';
-            }
-            if (!empty($doc['user'])) {
-                echo ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
-            }
-            echo '</dd>';
-
-            // snippets
-            echo '<dd class="snippet">';
-            echo $snippet;
-            echo '</dd>';
-        }
-        echo '</dl>';
-
-        return (bool)$found;
-    }
-
-    /**
-     * @param array $result
-     */
-    protected function printPagination($result)
-    {
-        global $INPUT;
-        global $QUERY;
-
-        $all = $result['hits']['total']['value'];
-        $pages = ceil($all / $this->getConf('perpage'));
-        $cur = $INPUT->int('p', 1, true);
-
-        if ($pages < 2) return;
-
-        // which pages to show
-        $toshow = [1, 2, $cur, $pages, $pages - 1];
-        if ($cur - 1 > 1) $toshow[] = $cur - 1;
-        if ($cur + 1 < $pages) $toshow[] = $cur + 1;
-        $toshow = array_unique($toshow);
-        // fill up to seven, if possible
-        if (count($toshow) < 7) {
-            if ($cur < 4) {
-                if ($cur + 2 < $pages && count($toshow) < 7) $toshow[] = $cur + 2;
-                if ($cur + 3 < $pages && count($toshow) < 7) $toshow[] = $cur + 3;
-                if ($cur + 4 < $pages && count($toshow) < 7) $toshow[] = $cur + 4;
-            } else {
-                if ($cur - 2 > 1 && count($toshow) < 7) $toshow[] = $cur - 2;
-                if ($cur - 3 > 1 && count($toshow) < 7) $toshow[] = $cur - 3;
-                if ($cur - 4 > 1 && count($toshow) < 7) $toshow[] = $cur - 4;
-            }
-        }
-        sort($toshow);
-        $showlen = count($toshow);
-
-        $p = [
-            'q' => $QUERY,
-            'do' => 'search',
-            'ns' => $INPUT->arr('ns'),
-            'min' => $INPUT->str('min', null),
+        return [
+            'label' => 'Language', // FIXME localize
+            'queryParam' => 'lang',
+            'isAndQuery' => false,
+            'options' => $options,
         ];
-
-        // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
-
-        echo '<ul class="elastic_pagination">';
-        if ($cur > 1) {
-            $p['p'] = ($cur - 1);
-            echo '<li class="prev">';
-            echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
-            echo '«';
-            echo '</a>';
-            echo '</li>';
-        }
-
-        for ($i = 0; $i < $showlen; $i++) {
-            if ($toshow[$i] == $cur) {
-                echo '<li class="cur">' . $toshow[$i] . '</li>';
-            } else {
-                $p['p'] = $toshow[$i];
-                echo '<li>';
-                echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
-                echo $toshow[$i];
-                echo '</a>';
-                echo '</li>';
-            }
-
-            // show seperator when a jump follows
-            if (isset($toshow[$i + 1]) && $toshow[$i + 1] - $toshow[$i] > 1) {
-                echo '<li class="sep">…</li>';
-            }
-        }
-
-        if ($cur < $pages) {
-            $p['p'] = ($cur + 1);
-            echo '<li class="next">';
-            echo '<a href="' . wl('', http_build_query($p,'',',')) . '">';
-            echo '»';
-            echo '</a>';
-            echo '</li>';
-        }
-
-        echo '</ul>';
     }
+
 
 }
