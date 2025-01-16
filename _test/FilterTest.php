@@ -3,11 +3,10 @@
 namespace dokuwiki\plugin\elasticsearch\test;
 
 use dokuwiki\plugin\elasticsearch\Filter;
-use dokuwiki\plugin\elasticsearch\QueryParser;
 use DokuWikiTest;
 
 /**
- * FIXME tests for the elasticsearch plugin
+ * Filter tests for the elasticsearch plugin
  *
  * @group plugin_elasticsearch
  * @group plugins
@@ -30,7 +29,6 @@ class FilterTest extends DokuWikiTest
         $this->assertEquals([], $filter->getOptions());
         $this->assertTrue($filter->isAndQuery());
     }
-
 
 
 }

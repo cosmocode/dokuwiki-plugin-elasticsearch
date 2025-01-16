@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\elasticsearch;
 
+use dokuwiki\Utf8\Sort;
+
 class Filter
 {
 
@@ -41,6 +43,7 @@ class Filter
         $this->options = $config['options'] ?? [];
         $this->isAndQuery = $config['isAndQuery'] ?? true;
         $this->values = [];
+        Sort::asort($this->options);
     }
 
     public function addValues(array $values)
@@ -113,7 +116,7 @@ class Filter
         foreach ($values as $value) {
             $result[$value] = $this->getOptionLabel($value, $keepPrefix);
         }
-        asort($result); // FIXME use our natural sort
+        Sort::asort($result);
         return $result;
     }
 

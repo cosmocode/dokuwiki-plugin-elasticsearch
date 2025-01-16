@@ -7,7 +7,7 @@ use dokuwiki\plugin\elasticsearch\Query;
 use DokuWikiTest;
 
 /**
- * FIXME tests for the elasticsearch plugin
+ * Query tests for the elasticsearch plugin
  *
  * @group plugin_elasticsearch
  * @group plugins
@@ -87,9 +87,6 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
-    /**
-     * @todo this is the query the old ruflin based setup generated, however it seems to be more complicated than needed?
-     */
     public function testSetACLs()
     {
         $expected = [

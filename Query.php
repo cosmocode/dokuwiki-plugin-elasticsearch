@@ -80,7 +80,6 @@ class Query
         $this->querySet('query/bool/must//bool/should', $includes);
 
         // groups exclusion SHOULD be respected, not MUST, since that would not allow for exceptions
-        // FIXME the below satisfies the test, but is it correct? the should/must_not/should structure is a bit odd
         $this->querySet('query/bool/should//bool/must_not//bool/should', $this->termList('groups_exclude', $groups));
 
         // user specific excludes must always be respected

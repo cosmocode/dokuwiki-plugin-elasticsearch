@@ -13,7 +13,7 @@ abstract class AbstractGui
     /** @var QueryParser The parsed query and filters */
     protected QueryParser $query;
 
-    /** @var helper_plugin_elasticsearch_client for accessing plugin mechanisms */
+    /** @var \helper_plugin_elasticsearch_client for accessing plugin mechanisms */
     protected $helper;
 
 

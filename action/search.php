@@ -12,8 +12,7 @@ use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Form\Form;
 use dokuwiki\plugin\elasticsearch\gui\Gui;
-use dokuwiki\plugin\elasticsearch\Query;
-use dokuwiki\plugin\elasticsearch\QueryParser;
+use dokuwiki\plugin\elasticsearch\Search;
 
 /**
  * Main search helper
@@ -78,64 +77,17 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         if ($event->data !== 'search') return;
         $event->preventDefault();
         $event->stopPropagation();
-        global $INFO;
         global $QUERY;
         global $INPUT;
 
-
-        // get extended search configurations from plugins
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_FILTERS', $this->filterconfigs);
-        // add namespace filter
-        $this->filterconfigs['namespace'] = [
-            'label' => trim($this->getLang('ns'), ':'),
-            'queryParam' => 'ns',
-            'prefix' => '@',
-            'isAndQuery' => false,
-        ];
-        // add language filter
-        $langfilter = $this->createLanguageFilter();
-        if ($langfilter) {
-            $this->filterconfigs['language'] = $langfilter;
-        }
-        $this->filterconfigs['media'] = $this->createMediaFilter();
-
-        // parse the query
         if (empty($QUERY)) $QUERY = $INPUT->str('q');
-        $queryParser = new QueryParser($QUERY, $this->filterconfigs);
-        $QUERY = $queryParser->getQuery();
-
-        // get fields to use in query
-        $fields = [];
-        Event::createAndTrigger('PLUGIN_ELASTICSEARCH_SEARCHFIELDS', $fields);
-        if ($this->getConf('searchSyntax')) {
-            $this->searchFields[] = 'syntax*';
-        }
-
-        // initialize the Query
-        $queryBuilder = new Query();
-        $queryBuilder->setSimpleQuery($QUERY, array_merge($this->searchFields, $fields));
-        $queryBuilder->setHighlights($this->getConf('snippets'));
-        $queryBuilder->setPagination($this->getConf('perpage'), $INPUT->int('p', 1, true));
-        if (!$INFO['isadmin']) {
-            $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
-        }
-        $queryBuilder->addDateFilter($INPUT->str('min'));
-
-        // add filters
-        foreach ($queryParser->getFilters() as $filter) {
-            $queryBuilder->addFilter($filter);
-        }
 
         // execute search and output results
         try {
-            /** @var helper_plugin_elasticsearch_client $hlp */
-            $hlp = plugin_load('helper', 'elasticsearch_client');
-            $client = $hlp->client();
-            $result = $client->call('_search', $queryBuilder->query);
-
-            $gui = new Gui($result, $queryParser);
+            $search = new Search($QUERY);
+            $result = $search->search();
+            $gui = new Gui($result, $search->getParsedQuery());
             echo $gui->render();
-
         } catch (Exception $e) {
             msg('Something went wrong on searching please try again later or ask an admin for help.<br /><pre>' .
                 hsc($e->getMessage()) . '</pre>', -1);
@@ -156,95 +108,6 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         $pos = $form->findPositionByAttribute('id', 'qsearch__out');
         $form->removeElement($pos);
         $form->removeElement($pos + 1); // div closing tag
-    }
-
-
-    /**
-     * Languages to be used in the current search, determined by:
-     * 1. $INPUT variables, or 2. translation plugin
-     *
-     * @return array
-     * @todo currently not used, needs to be reincorporated
-     */
-    protected function getLanguageFilter()
-    {
-        global $ID;
-        global $INPUT;
-
-        $ns = getNS($ID);
-        $langFilter = $INPUT->arr('lang');
-
-        /** @var helper_plugin_translation $transplugin */
-        $transplugin = plugin_load('helper', 'translation');
-
-        // optional translation detection: use current top namespace if it matches translation config
-        if (empty($langFilter) && $transplugin && $this->getConf('detectTranslation') && $ns) {
-            $topNs = strtok($ns, ':');
-            if ($topNs && in_array($topNs, $transplugin->translations)) {
-                $langFilter = [$topNs];
-                $INPUT->set('lang', $langFilter);
-            } elseif ($transplugin->defaultlang === '') {
-                // for empty default language, use the real language code
-                $langFilter = $transplugin->realLC('');
-                $INPUT->set('lang', $langFilter);
-            }
-        }
-
-        return $langFilter;
-    }
-
-    /**
-     * Create the language filter
-     *
-     * @return array|null returns null if translation plugin is not available
-     * @todo this could maybe be moved to the tanslation plugin itself?
-     */
-    protected function createLanguageFilter()
-    {
-        /** @var helper_plugin_translation $transplugin */
-        $transplugin = plugin_load('helper', 'translation');
-        if ($transplugin === null) return null;
-
-        $options = [];
-        foreach ($transplugin->translations as $lang) {
-            $lang = $transplugin->realLC($lang);
-            $label = $transplugin->getLocalName($lang);
-            $options[$lang] = $label;
-        }
-
-        return [
-            'label' => $this->getLang('language'),
-            'queryParam' => 'lang',
-            'isAndQuery' => false,
-            'options' => $options,
-        ];
-    }
-
-    protected function createMediaFilter()
-    {
-        /** @var helper_plugin_elasticsearch_docparser $docparser */
-        $docparser = plugin_load('helper', 'elasticsearch_docparser');
-
-
-        $extensions = array_combine($docparser->getExtensions(), $docparser->getExtensions());
-        if (isset($extensions['jpeg'])) {
-            unset($extensions['jpeg']);
-            $extensions['jpg'] = 'jpg';
-        }
-
-        return [
-            'label' => $this->getLang('filetype'),
-            'isAndQuery' => false,
-            'queryParam' => 'ext',
-            'prefix' => 'ext:',
-            'fieldPath' => 'ext',
-            'options' => array_merge(
-                [
-                    'wiki' => $this->getLang('wikipages'),
-                ],
-                $extensions
-            )
-        ];
     }
 
 }

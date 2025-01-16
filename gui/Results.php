@@ -69,7 +69,7 @@ class Results extends AbstractGui
             ['<strong class="search_hit">', '</strong>'],
             hsc(implode(' … ', $highlightedSnippets))
         );
-        if (!$snippet) $snippet = hsc($doc['abstract']); // always fall back to abstract
+        if (!$snippet) $snippet = hsc($doc['abstract'] ?? ''); // always fall back to abstract
 
         // assume page if no doctype is set, because old index won't have doctypes
         $isPage = empty($doc['doctype']) || $doc['doctype'] === \action_plugin_elasticsearch_indexing::DOCTYPE_PAGE;

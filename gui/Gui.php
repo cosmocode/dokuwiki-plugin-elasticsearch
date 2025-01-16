@@ -22,8 +22,6 @@ class Gui extends AbstractGui
 
     /**
      * Prints the introduction text
-     *
-     * @todo for page creation, maybe we should use the uncleaned query?
      */
     protected function renderIntro()
     {

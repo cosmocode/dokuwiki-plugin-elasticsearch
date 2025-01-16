@@ -87,6 +87,17 @@ class QueryParser
     }
 
     /**
+     * Check if the given filter is configured
+     *
+     * @param string $name
+     * @return bool
+     */
+    public function hasFilter($name): bool
+    {
+        return isset($this->filters[$name]);
+    }
+
+    /**
      * Parse the keywords out of the query string
      *
      * @param string $query The query string with keywords, keywords will be removed
