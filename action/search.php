@@ -109,5 +109,4 @@ class action_plugin_elasticsearch_search extends ActionPlugin
         $form->removeElement($pos);
         $form->removeElement($pos + 1); // div closing tag
     }
-
 }

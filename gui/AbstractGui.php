@@ -2,7 +2,6 @@
 
 namespace dokuwiki\plugin\elasticsearch\gui;
 
-
 use dokuwiki\plugin\elasticsearch\QueryParser;
 
 abstract class AbstractGui
@@ -48,7 +47,8 @@ abstract class AbstractGui
      * @param string $msg
      * @return string
      */
-    protected function getLang($msg) {
+    protected function getLang($msg)
+    {
         return $this->helper->getLang($msg);
     }
 
@@ -58,7 +58,8 @@ abstract class AbstractGui
      * @param string $conf
      * @return mixed
      */
-    protected function getConf($conf) {
+    protected function getConf($conf)
+    {
         return $this->helper->getConf($conf);
     }
 }

@@ -7,11 +7,10 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
+use dokuwiki\plugin\elasticsearch\Client;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\Plugin;
 use splitbrain\phpcli\Exception;
-
-require_once __DIR__ . '/../vendor/autoload.php';
 
 /**
  * Access to the Elastica client
@@ -53,18 +52,18 @@ class helper_plugin_elasticsearch_client extends Plugin
         'tr' => 'turkish',
     ];
 
-    protected ?\dokuwiki\plugin\elasticsearch\Client $client = null;
+    protected ?Client $client = null;
 
     /**
      * Connect to the ElasticSearch server
      *
-     * @return \dokuwiki\plugin\elasticsearch\Client
+     * @return Client
      * @throws \dokuwiki\plugin\elasticsearch\Exception
      */
-    public function client(): \dokuwiki\plugin\elasticsearch\Client
+    public function client(): Client
     {
-        if ($this->client === null) {
-            $this->client = new \dokuwiki\plugin\elasticsearch\Client(
+        if (!$this->client instanceof Client) {
+            $this->client = new Client(
                 $this->getConf('servers'),
                 $this->getConf('indexname'),
                 $this->getConf('username'),

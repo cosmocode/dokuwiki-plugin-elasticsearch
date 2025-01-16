@@ -207,5 +207,4 @@ class Query
     }
 
     // endregion
-
 }

@@ -6,7 +6,6 @@ use dokuwiki\Utf8\Sort;
 
 class Filter
 {
-
     private string $name;
     private string $prefix;
     private string $queryParam;
@@ -15,7 +14,7 @@ class Filter
     private int $limit;
     private array $options;
     private bool $isAndQuery;
-    private array $values;
+    private array $values = [];
 
     /**
      * Create a new filter
@@ -42,7 +41,6 @@ class Filter
         $this->limit = (int)($config['limit'] ?? 25);
         $this->options = $config['options'] ?? [];
         $this->isAndQuery = $config['isAndQuery'] ?? true;
-        $this->values = [];
         Sort::asort($this->options);
     }
 
@@ -159,6 +157,4 @@ class Filter
     {
         return $this->values;
     }
-
-
 }

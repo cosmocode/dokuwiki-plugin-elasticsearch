@@ -1,6 +1,5 @@
 <?php
 
-
 namespace dokuwiki\plugin\elasticsearch\gui;
 
 use dokuwiki\plugin\elasticsearch\QueryParser;

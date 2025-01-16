@@ -2,7 +2,6 @@
 
 namespace dokuwiki\plugin\elasticsearch;
 
-
 use dokuwiki\HTTP\DokuHTTPClient;
 use dokuwiki\Logger;
 
@@ -56,7 +55,7 @@ class Client
             $this->server = $server;
         }
 
-        if ($this->http === null) {
+        if (!$this->http instanceof DokuHTTPClient) {
             throw new Exception('Failed to connect to any elasticsearch server');
         }
     }

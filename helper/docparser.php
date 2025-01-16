@@ -11,8 +11,6 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\HTTP\DokuHTTPClient;
 use LanguageDetection\Language;
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
 /**
  * Convert a file to text and metainfos
  */
@@ -215,6 +213,4 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
         return array_shift($langs);
     }
-
-
 }

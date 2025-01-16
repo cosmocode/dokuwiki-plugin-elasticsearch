@@ -7,7 +7,6 @@ use dokuwiki\plugin\elasticsearch\QueryParser;
 
 class LinkBuilder
 {
-
     protected QueryParser $query;
     protected array $parameters = [];
 
@@ -32,7 +31,7 @@ class LinkBuilder
         ];
 
         // add the filters to the URL
-        foreach ($parsedQuery->getFilters() as $name => $filter) {
+        foreach ($parsedQuery->getFilters() as $filter) {
             $values = $filter->getValues();
             $this->parameters[$filter->getQueryParam()] = $values;
         }
@@ -58,7 +57,7 @@ class LinkBuilder
     {
         global $ID;
         // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
-        return wl($ID, http_build_query($this->getParameters(), '', ','),false, $sep);
+        return wl($ID, http_build_query($this->getParameters(), '', ','), false, $sep);
     }
 
     /**

@@ -125,5 +125,4 @@ class QueryParser
 
         return $filters;
     }
-
 }

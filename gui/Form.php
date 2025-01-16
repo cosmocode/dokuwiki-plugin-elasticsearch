@@ -2,7 +2,6 @@
 
 namespace dokuwiki\plugin\elasticsearch\gui;
 
-
 use dokuwiki\Form\Form as DokuForm;
 use dokuwiki\plugin\elasticsearch\Filter;
 
@@ -11,9 +10,9 @@ class Form extends AbstractGui
     /** @var DokuForm */
     protected $searchForm;
 
-    const KEEP_PREFIX = 1;
-    const MOD_REMOVE = 'remove';
-    const MOD_ADD = 'add';
+    protected const KEEP_PREFIX = 1;
+    protected const MOD_REMOVE = 'remove';
+    protected const MOD_ADD = 'add';
 
     public function render(): string
     {
@@ -113,7 +112,7 @@ class Form extends AbstractGui
 
         $html .= '<li class="add"><div class="li">';
         $html .= '<details>';
-        $html .= '<summary title="'.$this->getLang('add_filter').'">' . hsc($filter->getLabel()) . '</summary>';
+        $html .= '<summary title="' . $this->getLang('add_filter') . '">' . hsc($filter->getLabel()) . '</summary>';
         $html .= '<ul>';
         foreach ($additions as $value => $info) {
             $html .= '<li>';
@@ -139,7 +138,7 @@ class Form extends AbstractGui
      */
     protected function filterModLink(string $mod, Filter $opFilter, string $value, string $label, int $count = 0)
     {
-        if($mod === self::MOD_REMOVE) {
+        if ($mod === self::MOD_REMOVE) {
             $url = $this->linkBuilder()->removeFilterValue($opFilter, $value)->getUrl('&');
         } else {
             $url = $this->linkBuilder()->addFilterValue($opFilter, $value)->getUrl('&');
@@ -162,5 +161,4 @@ class Form extends AbstractGui
 
         return '<a ' . buildAttributes($linkattr) . '>' . $label . '</a>';
     }
-
 }

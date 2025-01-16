@@ -2,14 +2,11 @@
 
 namespace dokuwiki\plugin\elasticsearch\gui;
 
-
 /**
  * The main GUI class for the ElasticSearch plugin
  */
 class Gui extends AbstractGui
 {
-
-
     public function render(): string
     {
         return implode("\n", [
@@ -42,5 +39,4 @@ class Gui extends AbstractGui
         );
         return $intro;
     }
-
 }
