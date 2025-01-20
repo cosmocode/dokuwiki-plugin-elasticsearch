@@ -12,6 +12,8 @@ namespace dokuwiki\plugin\elasticsearch;
  */
 class Query
 {
+    public const MAX_ANALYZED_OFFSET = 1000000; // this is the default value in elasticsearch
+
     /** @var array The query representation */
     public $query = [];
 
@@ -39,6 +41,7 @@ class Query
         $this->query['highlight'] = [
             'pre_tags' => ['ELASTICSEARCH_MARKER_IN'],
             'post_tags' => ['ELASTICSEARCH_MARKER_OUT'],
+            'max_analyzed_offset' => self::MAX_ANALYZED_OFFSET,
             'fields' => [
                 'title' => new \stdClass(),
                 $field => new \stdClass(),

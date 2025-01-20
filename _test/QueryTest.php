@@ -51,6 +51,7 @@ class QueryTest extends DokuWikiTest
                 'post_tags' => [
                     0 => 'ELASTICSEARCH_MARKER_OUT',
                 ],
+                'max_analyzed_offset' => 1000000,
                 'fields' => [
                     'content' => (object)[],
                     'title' => (object)[],

@@ -7,9 +7,10 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-use dokuwiki\plugin\elasticsearch\Client;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\Plugin;
+use dokuwiki\plugin\elasticsearch\Client;
+use dokuwiki\plugin\elasticsearch\Query;
 use splitbrain\phpcli\Exception;
 
 /**
@@ -91,8 +92,16 @@ class helper_plugin_elasticsearch_client extends Plugin
             }
         }
 
-        $client->call('', null, 'PUT'); // create index or throw exception
-        $client->call('_mapping', ['properties' => $this->createMappings()]);
+        $client->call('',
+            [
+                'mappings' => [
+                    'properties' => $this->createMappings()
+                ],
+                'settings' => [
+                    'index.highlight.max_analyzed_offset' => Query::MAX_ANALYZED_OFFSET,
+                ]
+            ]
+            , 'PUT'); // create index or throw exception
     }
 
     /**
