@@ -40,24 +40,41 @@ class Query
     public function setSuggest(string $query, string $field)
     {
         $this->querySet(
-            'suggest',
+            'suggest/phrase',
             [
-                'phrase' =>
-                    [
-                        'text' => $query,
-                        'phrase' => [
+                'text' => $query,
+                'phrase' => [
+                    'field' => $field,
+                    'size' => 1,
+                    'gram_size' => 3,
+                    'direct_generator' => [
+                        [
                             'field' => $field,
-                            'size' => 1,
-                            'gram_size' => 3,
-                            'direct_generator' => [
-                                [
-                                    'field' => $field,
-                                    'suggest_mode' => "popular",
-                                    'min_word_length' => 3,
-                                ]
-                            ]
+                            'suggest_mode' => "popular",
+                            'min_word_length' => 3,
                         ]
-                    ],
+                    ]
+                ]
+            ]
+        );
+    }
+
+    /**
+     * Let Elastic autocomplete the given query
+     *
+     * @param string $query
+     * @return void
+     */
+    public function setAutocomplete(string $query)
+    {
+        $this->querySet(
+            'suggest/autocomplete',
+            [
+                'prefix' => $query,
+                'completion' => [
+                    'field' => 'suggest',
+                    'size' => 7,
+                ]
             ]
         );
     }
@@ -131,18 +148,21 @@ class Query
      * Add terms and aggregation for a filter
      *
      * @param Filter $filter
+     * @param bool $aggregate Should aggregations for this filter be added?
      * @return void
      */
-    public function addFilter(Filter $filter)
+    public function addFilter(Filter $filter, $aggregate = true)
     {
         // add aggregation
-        $this->querySet(
-            'aggs/' . $filter->getName() . '/terms',
-            [
-                'field' => $filter->getFieldPath() . '.keyword',
-                'size' => $filter->getLimit(),
-            ]
-        );
+        if($aggregate) {
+            $this->querySet(
+                'aggs/' . $filter->getName() . '/terms',
+                [
+                    'field' => $filter->getFieldPath() . '.keyword',
+                    'size' => $filter->getLimit(),
+                ]
+            );
+        }
 
         // add filter terms
         $terms = $filter->getValues();

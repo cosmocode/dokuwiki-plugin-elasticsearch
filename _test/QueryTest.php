@@ -93,6 +93,26 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
+    public function testSetAutocomplete()
+    {
+        $expected = [
+            'suggest' => [
+                'autocomplete' => [
+                    'prefix' => 'test query',
+                    'completion' => [
+                        'field' => 'suggest',
+                        'size' => 7,
+                    ],
+                ],
+            ],
+        ];
+
+        $query = new Query();
+        $query->setAutocomplete('test query');
+
+        $this->assertEquals($expected, $query->query);
+    }
+
     public function testSetPagination()
     {
         $expected = [

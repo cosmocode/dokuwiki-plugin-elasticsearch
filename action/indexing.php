@@ -244,6 +244,23 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
             unset($data['namespace']);
         }
 
+        // weighted indexing for auto-completion
+        // page data is multiplied by 2 to give it more weight over media
+        $data['suggest'] = [
+            [
+                'input' => $data['title'],
+                'weight' => 3 * 2
+            ],
+            [
+                'input' => $data['uri'],
+                'weight' => 2 * 2
+            ],
+            [
+                'input' => $data['content'],
+                'weight' => 1 * 2
+            ],
+        ];
+
         /** @var helper_plugin_elasticsearch_acl $hlpAcl */
         $hlpAcl = plugin_load('helper', 'elasticsearch_acl');
 
@@ -282,6 +299,22 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
             if (trim($data['namespace']) == '') {
                 unset($data['namespace']);
             }
+
+            // weighted indexing for auto-completion
+            $data['suggest'] = [
+                [
+                    'input' => $data['title'],
+                    'weight' => 3
+                ],
+                [
+                    'input' => $data['uri'],
+                    'weight' => 2
+                ],
+                [
+                    'input' => $data['content'],
+                    'weight' => 1
+                ],
+            ];
 
             /** @var helper_plugin_elasticsearch_acl $hlpAcl */
             $hlpAcl = plugin_load('helper', 'elasticsearch_acl');

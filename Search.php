@@ -119,13 +119,44 @@ class Search
         $queryBuilder->setSuggest($this->query->getQuery(), 'content');
 
         if (!$INFO['isadmin']) {
-            $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
+            $queryBuilder->setACLs($INPUT->server->str('REMOTE_USER'), $INFO['userinfo']['grps'] ?? []);
         }
         $queryBuilder->addDateFilter($INPUT->str('min'));
 
         // add filters
         foreach ($this->query->getFilters() as $filter) {
             $queryBuilder->addFilter($filter);
+        }
+
+        return $this->client->client()->call('_search', $queryBuilder->query);
+    }
+
+    /**
+     * Do an autocomplete search
+     *
+     * This is similar to the search but only returns suggestions
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function autocomplete(): array
+    {
+        global $INFO;
+        global $INPUT;
+
+        // initialize the Query
+        $queryBuilder = new Query();
+        $queryBuilder->setAutocomplete($this->query->getQuery());
+        $queryBuilder->setPagination(0); // we don't really want any results, just the suggestions
+
+        if (!$INFO['isadmin']) {
+            $queryBuilder->setACLs($INPUT->server->str('REMOTE_USER'), $INFO['userinfo']['grps'] ?? []);
+        }
+        $queryBuilder->addDateFilter($INPUT->str('min'));
+
+        // add filters
+        foreach ($this->query->getFilters() as $filter) {
+            $queryBuilder->addFilter($filter, false);
         }
 
         return $this->client->client()->call('_search', $queryBuilder->query);

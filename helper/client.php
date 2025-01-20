@@ -173,11 +173,17 @@ class helper_plugin_elasticsearch_client extends Plugin
             ],
         ];
 
+        $suggestProps = [
+            'suggest' => [
+                'type' => 'completion',
+            ],
+        ];
+
         // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
         $pluginProps = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginProps);
 
-        $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps);
+        $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps, $suggestProps);
         foreach ($pluginProps as $fields) {
             $props = array_merge($props, $fields);
         }
