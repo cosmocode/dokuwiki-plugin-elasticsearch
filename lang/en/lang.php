@@ -19,3 +19,5 @@ $lang['filter_remove'] = 'Remove filter "%s" from search (%s)';
 $lang['filter_add'] = 'Add filter "%s" to search (%s)';
 $lang['filetype'] = 'File Type';
 $lang['wikipages'] = 'Wiki Pages';
+
+$lang['suggest'] = 'Did you mean: %s?';

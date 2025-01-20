@@ -44,6 +44,9 @@ class Form extends AbstractGui
         $this->searchForm->addButton('', $lang['btn_search'])->attr('type', 'submit');
         $this->searchForm->addTagClose('section');
 
+        $this->searchForm->addHTML($this->suggestionUi());
+
+
         $this->searchForm->addTagOpen('ul')->addClass('filters');
         foreach ($this->query->getFilters() as $filter) {
             $this->searchForm->addHTML($this->filterUi($filter));
@@ -160,5 +163,25 @@ class Form extends AbstractGui
         }
 
         return '<a ' . buildAttributes($linkattr) . '>' . $label . '</a>';
+    }
+
+    /**
+     * Output the suggestion if any
+     *
+     * @return string
+     */
+    protected function suggestionUi()
+    {
+        if (!$this->results['suggest']['phrase'][0]['options']) return '';
+
+        $suggestion = $this->results['suggest']['phrase'][0]['options'][0]['text'];
+
+        $url = $this->linkBuilder()->setQueryString($suggestion)->getUrl();
+        $link = '<a href="' . $url . '">' . $suggestion . '</a>';
+
+        $html = '<p class="suggestion">';
+        $html .= sprintf($this->getLang('suggest'), $link);
+        $html .= '</p>';
+        return $html;
     }
 }

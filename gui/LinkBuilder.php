@@ -61,6 +61,18 @@ class LinkBuilder
     }
 
     /**
+     * Set the query string
+     *
+     * @param string $q
+     * @return LinkBuilder
+     */
+    public function setQueryString($q): self
+    {
+        $this->parameters['q'] = $q;
+        return $this;
+    }
+
+    /**
      * Set the page number
      *
      * @param int $page

@@ -65,6 +65,34 @@ class QueryTest extends DokuWikiTest
         $this->assertEquals($expected, $query->query);
     }
 
+    public function testSetSuggest()
+    {
+        $expected = [
+            'suggest' => [
+                'phrase' => [
+                    'text' => 'test query',
+                    'phrase' => [
+                        'field' => 'content',
+                        'size' => 1,
+                        'gram_size' => 3,
+                        'direct_generator' => [
+                            [
+                                'field' => 'content',
+                                'suggest_mode' => 'popular',
+                                'min_word_length' => 3,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $query = new Query();
+        $query->setSuggest('test query', 'content');
+
+        $this->assertEquals($expected, $query->query);
+    }
+
     public function testSetPagination()
     {
         $expected = [

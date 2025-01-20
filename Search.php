@@ -116,6 +116,8 @@ class Search
         $queryBuilder->setSimpleQuery($this->query->getQuery(), $this->initSearchFields());
         $queryBuilder->setHighlights($this->getConf('snippets'));
         $queryBuilder->setPagination($this->getConf('perpage'), $INPUT->int('p', 1, true));
+        $queryBuilder->setSuggest($this->query->getQuery(), 'content');
+
         if (!$INFO['isadmin']) {
             $queryBuilder->setACLs($_SERVER['REMOTE_USER'] ?? '', $INFO['userinfo']['grps'] ?? []);
         }

@@ -19,13 +19,45 @@ class Query
 
     // region initialization
 
-    public function setSimpleQuery($simplequery, $fields)
+    public function setSimpleQuery(string $simplequery, array $fields)
     {
         $this->querySet(
             'query/bool/must//simple_query_string',
             [
                 'query' => $simplequery,
                 'fields' => $fields,
+            ]
+        );
+    }
+
+    /**
+     * Let Elastic return a correction result for the query
+     *
+     * @param string $query The query string
+     * @param string $field The field to search in
+     * @return void
+     */
+    public function setSuggest(string $query, string $field)
+    {
+        $this->querySet(
+            'suggest',
+            [
+                'phrase' =>
+                    [
+                        'text' => $query,
+                        'phrase' => [
+                            'field' => $field,
+                            'size' => 1,
+                            'gram_size' => 3,
+                            'direct_generator' => [
+                                [
+                                    'field' => $field,
+                                    'suggest_mode' => "popular",
+                                    'min_word_length' => 3,
+                                ]
+                            ]
+                        ]
+                    ],
             ]
         );
     }
