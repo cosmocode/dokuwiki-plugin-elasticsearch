@@ -34,7 +34,7 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         'content' => 'content',
         'body' => 'content',
         'dc:description' => 'content',
-        'X-TIKA:content' => 'content',
+        'X-TIKA:content' => 'content.html', // will be converted to plain text and saved to content
         'Creation-Date' => 'created',
         'dcterms:created' => 'created',
         'meta:creation-date' => 'created',
@@ -166,13 +166,9 @@ class helper_plugin_elasticsearch_docparser extends Plugin
     {
         // decode json responses
         if (
-            (
-                $result[0] !== '[' && $result[0] !== '{'
-            )
+            ($result[0] !== '[' && $result[0] !== '{')
             ||
-            (
-                ($decoded = json_decode($result, true)) === null
-            )
+            (($decoded = json_decode($result, true)) === null)
         ) {
             return [
                 'content' => $result,
@@ -185,7 +181,14 @@ class helper_plugin_elasticsearch_docparser extends Plugin
 
         $data = [];
         foreach (self::FIELDMAP as $from => $to) {
-            if (!blank($decoded[$from])) $data[$to] = trim($decoded[$from]);
+            if (blank($decoded[$from])) continue;
+            $content = $decoded[$from];
+            // if field is HTML, strip tags
+            if (str_ends_with($to, '.html')) {
+                $content = strip_tags($content);
+                $to = substr($to, 0, -5);
+            }
+            $data[$to] = trim($content);
         }
         return $data;
     }
