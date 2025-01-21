@@ -264,7 +264,7 @@ class QueryTest extends DokuWikiTest
                     'must' => [
                         0 => [
                             'bool' => [
-                                'should' => [
+                                'must' => [
                                     0 => [
                                         'term' => [
                                             'tagging' => [

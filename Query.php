@@ -169,7 +169,7 @@ class Query
         if ($terms === []) return;
         $termlist = $this->termList($filter->getFieldName(), $terms);
         if ($filter->isAndQuery()) {
-            $this->querySet('query/bool/must//bool/should', $termlist);
+            $this->querySet('query/bool/must//bool/must', $termlist);
         } else {
             $this->querySet('post_filter/bool/must//bool/should', $termlist);
         }
