@@ -147,13 +147,17 @@ class Form extends AbstractGui
     {
         if (!$this->results['suggest']['phrase'][0]['options']) return '';
 
-        $suggestion = $this->results['suggest']['phrase'][0]['options'][0]['text'];
+        $links = [];
 
-        $url = $this->linkBuilder()->setQueryString($suggestion)->getUrl();
-        $link = '<a href="' . $url . '">' . $suggestion . '</a>';
+        foreach ($this->results['suggest']['phrase'][0]['options'] as $suggest) {
+            $suggestion = $suggest['text'];
+            $url = $this->linkBuilder()->setQueryString($suggestion)->getUrl();
+            $links[] = '<a href="' . $url . '">' . $suggestion . '</a>';
+        }
+
 
         $html = '<p class="suggestion">';
-        $html .= sprintf($this->getLang('suggest'), $link);
+        $html .= sprintf($this->getLang('suggest'), join(',', $links));
         $html .= '</p>';
         return $html;
     }
