@@ -10,10 +10,6 @@ class Form extends AbstractGui
     /** @var DokuForm */
     protected $searchForm;
 
-    public const KEEP_PREFIX = 1;
-    protected const MOD_REMOVE = 'remove';
-    protected const MOD_ADD = 'add';
-
     public function render(): string
     {
         global $lang;
@@ -69,7 +65,7 @@ class Form extends AbstractGui
         // currently set filters
         $removals = array_map(
             fn($label) => ['label' => $label, 'count' => 0],
-            $filter->getValueLabels(self::KEEP_PREFIX)
+            $filter->getValueLabels(LinkBuilder::KEEP_PREFIX)
         );
         foreach ($this->results['aggregations'][$filter->getName()]['buckets'] as $bucket) {
             if (isset($removals[$bucket['key']])) {
@@ -84,7 +80,7 @@ class Form extends AbstractGui
         );
         foreach ($this->results['aggregations'][$filter->getName()]['buckets'] as $bucket) {
             $additions[$bucket['key']] = [
-                'label' => $filter->getOptionLabel($bucket['key'], self::KEEP_PREFIX),
+                'label' => $filter->getOptionLabel($bucket['key'], LinkBuilder::KEEP_PREFIX),
                 'count' => $bucket['doc_count'],
             ];
         }
@@ -107,7 +103,13 @@ class Form extends AbstractGui
 
         foreach ($removals as $value => $info) {
             $html .= '<li>';
-            $html .= $this->filterModLink(self::MOD_REMOVE, $filter, $value, $info['label'], $info['count']);
+            $html .= $this->linkBuilder()->filterModLink(
+                LinkBuilder::MOD_REMOVE,
+                $filter,
+                $value,
+                $info['label'],
+                $info['count']
+            );
             $html .= '</li>';
         }
 
@@ -119,7 +121,13 @@ class Form extends AbstractGui
         $html .= '<ul>';
         foreach ($additions as $value => $info) {
             $html .= '<li>';
-            $html .= $this->filterModLink(self::MOD_ADD, $filter, $value, $info['label'], $info['count']);
+            $html .= $this->linkBuilder()->filterModLink(
+                LinkBuilder::MOD_ADD,
+                $filter,
+                $value,
+                $info['label'],
+                $info['count']
+            );
             $html .= '</li>';
         }
         $html .= '</ul>';
@@ -129,41 +137,6 @@ class Form extends AbstractGui
         return $html;
     }
 
-    /**
-     * Get an a link to the current search but with the given filter value removed
-     *
-     * @param string $mod The type of link, use MOD_* constants
-     * @param Filter $opFilter The filter to remove
-     * @param string $value The value to remove
-     * @param string $label The label to show for the link
-     * @param int $count The count of results with this value
-     * @return string
-     */
-    protected function filterModLink(string $mod, Filter $opFilter, string $value, string $label, int $count = 0)
-    {
-        if ($mod === self::MOD_REMOVE) {
-            $url = $this->linkBuilder()->removeFilterValue($opFilter, $value)->getUrl('&');
-        } else {
-            $url = $this->linkBuilder()->addFilterValue($opFilter, $value)->getUrl('&');
-        }
-
-        $title = sprintf($this->getLang('filter_' . $mod), $value, $opFilter->getLabel());
-        $linkattr = [
-            'href' => $url,
-            'title' => $title,
-            'class' => 'filter-' . $mod,
-        ];
-
-        $label = '<bdi>' . hsc($label) . '</bdi>';
-        if ($count) {
-            $label .= ' <span class="count">(' . $count . ')</span>';
-        }
-        if ($mod === self::MOD_REMOVE) {
-            $label .= ' ✗';
-        }
-
-        return '<a ' . buildAttributes($linkattr) . '>' . $label . '</a>';
-    }
 
     /**
      * Output the suggestion if any

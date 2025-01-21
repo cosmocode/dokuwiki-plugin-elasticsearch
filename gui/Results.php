@@ -161,17 +161,8 @@ class Results extends AbstractGui
             if ($filter->getName() === 'namespace') continue;
             $field = $filter->getFieldPath();
             if (isset($doc[$field])) foreach ((array)$doc[$field] as $value) {
-                $url = $this->linkBuilder()
-                    ->addFilterValue($filter, $value)
-                    ->getUrl('&');
-                $link = [
-                    'href' => $url,
-                    'class' => 'filter-add',
-                    'title' => sprintf($this->getLang('filter_add'), $value, $filter->getLabel()),
-                ];
-                $html .= ' <a ' . buildAttributes($link) . '>';
-                $html .= hsc($filter->getOptionLabel($value, Form::KEEP_PREFIX));
-                $html .= '</a>';
+                $html .= ' ';
+                $html .= $this->linkBuilder()->filterModLink(LinkBuilder::MOD_ADD, $filter, $value);
             }
         }
         $html .= '</dd>';

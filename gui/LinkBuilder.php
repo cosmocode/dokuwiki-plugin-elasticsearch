@@ -10,6 +10,9 @@ class LinkBuilder
     protected QueryParser $query;
     protected array $parameters = [];
 
+    public const KEEP_PREFIX = 1;
+    public const MOD_REMOVE = 'remove';
+    public const MOD_ADD = 'add';
 
     /**
      * Initialize the link with the current state of the search
@@ -59,6 +62,46 @@ class LinkBuilder
         // FIXME: once dokuwiki/dokuwiki#4389 is in stable, we can pass $p directly to wl()
         return wl($ID, http_build_query($this->getParameters(), '', ','), false, $sep);
     }
+
+    /**
+     * Get an a link to the current search but with the given filter value removed or added
+     *
+     * @param string $mod The type of link, use MOD_* constants
+     * @param Filter $opFilter The filter to remove
+     * @param string $value The value to remove
+     * @param string $label The label to show for the link
+     * @param int $count The count of results with this value
+     * @return string
+     */
+    public function filterModLink(string $mod, Filter $opFilter, string $value, string $label = '', int $count = 0)
+    {
+        $helper = plugin_load('helper', 'elasticsearch_client');
+        if($label === '') $label = $opFilter->getOptionLabel($value, self::KEEP_PREFIX);
+
+        if ($mod === LinkBuilder::MOD_REMOVE) {
+            $url = $this->removeFilterValue($opFilter, $value)->getUrl('&');
+        } else {
+            $url = $this->addFilterValue($opFilter, $value)->getUrl('&');
+        }
+
+        $title = sprintf($helper->getLang('filter_' . $mod), $value, $opFilter->getLabel());
+        $linkattr = [
+            'href' => $url,
+            'title' => $title,
+            'class' => 'filter-' . $mod,
+        ];
+
+        $label = '<bdi>' . hsc($label) . '</bdi>';
+        if ($count) {
+            $label .= ' <span class="count">(' . $count . ')</span>';
+        }
+        if ($mod === LinkBuilder::MOD_REMOVE) {
+            $label .= ' ✗';
+        }
+
+        return '<a ' . buildAttributes($linkattr) . '>' . $label . '</a>';
+    }
+
 
     /**
      * Set the query string
