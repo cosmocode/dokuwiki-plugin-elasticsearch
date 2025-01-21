@@ -75,6 +75,7 @@
                 details {
                     margin: 0;
                     summary {
+                        display: list-item; // default style, but some template change it
                         list-style-type: '+ ';
                         margin: 0;
                         cursor: pointer;
@@ -104,15 +105,14 @@
     // filter pills
     a.filter-add,
     a.filter-remove {
-        border: @ini_background_neu 1px solid;
+        border: @ini_border 1px solid;
         color: @ini_text;
         display: inline-block;
         padding: 0.1em 0.25em;
         border-radius: 0.5em;
 
         &:hover {
-            background-color: @ini_background_neu;
-            color: @ini_text;
+            border-color: @ini_link;
             text-decoration: none;
         }
 
