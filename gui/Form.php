@@ -10,7 +10,7 @@ class Form extends AbstractGui
     /** @var DokuForm */
     protected $searchForm;
 
-    protected const KEEP_PREFIX = 1;
+    public const KEEP_PREFIX = 1;
     protected const MOD_REMOVE = 'remove';
     protected const MOD_ADD = 'add';
 

@@ -10,10 +10,12 @@ class Gui extends AbstractGui
     public function render(): string
     {
         return implode("\n", [
+            '<div class="plugin_elasticsearch">',
             $this->renderIntro(),
             (new Form($this->results, $this->query))->render(),
             (new Results($this->results, $this->query))->render(),
             (new Pagination($this->results, $this->query))->render(),
+            '</div>',
         ]);
     }
 

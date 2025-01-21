@@ -157,6 +157,23 @@ class Results extends AbstractGui
         if (!empty($doc['user'])) {
             $html .= ' <span class="author">' . $this->getLang('author') . ' ' . userlink($doc['user']) . '</span>';
         }
+        foreach ($this->query->getFilters() as $filter) {
+            if ($filter->getName() === 'namespace') continue;
+            $field = $filter->getFieldPath();
+            if (isset($doc[$field])) foreach ((array)$doc[$field] as $value) {
+                $url = $this->linkBuilder()
+                    ->addFilterValue($filter, $value)
+                    ->getUrl('&');
+                $link = [
+                    'href' => $url,
+                    'class' => 'filter-add',
+                    'title' => sprintf($this->getLang('filter_add'), $value, $filter->getLabel()),
+                ];
+                $html .= ' <a ' . buildAttributes($link) . '>';
+                $html .= hsc($filter->getOptionLabel($value, Form::KEEP_PREFIX));
+                $html .= '</a>';
+            }
+        }
         $html .= '</dd>';
 
         // snippets
