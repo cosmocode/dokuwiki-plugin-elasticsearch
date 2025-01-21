@@ -76,7 +76,7 @@ class LinkBuilder
     public function filterModLink(string $mod, Filter $opFilter, string $value, string $label = '', int $count = 0)
     {
         $helper = plugin_load('helper', 'elasticsearch_client');
-        if($label === '') $label = $opFilter->getOptionLabel($value, self::KEEP_PREFIX);
+        if ($label === '') $label = $opFilter->getOptionLabel($value, self::KEEP_PREFIX);
 
         if ($mod === LinkBuilder::MOD_REMOVE) {
             $url = $this->removeFilterValue($opFilter, $value)->getUrl('&');

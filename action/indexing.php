@@ -257,7 +257,7 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
             ],
             [
                 'input' => $data['content'],
-                'weight' => 1 * 2
+                'weight' => 2
             ],
         ];
 

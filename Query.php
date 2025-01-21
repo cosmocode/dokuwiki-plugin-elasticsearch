@@ -154,7 +154,7 @@ class Query
     public function addFilter(Filter $filter, $aggregate = true)
     {
         // add aggregation
-        if($aggregate) {
+        if ($aggregate) {
             $this->querySet(
                 'aggs/' . $filter->getName() . '/terms',
                 [

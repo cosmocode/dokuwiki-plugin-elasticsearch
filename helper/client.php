@@ -92,7 +92,8 @@ class helper_plugin_elasticsearch_client extends Plugin
             }
         }
 
-        $client->call('',
+        $client->call(
+            '',
             [
                 'mappings' => [
                     'properties' => $this->createMappings()
@@ -100,8 +101,9 @@ class helper_plugin_elasticsearch_client extends Plugin
                 'settings' => [
                     'index.highlight.max_analyzed_offset' => Query::MAX_ANALYZED_OFFSET,
                 ]
-            ]
-            , 'PUT'); // create index or throw exception
+            ],
+            'PUT'
+        ); // create index or throw exception
     }
 
     /**
