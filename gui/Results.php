@@ -77,7 +77,7 @@ class Results extends AbstractGui
 
         $link = [
             'href' => $href,
-            'title' => $title,
+            'title' => $doc['uri'],
         ];
         if ($isPage) {
             $link['class'] = 'wikilink1';
