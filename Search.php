@@ -183,7 +183,7 @@ class Search
         return [
             'label' => trim($this->getLang('ns'), ':'),
             'queryParam' => 'ns',
-            'fieldPath' => 'namespace',
+            'fieldName' => 'namespace',
             'prefix' => '@',
             'isAndQuery' => false,
         ];
@@ -237,7 +237,7 @@ class Search
             'isAndQuery' => false,
             'queryParam' => 'ext',
             'prefix' => 'ext:',
-            'fieldPath' => 'ext',
+            'fieldName' => 'ext',
             'options' => array_merge(
                 [
                     'wiki' => $this->getLang('wikipages'),

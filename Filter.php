@@ -10,6 +10,7 @@ class Filter
     private string $prefix;
     private string $queryParam;
     private string $label;
+    private string $fieldName;
     private string $fieldPath;
     private int $limit;
     private array $options;
@@ -24,7 +25,8 @@ class Filter
      *     'prefix' => string,    // The prefix to look for in the query string, defaults to the filter name
      *     'queryParam' => string,// The query parameter to use for this filter, defaults to the filter name
      *     'label' => string,     // The label to display for this filter (in current language)
-     *     'fieldPath' => string, // The field name to use in the ElasticSearch query, defaults to the filter name
+     *     'fieldName' => string, // The field name to use in the ElasticSearch query, defaults to the filter name
+     *     'fieldPath' => string, // The field name to use when aggregating, defaults to the filterName.keyword
      *     'limit' => int,        // The maximum number of values to aggregate, defaults to 25
      *     'options' => string[], // value => label pairs for the filter options, empty for aggregation only
      *     'isAndQuery' => bool,  // If true, the filter values are combined with AND instead of OR, defaults to true
@@ -37,7 +39,8 @@ class Filter
         $this->prefix = $config['prefix'] ?? $name . ':';
         $this->queryParam = $config['queryParam'] ?? $name;
         $this->label = $config['label'] ?? $name;
-        $this->fieldPath = $config['fieldPath'] ?? $name;
+        $this->fieldName = $config['fieldName'] ?? $name;
+        $this->fieldPath = $config['fieldPath'] ?? $name . '.keyword';
         $this->limit = (int)($config['limit'] ?? 25);
         $this->options = $config['options'] ?? [];
         $this->isAndQuery = $config['isAndQuery'] ?? true;
@@ -84,6 +87,11 @@ class Filter
     public function getLabel(): string
     {
         return $this->label;
+    }
+
+    public function getFieldName(): string
+    {
+        return $this->fieldName;
     }
 
     public function getFieldPath(): string

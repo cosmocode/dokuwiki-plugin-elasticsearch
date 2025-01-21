@@ -159,7 +159,7 @@ class Results extends AbstractGui
         }
         foreach ($this->query->getFilters() as $filter) {
             if ($filter->getName() === 'namespace') continue;
-            $field = $filter->getFieldPath();
+            $field = $filter->getFieldName();
             if (isset($doc[$field])) foreach ((array)$doc[$field] as $value) {
                 $html .= ' ';
                 $html .= $this->linkBuilder()->filterModLink(LinkBuilder::MOD_ADD, $filter, $value);

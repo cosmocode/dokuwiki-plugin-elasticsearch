@@ -158,7 +158,7 @@ class Query
             $this->querySet(
                 'aggs/' . $filter->getName() . '/terms',
                 [
-                    'field' => $filter->getFieldPath() . '.keyword',
+                    'field' => $filter->getFieldPath(),
                     'size' => $filter->getLimit(),
                 ]
             );
@@ -167,7 +167,7 @@ class Query
         // add filter terms
         $terms = $filter->getValues();
         if ($terms === []) return;
-        $termlist = $this->termList($filter->getFieldPath(), $terms);
+        $termlist = $this->termList($filter->getFieldName(), $terms);
         if ($filter->isAndQuery()) {
             $this->querySet('query/bool/must//bool/should', $termlist);
         } else {

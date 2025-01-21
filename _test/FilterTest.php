@@ -23,7 +23,8 @@ class FilterTest extends DokuWikiTest
         $this->assertEquals('filter1:', $filter->getPrefix());
         $this->assertEquals('filter1', $filter->getQueryParam());
         $this->assertEquals('filter1', $filter->getLabel());
-        $this->assertEquals('filter1', $filter->getFieldPath());
+        $this->assertEquals('filter1', $filter->getFieldName());
+        $this->assertEquals('filter1.keyword', $filter->getFieldPath());
         $this->assertEquals(25, $filter->getLimit());
         $this->assertEquals([], $filter->getValues());
         $this->assertEquals([], $filter->getOptions());

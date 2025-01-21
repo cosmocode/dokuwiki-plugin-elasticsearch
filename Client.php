@@ -87,6 +87,7 @@ class Client
             if ($body && $body[0] === '{') {
                 try {
                     $body = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                    Logger::error('ElasticSearch request failed: ', $body);
                     $body = $body['error'];
                     if (is_array($body)) $body = $body['reason'];
                 } catch (\Exception $ignored) {
