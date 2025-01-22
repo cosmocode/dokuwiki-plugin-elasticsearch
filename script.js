@@ -14,7 +14,7 @@ jQuery(function () {
             call: 'elasticsearch_autocomplete',
             min: 0 // FIXME get from form
         };
-        jQuery.post(DOKU_BASE + '/lib/exe/ajax.php', data, response, 'json');
+        jQuery.post(DOKU_BASE + 'lib/exe/ajax.php', data, response, 'json');
     };
 
     // Attach autocomplete to our search form
