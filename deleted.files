@@ -6,12 +6,12 @@ build.properties
 build.xml
 conf/parsers.php.dist
 create-mapping.php
+helper/form.php
 helper/searching.php
 index-cli.php
 list-acls.php
 list-pages.php
 mapping.json
-script.js
 src/elasticsearch/README
 src/elasticsearch/action/indexing.php
 src/elasticsearch/conf/default.php
