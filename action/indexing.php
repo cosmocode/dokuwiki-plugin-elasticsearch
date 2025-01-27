@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\ErrorHandler;
 use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
@@ -52,7 +53,12 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
             ]
         );
         if ($this->needsIndexing($ID)) {
-            $this->indexPage($ID);
+            try {
+                $this->indexPage($ID);
+            } catch (Exception $e) {
+                // an error here, might be caused by Elastic being down. We log it and continue
+                ErrorHandler::logException($e);
+            }
         }
     }
 
