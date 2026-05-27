@@ -108,7 +108,12 @@ class cli_plugin_elasticsearch extends CLIPlugin
             $ID = $val['id'];
             $n++;
             $this->info(sprintf("Indexing page %s (%d of %d)\n", $ID, $n, $pages));
-            $act->indexPage($ID);
+            try {
+                $act->indexPage($ID);
+            } catch (Throwable $e) {
+                $this->error("$ID indexing error: " . $e->getMessage());
+                $this->debug($e->getTraceAsString());
+            }
         }
     }
 
