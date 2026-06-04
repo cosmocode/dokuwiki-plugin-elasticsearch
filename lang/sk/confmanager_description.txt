@@ -1,0 +1,12 @@
+Elasticsearch dokáže indexovať mediálne súbory pomocou externých nástrojov/parserov, ktoré extrahujú textový obsah súborov.
+
+Parsery môžu byť nástroje príkazového riadku alebo webové služby. Musia vracať čistý text alebo JSON štruktúru.
+
+Definujte parsery pre každú príponu súborov, ktorá sa má spracovať. Pri CLI nástrojoch určte vstupný súbor pomocou ''%in%''. Webové služby musia akceptovať vstupný súbor ako POST dáta.
+
+Krátky príklad:
+
+<code>
+pdf    /usr/bin/pdftotext %in% -
+docx   http://givemetext.okfnlabs.org/tika/rmeta
+</code>
