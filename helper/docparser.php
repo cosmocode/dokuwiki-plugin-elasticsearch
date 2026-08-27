@@ -211,9 +211,12 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         $trans = plugin_load('helper', 'translation');
         if ($trans === null) return $conf['lang'];
 
+        // an empty translation stands for the wiki's default language
+        $whitelist = array_map([$trans, 'realLC'], $trans->translations);
+
         $ld = new Language();
 
-        $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
+        $langs = array_keys($ld->detect($body)->whitelist(...$whitelist)->close());
         return array_shift($langs);
     }
 }
