@@ -100,6 +100,7 @@ class helper_plugin_elasticsearch_client extends Plugin
                 ],
                 'settings' => [
                     'index.highlight.max_analyzed_offset' => Query::MAX_ANALYZED_OFFSET,
+                    'analysis' => $this->createAnalysis(),
                 ]
             ],
             'PUT'
@@ -173,6 +174,15 @@ class helper_plugin_elasticsearch_client extends Plugin
                 'type' => 'text',
                 'analyzer' => 'pattern', // because colons surrounded by letters are part of word in standard analyzer
             ],
+            'namespace' => [
+                'type' => 'text',
+                'analyzer' => 'namespace_path', // to also match the namespaces below the searched one
+                'fields' => [
+                    'keyword' => [
+                        'type' => 'keyword', // the unsplit path, used for aggregating
+                    ],
+                ],
+            ],
         ];
 
         $suggestProps = [
@@ -191,6 +201,32 @@ class helper_plugin_elasticsearch_client extends Plugin
         }
 
         return $props;
+    }
+
+    /**
+     * Define custom analyzers
+     *
+     * Namespaces are paths whose segments are separated by colons. The path_hierarchy
+     * tokenizer indexes every parent path of a namespace as a token of its own, so that
+     * a term query for a namespace also matches all the namespaces below it.
+     *
+     * @return array The analysis settings
+     */
+    protected function createAnalysis(): array
+    {
+        return [
+            'tokenizer' => [
+                'namespace_path' => [
+                    'type' => 'path_hierarchy',
+                    'delimiter' => ':',
+                ],
+            ],
+            'analyzer' => [
+                'namespace_path' => [
+                    'tokenizer' => 'namespace_path',
+                ],
+            ],
+        ];
     }
 
     /**
