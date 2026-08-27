@@ -238,6 +238,7 @@ class Search
             'queryParam' => 'ext',
             'prefix' => 'ext:',
             'fieldName' => 'ext',
+            'fieldPath' => 'ext',
             'options' => array_merge(
                 [
                     'wiki' => $this->getLang('wikipages'),
