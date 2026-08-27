@@ -143,14 +143,20 @@ class helper_plugin_elasticsearch_test extends DokuWikiTest
      */
     public function testACL($page, $expected)
     {
-        global $AUTH_ACL;
-        $AUTH_ACL = $this->acl;
+        global $config_cascade;
+
+        $aclFile = $config_cascade['acl']['default'];
+        $config_cascade['acl']['default'] .= '.test';
+        file_put_contents($config_cascade['acl']['default'], implode("\n", $this->acl));
 
         /** @var helper_plugin_elasticsearch_acl $helper */
         $helper = plugin_load('helper', 'elasticsearch_acl');
 
         $raw = $helper->getPageACL($page);
         $actual = $helper->splitRules($raw);
+
+        unlink($config_cascade['acl']['default']);
+        $config_cascade['acl']['default'] = $aclFile;
 
         $this->assertEquals($expected, $actual);
     }

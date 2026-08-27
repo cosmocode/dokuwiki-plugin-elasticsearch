@@ -23,17 +23,28 @@ class helper_plugin_elasticsearch_acl extends Plugin
      */
     public function getPageACL($id)
     {
+        global $AUTH_ACL;
+        global $config_cascade;
+
         $id    = cleanID($id);
         $rules = [];
 
         /** @var admin_plugin_acl $hlpACL */
         $hlpACL = plugin_load('admin', 'acl');
+
+        // the global rule set has the user and group wildcards resolved for the current visitor,
+        // the index has to be user independent and needs a fresh 1:1 copy instead
+        $visitorACL = $AUTH_ACL;
+        $aclFile = $config_cascade['acl']['default'];
+        $AUTH_ACL = is_readable($aclFile) ? file($aclFile) : [];
+
         if (method_exists($hlpACL, 'initAclConfig')) {
             $hlpACL->initAclConfig();
         } else {
             /** @deprecated Call for current stable release */
             $hlpACL->_init_acl_config();
         }
+        $AUTH_ACL = $visitorACL;
 
         // ACL lines as array
         $acl = $hlpACL->acl;
