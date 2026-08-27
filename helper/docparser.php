@@ -35,6 +35,7 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         'body' => 'content',
         'dc:description' => 'content',
         'X-TIKA:content' => 'content.html', // will be converted to plain text and saved to content
+        'tk:content' => 'content.html', // the same field in Tika 4 and later
         'Creation-Date' => 'created',
         'dcterms:created' => 'created',
         'meta:creation-date' => 'created',
