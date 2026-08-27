@@ -10,8 +10,8 @@
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\Plugin;
 use dokuwiki\plugin\elasticsearch\Client;
+use dokuwiki\plugin\elasticsearch\Exception;
 use dokuwiki\plugin\elasticsearch\Query;
-use splitbrain\phpcli\Exception;
 
 /**
  * Access to the Elastica client
@@ -59,7 +59,7 @@ class helper_plugin_elasticsearch_client extends Plugin
      * Connect to the ElasticSearch server
      *
      * @return Client
-     * @throws \dokuwiki\plugin\elasticsearch\Exception
+     * @throws Exception
      */
     public function client(): Client
     {
