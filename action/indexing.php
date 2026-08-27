@@ -101,14 +101,20 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
     /**
      * Check if the page $id has changed since the last indexing.
      *
+     * The indexed permissions of every page depend on the ACL configuration, so a change
+     * to it makes all previously indexed pages stale.
+     *
      * @param string $id
      * @return boolean
      */
     protected function needsIndexing($id)
     {
+        global $config_cascade;
+
         $indexStateFile = metaFN($id, '.elasticsearch_indexed');
         $refreshStateFile = metaFN($id, '.elasticsearch_refresh');
         $dataFile = wikiFN($id);
+        $aclFile = $config_cascade['acl']['default'];
 
         // no data file or page is hidden ('hidepages' configuration option) -> no indexing
         if (!file_exists($dataFile) || isHiddenPage($id)) {
@@ -123,12 +129,13 @@ class action_plugin_elasticsearch_indexing extends ActionPlugin
         if (PHP_SAPI == 'cli') {
             return true;
         }
-        // check if latest indexing attempt is done after page update
-        // and after other updates related to the page made by plugins
+        // check if latest indexing attempt is done after page update, after other updates
+        // related to the page made by plugins and after the last ACL change
         if (file_exists($indexStateFile)) {
             if (
                 (filemtime($indexStateFile) > filemtime($dataFile)) &&
-                (!file_exists($refreshStateFile) || filemtime($indexStateFile) > filemtime($refreshStateFile))
+                (!file_exists($refreshStateFile) || filemtime($indexStateFile) > filemtime($refreshStateFile)) &&
+                (!file_exists($aclFile) || filemtime($indexStateFile) > filemtime($aclFile))
             ) {
                 return false;
             }
