@@ -8,10 +8,8 @@
  */
 
 use dokuwiki\Extension\Plugin;
-use LanguageDetection\Language;
 use dokuwiki\HTTP\DokuHTTPClient;
-
-require_once __DIR__ . '/../vendor/autoload.php';
+use LanguageDetection\Language;
 
 /**
  * Convert a file to text and metainfos
@@ -36,7 +34,8 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         'content' => 'content',
         'body' => 'content',
         'dc:description' => 'content',
-        'X-TIKA:content' => 'content',
+        'X-TIKA:content' => 'content.html', // will be converted to plain text and saved to content
+        'tk:content' => 'content.html', // the same field in Tika 4 and later
         'Creation-Date' => 'created',
         'dcterms:created' => 'created',
         'meta:creation-date' => 'created',
@@ -56,6 +55,18 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         }
 
         $this->parsers = $parsers;
+    }
+
+    /**
+     * Get a list of all configured extensions
+     *
+     * @return array
+     */
+    public function getExtensions()
+    {
+        $extensions = array_keys($this->parsers);
+        sort($extensions);
+        return $extensions;
     }
 
     /**
@@ -93,13 +104,16 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         if ($result === false) {
             throw new RuntimeException('No response from parser');
         }
+        if ($result === '') {
+            throw new RuntimeException('Empty response from parser');
+        }
 
         // defaults
         $data = [
             'title' => basename($file),
             'content' => '',
             'mime' => $mime,
-            'ext' => $ext,
+            'ext' => $ext === 'jpeg' ? 'jpg' : $ext,
             'language' => '',
             'created' => date('Y-m-d\TH:i:s\Z', filemtime($file)),
         ];
@@ -153,13 +167,9 @@ class helper_plugin_elasticsearch_docparser extends Plugin
     {
         // decode json responses
         if (
-            (
-                $result[0] !== '[' && $result[0] !== '{'
-            )
+            ($result[0] !== '[' && $result[0] !== '{')
             ||
-            (
-                ($decoded = json_decode($result, true)) === null
-            )
+            (($decoded = json_decode($result, true)) === null)
         ) {
             return [
                 'content' => $result,
@@ -172,7 +182,14 @@ class helper_plugin_elasticsearch_docparser extends Plugin
 
         $data = [];
         foreach (self::FIELDMAP as $from => $to) {
-            if (!blank($decoded[$from])) $data[$to] = trim($decoded[$from]);
+            if (blank($decoded[$from])) continue;
+            $content = $decoded[$from];
+            // if field is HTML, strip tags
+            if (str_ends_with($to, '.html')) {
+                $content = strip_tags($content);
+                $to = substr($to, 0, -5);
+            }
+            $data[$to] = trim($content);
         }
         return $data;
     }
@@ -195,9 +212,12 @@ class helper_plugin_elasticsearch_docparser extends Plugin
         $trans = plugin_load('helper', 'translation');
         if ($trans === null) return $conf['lang'];
 
+        // an empty translation stands for the wiki's default language
+        $whitelist = array_map([$trans, 'realLC'], $trans->translations);
+
         $ld = new Language();
 
-        $langs = array_keys($ld->detect($body)->whitelist(...$trans->translations)->close());
+        $langs = array_keys($ld->detect($body)->whitelist(...$whitelist)->close());
         return array_shift($langs);
     }
 }

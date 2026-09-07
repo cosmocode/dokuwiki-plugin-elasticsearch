@@ -1,4 +1,4 @@
-.dokuwiki {
+.plugin_elasticsearch {
     ul.elastic_pagination {
         list-style-type: none;
         text-align: center;
@@ -17,23 +17,111 @@
         }
     }
 
-    dd.elastic-resultmeta {
-        font-size: smaller;
-    }
+    dl.search_results {
+        dt {
+            clear: both;
 
-    form .search-form {
-        .advancedOptions {
-            li {
-                white-space: nowrap;
+            img.mediaright {
+                margin: 0.2em 0 0.2em 0.5em;
+                border: 1px solid @ini_border;
             }
 
-            label {
-                color: @ini_text;
-            }
-
-            input[type=checkbox], input[type=radio] {
-                margin-right: 5px;
+            a.wikilink1 {
+                font-size: 120%;
             }
         }
+
+        dd.elastic-resultmeta {
+            font-size: smaller;
+        }
+    }
+
+    form.elastic-form {
+        display: block;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 1em;
+
+        section.input {
+            display: flex;
+            font-size: 1.5em;
+
+            input[type="search"] {
+                flex: 1;
+            }
+        }
+
+        ul.filters {
+            list-style-type: none;
+            padding: 0;
+            margin: 1em 0 0 0;
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+            align-items: center;
+
+            li {
+                white-space: nowrap;
+                padding: 0;
+                margin: 0;
+            }
+
+            // Dropdowns
+            li.add {
+                position: relative;
+                margin-right: 0.5em; // more space to next filter type
+
+                details {
+                    margin: 0;
+                    summary {
+                        display: list-item; // default style, but some template change it
+                        list-style-type: '+ ';
+                        margin: 0;
+                        cursor: pointer;
+                        &:active,
+                        &:hover {
+                            text-decoration: underline;
+                        }
+                    }
+
+                    ul {
+                        list-style-type: none;
+                        position: absolute;
+                        background-color: @ini_background;
+                        padding: 0.5em;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.2em;
+                        max-height: 50vh;
+                        overflow-y: auto;
+                        box-shadow: rgba(0,0,0, 0.5) 2px 2px 2px;
+                    }
+                }
+            }
+        }
+    }
+
+    // filter pills
+    a.filter-add,
+    a.filter-remove {
+        border: @ini_border 1px solid;
+        color: @ini_text;
+        display: inline-block;
+        padding: 0.1em 0.25em;
+        border-radius: 0.5em;
+
+        &:hover {
+            border-color: @ini_link;
+            text-decoration: none;
+        }
+
+    }
+
+    strong.search_hit {
+        background-color: transparent;
+        color: currentColor;
+        font-weight: bold !important;
+        text-shadow: @ini_highlight 0 0 10px;
     }
 }

@@ -7,15 +7,11 @@
  * @author  Kieback&Peter IT <it-support@kieback-peter.de>
  */
 
-use dokuwiki\Extension\Plugin;
-use Elastica\Client;
-use splitbrain\phpcli\Exception;
-use Elastica\Index;
-use Elastica\Response;
-use Elastica\Mapping;
 use dokuwiki\Extension\Event;
-
-require_once __DIR__ . '/../vendor/autoload.php';
+use dokuwiki\Extension\Plugin;
+use dokuwiki\plugin\elasticsearch\Client;
+use dokuwiki\plugin\elasticsearch\Exception;
+use dokuwiki\plugin\elasticsearch\Query;
 
 /**
  * Access to the Elastica client
@@ -55,46 +51,27 @@ class helper_plugin_elasticsearch_client extends Plugin
         'sv' => 'swedish',
         'th' => 'thai',
         'tr' => 'turkish',
-        ];
-    /**
-     * @var Client $elasticaClient
-     */
-    protected $elasticaClient;
+    ];
+
+    protected ?Client $client = null;
 
     /**
-     * Connects to the elastica servers and returns the client object
+     * Connect to the ElasticSearch server
      *
      * @return Client
+     * @throws Exception
      */
-    public function connect()
+    public function client(): Client
     {
-        if (!is_null($this->elasticaClient)) return $this->elasticaClient;
-        // security settings
-        $username = $this->getConf('username');
-        $password = $this->getConf('password');
-        // parse servers config into DSN array
-        $dsn = ['servers' => []];
-        $servers = $this->getConf('servers');
-        $lines   = explode("\n", $servers);
-        foreach ($lines as $line) {
-            [$host, $proxy] = array_pad(explode(',', $line, 2), 2, null);
-            [$host, $port] = explode(':', $host, 2);
-            $host = trim($host);
-            $port = (int) trim($port);
-            if (!$port) $port = 80;
-            $proxy = trim($proxy);
-            if (!$host) continue;
-            $dsn['servers'][] = [
-                'host' => $host,
-                'port' => $port,
-                'proxy' => $proxy,
-                'username' => $username,
-                'password' => $password
-            ];
+        if (!$this->client instanceof Client) {
+            $this->client = new Client(
+                $this->getConf('servers'),
+                $this->getConf('indexname'),
+                $this->getConf('username'),
+                $this->getConf('password')
+            );
         }
-
-        $this->elasticaClient = new Client($dsn);
-        return $this->elasticaClient;
+        return $this->client;
     }
 
     /**
@@ -105,16 +82,29 @@ class helper_plugin_elasticsearch_client extends Plugin
      */
     public function createIndex($clear = false)
     {
-        $client = $this->connect();
-        $index = $client->getIndex($this->getConf('indexname'));
+        $client = $this->client();
 
-        if ($index->create([], $clear)->hasError()) {
-            throw new Exception("Failed to create index!");
+        if ($clear) {
+            try {
+                $client->call('', null, 'DELETE');
+            } catch (Exception $e) {
+                // ignore if index does not exist
+            }
         }
 
-        if ($this->createMappings($index)->hasError()) {
-            throw new Exception("Failed to create field mappings!");
-        }
+        $client->call(
+            '',
+            [
+                'mappings' => [
+                    'properties' => $this->createMappings()
+                ],
+                'settings' => [
+                    'index.highlight.max_analyzed_offset' => Query::MAX_ANALYZED_OFFSET,
+                    'analysis' => $this->createAnalysis(),
+                ]
+            ],
+            'PUT'
+        ); // create index or throw exception
     }
 
     /**
@@ -143,10 +133,9 @@ class helper_plugin_elasticsearch_client extends Plugin
      *
      * Plugins may provide their own fields via PLUGIN_ELASTICSEARCH_CREATEMAPPING event.
      *
-     * @param Index $index
-     * @return Response
+     * @return array The mapping properties
      */
-    protected function createMappings(Index $index): Response
+    protected function createMappings(): array
     {
         $langProps = $this->getLangProps();
 
@@ -185,20 +174,59 @@ class helper_plugin_elasticsearch_client extends Plugin
                 'type' => 'text',
                 'analyzer' => 'pattern', // because colons surrounded by letters are part of word in standard analyzer
             ],
+            'namespace' => [
+                'type' => 'text',
+                'analyzer' => 'namespace_path', // to also match the namespaces below the searched one
+                'fields' => [
+                    'keyword' => [
+                        'type' => 'keyword', // the unsplit path, used for aggregating
+                    ],
+                ],
+            ],
+        ];
+
+        $suggestProps = [
+            'suggest' => [
+                'type' => 'completion',
+            ],
         ];
 
         // plugins can supply their own mappings: ['plugin' => ['type' => 'keyword'] ]
         $pluginProps = [];
         Event::createAndTrigger('PLUGIN_ELASTICSEARCH_CREATEMAPPING', $pluginProps);
 
-        $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps);
+        $props = array_merge($langProps, $aclProps, $mediaProps, $additionalProps, $suggestProps);
         foreach ($pluginProps as $fields) {
             $props = array_merge($props, $fields);
         }
 
-        $mapping = new Mapping();
-        $mapping->setProperties($props);
-        return $mapping->send($index);
+        return $props;
+    }
+
+    /**
+     * Define custom analyzers
+     *
+     * Namespaces are paths whose segments are separated by colons. The path_hierarchy
+     * tokenizer indexes every parent path of a namespace as a token of its own, so that
+     * a term query for a namespace also matches all the namespaces below it.
+     *
+     * @return array The analysis settings
+     */
+    protected function createAnalysis(): array
+    {
+        return [
+            'tokenizer' => [
+                'namespace_path' => [
+                    'type' => 'path_hierarchy',
+                    'delimiter' => ':',
+                ],
+            ],
+            'analyzer' => [
+                'namespace_path' => [
+                    'tokenizer' => 'namespace_path',
+                ],
+            ],
+        ];
     }
 
     /**
@@ -213,10 +241,10 @@ class helper_plugin_elasticsearch_client extends Plugin
         // default language
         $langprops = [
             'content' => [
-                'type'  => 'text',
+                'type' => 'text',
                 'fields' => [
                     $conf['lang'] => [
-                        'type'  => 'text',
+                        'type' => 'text',
                         'analyzer' => $this->getLanguageAnalyzer($conf['lang'])
                     ],
                 ]
