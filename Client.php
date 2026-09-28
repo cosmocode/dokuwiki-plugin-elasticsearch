@@ -90,7 +90,7 @@ class Client
                     Logger::error('ElasticSearch request failed: ', $body);
                     $body = $body['error'];
                     if (is_array($body)) $body = $body['reason'];
-                } catch (\Exception $ignored) {
+                } catch (\Exception) {
                 }
             }
             throw new Exception('ElasticSearch request failed: ' . $body, $this->http->status);

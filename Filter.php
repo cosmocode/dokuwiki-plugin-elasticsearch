@@ -6,15 +6,15 @@ use dokuwiki\Utf8\Sort;
 
 class Filter
 {
-    private string $name;
-    private string $prefix;
-    private string $queryParam;
-    private string $label;
-    private string $fieldName;
-    private string $fieldPath;
-    private int $limit;
+    private readonly string $name;
+    private readonly string $prefix;
+    private readonly string $queryParam;
+    private readonly string $label;
+    private readonly string $fieldName;
+    private readonly string $fieldPath;
+    private readonly int $limit;
     private array $options;
-    private bool $isAndQuery;
+    private readonly bool $isAndQuery;
     private array $values = [];
 
     /**
