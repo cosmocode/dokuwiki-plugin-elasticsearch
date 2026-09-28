@@ -186,7 +186,7 @@ class Query
      */
     public function addDateFilter(string $unit, int $amount = 1)
     {
-        if (!in_array($unit, ['year', 'month', 'week'])) return;
+        if (!in_array($unit, ['year', 'month', 'week'], true)) return;
 
         $date = date('Y-m-d', strtotime($amount . ' ' . $unit . ' ago'));
         $this->querySet('query/bool/must//range/modified/gte', $date);

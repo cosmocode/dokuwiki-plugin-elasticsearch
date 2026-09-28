@@ -146,7 +146,8 @@ class helper_plugin_elasticsearch_docparser extends Plugin
                 return $http->resp_body;
             }
             return false;
-        } elseif (is_executable(strtok($parser, ' '))) {
+        }
+        if (is_executable(strtok($parser, ' '))) {
             $output = [];
             $ok = 0;
             exec(str_replace('%in%', escapeshellarg($file), $parser), $output, $ok);

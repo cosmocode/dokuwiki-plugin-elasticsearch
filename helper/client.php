@@ -87,7 +87,7 @@ class helper_plugin_elasticsearch_client extends Plugin
         if ($clear) {
             try {
                 $client->call('', null, 'DELETE');
-            } catch (Exception $e) {
+            } catch (Exception) {
                 // ignore if index does not exist
             }
         }
