@@ -16,11 +16,45 @@ class docindex_elasticsearch_test extends DokuWikiTest
      */
     protected $docparser;
 
+    /**
+     * Configure the parser to use the Tika server and make sure it is reachable
+     *
+     * The Tika URL defaults to the service from the included docker-compose.yml
+     * and can be overridden with the TIKA_URL environment variable.
+     *
+     * When Tika is unreachable, the test is skipped on dev machines but fails on GitHub Actions.
+     *
+     * @return void
+     */
     public function setUp(): void
     {
         parent::setUp();
-        io_saveFile(DOKU_CONF . 'elasticsearch.conf', file_get_contents(__DIR__ . '/../conf/elasticsearch.conf.example'));
+
+        $tikaUrl = getenv('TIKA_URL') ?: 'http://localhost:9998/rmeta/text';
+        if (!$this->isTikaAvailable($tikaUrl)) {
+            $message = "Apache Tika is not reachable at $tikaUrl. " .
+                'Start it with _test/pretest.sh or set TIKA_URL.';
+            if (getenv('GITHUB_ACTIONS')) {
+                $this->fail($message);
+            }
+            $this->markTestSkipped($message);
+        }
+
+        io_saveFile(DOKU_CONF . 'elasticsearch.conf', "docx $tikaUrl\n");
         $this->docparser = new \helper_plugin_elasticsearch_docparser();
+    }
+
+    /**
+     * Check if the Tika server answers
+     *
+     * @param string $tikaUrl the configured Tika endpoint
+     * @return bool
+     */
+    protected function isTikaAvailable($tikaUrl)
+    {
+        $http = new \dokuwiki\HTTP\DokuHTTPClient();
+        $http->timeout = 5;
+        return $http->get(preg_replace('/\/rmeta(\/\w+)?$/', '/tika', $tikaUrl)) !== false;
     }
 
     /**

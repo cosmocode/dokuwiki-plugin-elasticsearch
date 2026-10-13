@@ -27,7 +27,7 @@ services:
       - "1358:1358"
 
   tika:
-    image: apache/tika:latest-full
+    image: apache/tika:4.1.0-1-full
     ports:
       - "9998:9998"
 
