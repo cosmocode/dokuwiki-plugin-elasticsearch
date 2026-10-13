@@ -98,7 +98,7 @@ class helper_plugin_elasticsearch_acl extends Plugin
         ];
 
         foreach ($rules as $key => $perm) {
-            if (strpos($key, '@') === 0) {
+            if (str_starts_with($key, '@')) {
                 $type = $perm ? 'groups_include' : 'groups_exclude';
             } else {
                 $type = $perm ? 'users_include' : 'users_exclude';
