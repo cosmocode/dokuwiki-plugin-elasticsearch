@@ -9,8 +9,8 @@
 # use the local pdftotext tool to extract PDF data:
 pdf    /usr/bin/pdftotext %in% -
 
-# use a free installation of Apache Tika on the Web for Word Documents
-docx   http://beta.offenedaten.de:9998/rmeta
+# use Apache Tika for Word Documents (e.g. the one from the included docker-compose.yml)
+docx   http://localhost:9998/rmeta/text
 
 # use our own parser for JPEGs
 jpg    bin/plugin.php elasticsearch_img %in%
