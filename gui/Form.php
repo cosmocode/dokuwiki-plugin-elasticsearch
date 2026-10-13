@@ -157,7 +157,7 @@ class Form extends AbstractGui
 
 
         $html = '<p class="suggestion">';
-        $html .= sprintf($this->getLang('suggest'), join(',', $links));
+        $html .= sprintf($this->getLang('suggest'), implode(',', $links));
         $html .= '</p>';
         return $html;
     }
